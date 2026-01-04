@@ -5,20 +5,13 @@ import { validateSchemas } from '@/lib/services/schema-validator';
 import { inspectDatabaseSchema } from '@/lib/services/schema-inspector';
 import { generateMigrationPlan, generateQuickFixSQL } from '@/lib/services/schema-migration-generator';
 import { getUser } from '@/lib/supabase/server';
+import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
+import { MigrationInputSchema, validateInput } from '@/lib/validations/schemas';
 
 /**
  * POST /api/sync/generate-migration
  * 
  * Generates SQL migration scripts to fix schema differences.
- * 
- * Request body:
- * {
- *   sourceConnectionId: string;
- *   targetConnectionId: string;
- *   tables: string[];
- *   direction?: 'source_to_target' | 'target_to_source';
- *   issueId?: string;  // Generate fix for specific issue only
- * }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -31,28 +24,33 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Rate limit check
+    const rateLimitResult = checkRateLimit(user.id, 'write');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'write') }
+      );
+    }
+    
     const body = await request.json();
+    
+    // Validate input with Zod
+    const validation = validateInput(MigrationInputSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: validation.errors.join(', ') },
+        { status: 400 }
+      );
+    }
+    
     const {
       sourceConnectionId,
       targetConnectionId,
       tables,
-      direction = 'source_to_target',
+      direction,
       issueId,
-    } = body as {
-      sourceConnectionId: string;
-      targetConnectionId: string;
-      tables: string[];
-      direction?: 'source_to_target' | 'target_to_source';
-      issueId?: string;
-    };
-    
-    // Validate input
-    if (!sourceConnectionId || !targetConnectionId) {
-      return NextResponse.json(
-        { success: false, error: 'Source and target connection IDs are required' },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
     
     // Get connections (scoped to user)
     const sourceConnection = connectionStore.getById(sourceConnectionId, user.id);
@@ -79,7 +77,7 @@ export async function POST(request: NextRequest) {
     // Auto-discover tables if not specified
     let tableNames = tables;
     
-    if (!tables || !Array.isArray(tables) || tables.length === 0) {
+    if (!tables || tables.length === 0) {
       // Auto-discover tables from both databases
       const [sourceSchema, targetSchema] = await Promise.all([
         inspectDatabaseSchema(sourceUrl),

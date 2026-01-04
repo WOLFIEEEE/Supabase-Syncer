@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Box,
@@ -27,6 +27,12 @@ import {
   Th,
   Td,
   Code,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  SimpleGrid,
+  Tooltip,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 
@@ -66,6 +72,52 @@ const RefreshIcon = () => (
     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
   </svg>
 );
+
+const ClockIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="12 6 12 12 16 14"/>
+  </svg>
+);
+
+const SpeedIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+  </svg>
+);
+
+// Helper function to format duration
+function formatDuration(seconds: number): string {
+  if (seconds < 0) return '--';
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  if (seconds < 3600) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return `${mins}m ${secs}s`;
+  }
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  return `${hours}h ${mins}m`;
+}
+
+// Helper function to calculate sync speed
+function calculateSpeed(processedRows: number, startTime: Date | null): number {
+  if (!startTime || processedRows === 0) return 0;
+  const elapsedSeconds = (Date.now() - new Date(startTime).getTime()) / 1000;
+  if (elapsedSeconds === 0) return 0;
+  return Math.round(processedRows / elapsedSeconds);
+}
+
+// Helper function to estimate remaining time
+function estimateRemainingTime(
+  processedRows: number,
+  totalRows: number,
+  speed: number
+): number {
+  if (speed === 0 || totalRows === 0) return -1;
+  const remainingRows = totalRows - processedRows;
+  return remainingRows / speed;
+}
 
 interface SyncProgress {
   totalTables: number;
@@ -119,10 +171,27 @@ export default function SyncDetailPage() {
   const [job, setJob] = useState<SyncJob | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isActioning, setIsActioning] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const startTimeRef = useRef<Date | null>(null);
   const router = useRouter();
   const params = useParams();
   const toast = useToast();
   const jobId = params.id as string;
+  
+  // Track elapsed time for running jobs
+  useEffect(() => {
+    if (job?.status === 'running' && job?.startedAt) {
+      startTimeRef.current = new Date(job.startedAt);
+      
+      const timer = setInterval(() => {
+        if (startTimeRef.current) {
+          setElapsedTime((Date.now() - startTimeRef.current.getTime()) / 1000);
+        }
+      }, 1000);
+      
+      return () => clearInterval(timer);
+    }
+  }, [job?.status, job?.startedAt]);
 
   const fetchJob = useCallback(async () => {
     try {
@@ -260,6 +329,16 @@ export default function SyncDetailPage() {
   const progressPercent = progress 
     ? Math.round((progress.completedTables / progress.totalTables) * 100)
     : 0;
+  
+  // Calculate speed and ETA
+  const totalProcessedRows = progress 
+    ? progress.insertedRows + progress.updatedRows + progress.skippedRows 
+    : 0;
+  const syncSpeed = job?.startedAt 
+    ? calculateSpeed(totalProcessedRows, new Date(job.startedAt))
+    : 0;
+  const estimatedTotal = progress?.totalRows || totalProcessedRows * 2; // Estimate if not known
+  const remainingTime = estimateRemainingTime(totalProcessedRows, estimatedTotal, syncSpeed);
 
   return (
     <Box minH="100vh" className="gradient-mesh">
@@ -400,38 +479,118 @@ export default function SyncDetailPage() {
                         />
                       </VStack>
 
+                      {/* Speed and ETA for running jobs */}
+                      {job.status === 'running' && (
+                        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={4}>
+                          <Card bg="surface.700" size="sm">
+                            <CardBody py={3}>
+                              <Stat size="sm">
+                                <StatLabel color="surface.400" fontSize="xs">
+                                  <HStack spacing={1}>
+                                    <ClockIcon />
+                                    <Text>Elapsed</Text>
+                                  </HStack>
+                                </StatLabel>
+                                <StatNumber color="white" fontSize="md">
+                                  {formatDuration(elapsedTime)}
+                                </StatNumber>
+                              </Stat>
+                            </CardBody>
+                          </Card>
+                          
+                          <Card bg="surface.700" size="sm">
+                            <CardBody py={3}>
+                              <Stat size="sm">
+                                <StatLabel color="surface.400" fontSize="xs">
+                                  <HStack spacing={1}>
+                                    <SpeedIcon />
+                                    <Text>Speed</Text>
+                                  </HStack>
+                                </StatLabel>
+                                <StatNumber color="teal.400" fontSize="md">
+                                  {syncSpeed.toLocaleString()} rows/s
+                                </StatNumber>
+                              </Stat>
+                            </CardBody>
+                          </Card>
+                          
+                          <Card bg="surface.700" size="sm">
+                            <CardBody py={3}>
+                              <Stat size="sm">
+                                <StatLabel color="surface.400" fontSize="xs">
+                                  <HStack spacing={1}>
+                                    <ClockIcon />
+                                    <Text>ETA</Text>
+                                  </HStack>
+                                </StatLabel>
+                                <StatNumber color="white" fontSize="md">
+                                  {remainingTime > 0 ? formatDuration(remainingTime) : '--'}
+                                </StatNumber>
+                                <StatHelpText color="surface.500" fontSize="xs">
+                                  remaining
+                                </StatHelpText>
+                              </Stat>
+                            </CardBody>
+                          </Card>
+                          
+                          <Card bg="surface.700" size="sm">
+                            <CardBody py={3}>
+                              <Stat size="sm">
+                                <StatLabel color="surface.400" fontSize="xs">Total Processed</StatLabel>
+                                <StatNumber color="white" fontSize="md">
+                                  {totalProcessedRows.toLocaleString()}
+                                </StatNumber>
+                                <StatHelpText color="surface.500" fontSize="xs">
+                                  rows
+                                </StatHelpText>
+                              </Stat>
+                            </CardBody>
+                          </Card>
+                        </SimpleGrid>
+                      )}
+                      
                       {/* Stats */}
                       <HStack spacing={8} wrap="wrap">
-                        <VStack align="start" spacing={0}>
-                          <Text color="surface.400" fontSize="xs">Tables</Text>
-                          <Text color="white" fontSize="lg" fontWeight="bold">
-                            {progress?.completedTables || 0}/{progress?.totalTables || 0}
-                          </Text>
-                        </VStack>
-                        <VStack align="start" spacing={0}>
-                          <Text color="surface.400" fontSize="xs">Inserted</Text>
-                          <Text color="green.400" fontSize="lg" fontWeight="bold">
-                            {(progress?.insertedRows || 0).toLocaleString()}
-                          </Text>
-                        </VStack>
-                        <VStack align="start" spacing={0}>
-                          <Text color="surface.400" fontSize="xs">Updated</Text>
-                          <Text color="blue.400" fontSize="lg" fontWeight="bold">
-                            {(progress?.updatedRows || 0).toLocaleString()}
-                          </Text>
-                        </VStack>
-                        <VStack align="start" spacing={0}>
-                          <Text color="surface.400" fontSize="xs">Skipped</Text>
-                          <Text color="yellow.400" fontSize="lg" fontWeight="bold">
-                            {(progress?.skippedRows || 0).toLocaleString()}
-                          </Text>
-                        </VStack>
-                        <VStack align="start" spacing={0}>
-                          <Text color="surface.400" fontSize="xs">Errors</Text>
-                          <Text color="red.400" fontSize="lg" fontWeight="bold">
-                            {progress?.errors || 0}
-                          </Text>
-                        </VStack>
+                        <Tooltip label="Completed / Total Tables">
+                          <VStack align="start" spacing={0}>
+                            <Text color="surface.400" fontSize="xs">Tables</Text>
+                            <Text color="white" fontSize="lg" fontWeight="bold">
+                              {progress?.completedTables || 0}/{progress?.totalTables || 0}
+                            </Text>
+                          </VStack>
+                        </Tooltip>
+                        <Tooltip label="New rows inserted into target">
+                          <VStack align="start" spacing={0}>
+                            <Text color="surface.400" fontSize="xs">Inserted</Text>
+                            <Text color="green.400" fontSize="lg" fontWeight="bold">
+                              {(progress?.insertedRows || 0).toLocaleString()}
+                            </Text>
+                          </VStack>
+                        </Tooltip>
+                        <Tooltip label="Existing rows updated in target">
+                          <VStack align="start" spacing={0}>
+                            <Text color="surface.400" fontSize="xs">Updated</Text>
+                            <Text color="blue.400" fontSize="lg" fontWeight="bold">
+                              {(progress?.updatedRows || 0).toLocaleString()}
+                            </Text>
+                          </VStack>
+                        </Tooltip>
+                        <Tooltip label="Rows skipped (already synced or conflicts)">
+                          <VStack align="start" spacing={0}>
+                            <Text color="surface.400" fontSize="xs">Skipped</Text>
+                            <Text color="yellow.400" fontSize="lg" fontWeight="bold">
+                              {(progress?.skippedRows || 0).toLocaleString()}
+                            </Text>
+                          </VStack>
+                        </Tooltip>
+                        <Tooltip label="Rows that failed to sync">
+                          <VStack align="start" spacing={0}>
+                            <Text color="surface.400" fontSize="xs">Errors</Text>
+                            <Text color="red.400" fontSize="lg" fontWeight="bold">
+                              {progress?.errors || 0}
+                            </Text>
+                          </VStack>
+                        </Tooltip>
                       </HStack>
                     </>
                   )}

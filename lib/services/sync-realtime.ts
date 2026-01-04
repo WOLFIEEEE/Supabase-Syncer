@@ -1,14 +1,33 @@
 /**
  * Real-time sync execution without Redis/BullMQ
  * Runs the sync process directly in the Node.js process
+ * 
+ * Enhanced with:
+ * - Retry logic with exponential backoff
+ * - Job timeout protection
+ * - Improved checkpoint granularity
+ * - Network interruption handling
  */
 
 import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
 import { getRowsToSync } from './diff-engine';
+import { withRetry, withTimeout, sleep } from './retry-handler';
 import type { SyncProgress, SyncCheckpoint, ConflictStrategy, Conflict } from '@/types';
+
+// Configuration
+const SYNC_CONFIG = {
+  maxRetries: 3,
+  retryDelay: 2000,
+  jobTimeout: 2 * 60 * 60 * 1000, // 2 hours
+  batchTimeout: 5 * 60 * 1000,    // 5 minutes per batch
+  checkpointInterval: 100,         // Save checkpoint every 100 rows
+};
 
 // Track cancelled jobs
 const cancelledJobs = new Set<string>();
+
+// Track job start times for timeout
+const jobStartTimes = new Map<string, number>();
 
 export function markSyncCancelled(jobId: string): void {
   cancelledJobs.add(jobId);
@@ -16,6 +35,12 @@ export function markSyncCancelled(jobId: string): void {
 
 function isSyncCancelled(jobId: string): boolean {
   return cancelledJobs.has(jobId);
+}
+
+function isJobTimedOut(jobId: string): boolean {
+  const startTime = jobStartTimes.get(jobId);
+  if (!startTime) return false;
+  return Date.now() - startTime > SYNC_CONFIG.jobTimeout;
 }
 
 export interface RealtimeSyncOptions {
@@ -29,10 +54,11 @@ export interface RealtimeSyncOptions {
   onProgress: (progress: SyncProgress) => void;
   onLog: (level: 'info' | 'warn' | 'error', message: string, metadata?: Record<string, unknown>) => void;
   onComplete: (success: boolean, checkpoint?: SyncCheckpoint) => void;
+  onCheckpoint?: (checkpoint: SyncCheckpoint) => void;
 }
 
 /**
- * Execute sync in real-time (non-queued)
+ * Execute sync in real-time (non-queued) with retry support
  */
 export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise<void> {
   const {
@@ -46,7 +72,11 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
     onProgress,
     onLog,
     onComplete,
+    onCheckpoint,
   } = options;
+  
+  // Record start time for timeout tracking
+  jobStartTimes.set(jobId, Date.now());
   
   let sourceConn: DrizzleConnection | null = null;
   let targetConn: DrizzleConnection | null = null;
@@ -69,8 +99,28 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
   try {
     onLog('info', 'Connecting to databases...');
     
-    sourceConn = createDrizzleClient(sourceUrl);
-    targetConn = createDrizzleClient(targetUrl);
+    // Connect with retry
+    sourceConn = await withRetry(
+      () => Promise.resolve(createDrizzleClient(sourceUrl)),
+      {
+        maxRetries: SYNC_CONFIG.maxRetries,
+        initialDelay: SYNC_CONFIG.retryDelay,
+        onRetry: (_, attempt) => {
+          onLog('warn', `Source connection failed, retrying (attempt ${attempt})...`);
+        },
+      }
+    );
+    
+    targetConn = await withRetry(
+      () => Promise.resolve(createDrizzleClient(targetUrl)),
+      {
+        maxRetries: SYNC_CONFIG.maxRetries,
+        initialDelay: SYNC_CONFIG.retryDelay,
+        onRetry: (_, attempt) => {
+          onLog('warn', `Target connection failed, retrying (attempt ${attempt})...`);
+        },
+      }
+    );
     
     onLog('info', 'Connected successfully. Starting sync...');
     
@@ -103,6 +153,21 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
           processedTables,
         };
         cancelledJobs.delete(jobId);
+        jobStartTimes.delete(jobId);
+        onComplete(false, currentCheckpoint);
+        return;
+      }
+      
+      // Check for timeout
+      if (isJobTimedOut(jobId)) {
+        onLog('error', 'Sync job timed out (2 hour limit)');
+        currentCheckpoint = {
+          lastTable: tableName,
+          lastRowId: '',
+          lastUpdatedAt: new Date().toISOString(),
+          processedTables,
+        };
+        jobStartTimes.delete(jobId);
         onComplete(false, currentCheckpoint);
         return;
       }
@@ -112,8 +177,8 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
       onLog('info', `Processing table: ${tableName}`);
       
       try {
-        // Sync this table
-        const result = await syncTable({
+        // Sync this table with retry
+        const result = await syncTableWithRetry({
           sourceConn,
           targetConn,
           tableName,
@@ -130,6 +195,13 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
             onProgress(progress);
           },
           onLog,
+          onCheckpoint: (cp) => {
+            currentCheckpoint = {
+              ...cp,
+              processedTables,
+            };
+            onCheckpoint?.(currentCheckpoint);
+          },
         });
         
         if (result.cancelled) {
@@ -158,6 +230,14 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
         onLog('error', `Error syncing table ${tableName}: ${message}`);
         progress.errors++;
         onProgress(progress);
+        
+        // Save checkpoint for retry
+        currentCheckpoint = {
+          lastTable: tableName,
+          lastRowId: '',
+          lastUpdatedAt: new Date().toISOString(),
+          processedTables,
+        };
       }
     }
     
@@ -167,11 +247,13 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
       rowsUpdated: progress.updatedRows,
     });
     
+    jobStartTimes.delete(jobId);
     onComplete(progress.errors === 0);
     
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     onLog('error', `Sync failed: ${message}`);
+    jobStartTimes.delete(jobId);
     onComplete(false, currentCheckpoint);
     throw error;
   } finally {
@@ -191,6 +273,7 @@ interface TableSyncOptions {
   jobId: string;
   onProgress: (progress: { processedRows: number; inserted: number; updated: number; skipped: number }) => void;
   onLog: (level: 'info' | 'warn' | 'error', message: string, metadata?: Record<string, unknown>) => void;
+  onCheckpoint?: (checkpoint: { lastTable: string; lastRowId: string; lastUpdatedAt: string }) => void;
 }
 
 interface TableSyncResult {
@@ -201,6 +284,33 @@ interface TableSyncResult {
   cancelled: boolean;
   lastRowId?: string;
   lastUpdatedAt?: string;
+}
+
+/**
+ * Sync a single table with retry logic
+ */
+async function syncTableWithRetry(options: TableSyncOptions): Promise<TableSyncResult> {
+  return withRetry(
+    () => syncTable(options),
+    {
+      maxRetries: SYNC_CONFIG.maxRetries,
+      initialDelay: SYNC_CONFIG.retryDelay,
+      retryCondition: (error) => {
+        if (error instanceof Error) {
+          const message = error.message.toLowerCase();
+          // Retry on connection errors
+          return message.includes('connection') || 
+                 message.includes('timeout') || 
+                 message.includes('network');
+        }
+        return false;
+      },
+      onRetry: (error, attempt) => {
+        const message = error instanceof Error ? error.message : 'Unknown';
+        options.onLog('warn', `Table sync failed, retrying (attempt ${attempt}): ${message}`);
+      },
+    }
+  );
 }
 
 /**
@@ -218,6 +328,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
     jobId,
     onProgress,
     onLog,
+    onCheckpoint,
   } = options;
   
   const result: TableSyncResult = {
@@ -231,6 +342,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
   let currentAfterId = afterId;
   let hasMore = true;
   let processedRows = 0;
+  let checkpointCounter = 0;
   
   while (hasMore) {
     // Check for cancellation
@@ -241,14 +353,25 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       return result;
     }
     
-    // Get batch of rows to sync
-    const batch = await getRowsToSync(
-      sourceConn,
-      targetConn,
-      tableName,
-      undefined,
-      currentAfterId,
-      batchSize
+    // Check for timeout
+    if (isJobTimedOut(jobId)) {
+      result.cancelled = true;
+      result.lastRowId = currentAfterId;
+      return result;
+    }
+    
+    // Get batch of rows to sync with timeout
+    const batch = await withTimeout(
+      async () => getRowsToSync(
+        sourceConn,
+        targetConn,
+        tableName,
+        undefined,
+        currentAfterId,
+        batchSize
+      ),
+      SYNC_CONFIG.batchTimeout,
+      `Batch fetch timeout for table ${tableName}`
     );
     
     hasMore = batch.hasMore;
@@ -336,6 +459,17 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
           }
           
           processedRows++;
+          checkpointCounter++;
+          
+          // Save checkpoint periodically
+          if (checkpointCounter >= SYNC_CONFIG.checkpointInterval) {
+            checkpointCounter = 0;
+            onCheckpoint?.({
+              lastTable: tableName,
+              lastRowId: row.id as string,
+              lastUpdatedAt: row.updated_at as string,
+            });
+          }
           
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
@@ -359,6 +493,9 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       const lastRow = batch.rows[batch.rows.length - 1];
       result.lastUpdatedAt = lastRow.updated_at as string;
     }
+    
+    // Small delay between batches to prevent overwhelming the database
+    await sleep(100);
   }
   
   return result;
@@ -384,3 +521,48 @@ function resolveConflict(
   }
 }
 
+/**
+ * Get estimated time remaining
+ */
+export function estimateTimeRemaining(
+  progress: SyncProgress,
+  startTime: Date
+): { seconds: number; formatted: string } | null {
+  if (progress.processedRows === 0 || progress.totalRows === 0) {
+    return null;
+  }
+  
+  const elapsedMs = Date.now() - startTime.getTime();
+  const rowsPerMs = progress.processedRows / elapsedMs;
+  const remainingRows = progress.totalRows - progress.processedRows;
+  const remainingMs = remainingRows / rowsPerMs;
+  const remainingSeconds = Math.ceil(remainingMs / 1000);
+  
+  // Format
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+  const formatted = minutes > 0 
+    ? `${minutes}m ${seconds}s`
+    : `${seconds}s`;
+  
+  return { seconds: remainingSeconds, formatted };
+}
+
+/**
+ * Calculate sync speed
+ */
+export function calculateSyncSpeed(
+  processedRows: number,
+  startTime: Date
+): { rowsPerSecond: number; formatted: string } {
+  const elapsedSeconds = (Date.now() - startTime.getTime()) / 1000;
+  if (elapsedSeconds === 0) {
+    return { rowsPerSecond: 0, formatted: '0 rows/sec' };
+  }
+  
+  const rowsPerSecond = Math.round(processedRows / elapsedSeconds);
+  return {
+    rowsPerSecond,
+    formatted: `${rowsPerSecond.toLocaleString()} rows/sec`,
+  };
+}

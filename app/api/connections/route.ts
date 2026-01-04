@@ -3,7 +3,8 @@ import { connectionStore } from '@/lib/db/memory-store';
 import { encrypt, validateDatabaseUrl, maskDatabaseUrl } from '@/lib/services/encryption';
 import { testConnection, getSyncableTables } from '@/lib/services/drizzle-factory';
 import { getUser } from '@/lib/supabase/server';
-import type { Environment } from '@/types';
+import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
+import { ConnectionInputSchema, validateInput } from '@/lib/validations/schemas';
 
 // GET - List all connections for the authenticated user
 export async function GET() {
@@ -14,6 +15,15 @@ export async function GET() {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
         { status: 401 }
+      );
+    }
+    
+    // Rate limit check
+    const rateLimitResult = checkRateLimit(user.id, 'read');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'read') }
       );
     }
     
@@ -51,39 +61,41 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Rate limit check for write operations
+    const rateLimitResult = checkRateLimit(user.id, 'write');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'write') }
+      );
+    }
+    
     const body = await request.json();
-    const { name, databaseUrl, environment } = body as {
-      name: string;
-      databaseUrl: string;
-      environment: Environment;
-    };
     
-    // Validate input
-    if (!name || typeof name !== 'string') {
+    // Validate input with Zod
+    const validation = validateInput(ConnectionInputSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Name is required' },
+        { success: false, error: validation.errors.join(', ') },
         { status: 400 }
       );
     }
     
-    if (!databaseUrl || typeof databaseUrl !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Database URL is required' },
-        { status: 400 }
-      );
-    }
+    const { name, databaseUrl, environment } = validation.data;
     
-    if (!environment || !['production', 'development'].includes(environment)) {
-      return NextResponse.json(
-        { success: false, error: 'Environment must be "production" or "development"' },
-        { status: 400 }
-      );
-    }
-    
-    // Validate database URL format
+    // Validate database URL format (additional check)
     if (!validateDatabaseUrl(databaseUrl)) {
       return NextResponse.json(
-        { success: false, error: 'Invalid PostgreSQL connection URL' },
+        { success: false, error: 'Invalid PostgreSQL connection URL format' },
+        { status: 400 }
+      );
+    }
+    
+    // Check connection limit per user (max 10 connections)
+    const existingConnections = connectionStore.getAll(user.id);
+    if (existingConnections.length >= 10) {
+      return NextResponse.json(
+        { success: false, error: 'Maximum connection limit reached (10). Please delete an existing connection first.' },
         { status: 400 }
       );
     }
@@ -119,6 +131,7 @@ export async function POST(request: NextRequest) {
         environment: connection.environment,
         maskedUrl: maskDatabaseUrl(databaseUrl),
         version: connectionTest.version,
+        tableCount: connectionTest.tableCount,
         syncableTables: tables,
       },
     });
@@ -144,12 +157,30 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
+    // Rate limit check for write operations
+    const rateLimitResult = checkRateLimit(user.id, 'write');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'write') }
+      );
+    }
+    
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'Connection ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate UUID format
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidPattern.test(id)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid connection ID format' },
         { status: 400 }
       );
     }

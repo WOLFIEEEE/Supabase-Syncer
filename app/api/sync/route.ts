@@ -3,7 +3,8 @@ import { connectionStore, syncJobStore, getJobWithConnections } from '@/lib/db/m
 import { decrypt } from '@/lib/services/encryption';
 import { calculateDiff } from '@/lib/services/diff-engine';
 import { getUser } from '@/lib/supabase/server';
-import type { SyncDirection, TableConfig } from '@/types';
+import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
+import { SyncJobInputSchema, PaginationSchema, validateInput } from '@/lib/validations/schemas';
 
 // GET - List all sync jobs for the authenticated user
 export async function GET(request: NextRequest) {
@@ -17,9 +18,26 @@ export async function GET(request: NextRequest) {
       );
     }
     
+    // Rate limit check
+    const rateLimitResult = checkRateLimit(user.id, 'read');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'read') }
+      );
+    }
+    
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    
+    // Validate pagination
+    const paginationValidation = validateInput(PaginationSchema, {
+      limit: searchParams.get('limit') || undefined,
+      offset: searchParams.get('offset') || undefined,
+    });
+    
+    const { limit, offset } = paginationValidation.success 
+      ? paginationValidation.data 
+      : { limit: 50, offset: 0 };
     
     const jobs = syncJobStore.getAll(user.id, limit, offset);
     const jobsWithConnections = jobs.map(job => getJobWithConnections(job, user.id));
@@ -27,6 +45,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: jobsWithConnections,
+      pagination: { limit, offset },
     });
     
   } catch (error) {
@@ -50,49 +69,33 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Rate limit check for sync operations (more restrictive)
+    const rateLimitResult = checkRateLimit(user.id, 'sync');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'sync') }
+      );
+    }
+    
     const body = await request.json();
+    
+    // Validate input with Zod
+    const validation = validateInput(SyncJobInputSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: validation.errors.join(', ') },
+        { status: 400 }
+      );
+    }
+    
     const {
       sourceConnectionId,
       targetConnectionId,
       direction,
       tables,
-      dryRun = false,
-    } = body as {
-      sourceConnectionId: string;
-      targetConnectionId: string;
-      direction: SyncDirection;
-      tables: TableConfig[];
-      dryRun?: boolean;
-    };
-    
-    // Validate input
-    if (!sourceConnectionId || !targetConnectionId) {
-      return NextResponse.json(
-        { success: false, error: 'Source and target connections are required' },
-        { status: 400 }
-      );
-    }
-    
-    if (sourceConnectionId === targetConnectionId) {
-      return NextResponse.json(
-        { success: false, error: 'Source and target connections must be different' },
-        { status: 400 }
-      );
-    }
-    
-    if (!direction || !['one_way', 'two_way'].includes(direction)) {
-      return NextResponse.json(
-        { success: false, error: 'Direction must be "one_way" or "two_way"' },
-        { status: 400 }
-      );
-    }
-    
-    if (!tables || !Array.isArray(tables) || tables.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'At least one table must be selected' },
-        { status: 400 }
-      );
-    }
+      dryRun,
+    } = validation.data;
     
     // Get connections (scoped to user)
     const sourceConnection = connectionStore.getById(sourceConnectionId, user.id);
@@ -128,6 +131,21 @@ export async function POST(request: NextRequest) {
     // Get enabled tables
     const enabledTables = tables.filter((t) => t.enabled).map((t) => t.tableName);
     
+    if (enabledTables.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'At least one table must be enabled for sync' },
+        { status: 400 }
+      );
+    }
+    
+    // Check sync limits (max 50 tables per sync)
+    if (enabledTables.length > 50) {
+      return NextResponse.json(
+        { success: false, error: 'Too many tables selected. Maximum 50 tables per sync job.' },
+        { status: 400 }
+      );
+    }
+    
     if (dryRun) {
       // Perform dry run - calculate differences
       const diff = await calculateDiff({
@@ -155,6 +173,10 @@ export async function POST(request: NextRequest) {
         warnings.push('Two-way sync may result in conflicts that require resolution');
       }
       
+      if (totalRows > 100000) {
+        warnings.push(`Large sync: ${totalRows.toLocaleString()} rows will be processed`);
+      }
+      
       return NextResponse.json({
         success: true,
         data: {
@@ -164,9 +186,21 @@ export async function POST(request: NextRequest) {
           totalInserts: diff.totalInserts,
           totalUpdates: diff.totalUpdates,
           estimatedDuration,
+          estimatedSpeed: '~1000 rows/sec',
           warnings,
         },
       });
+    }
+    
+    // Check concurrent job limit (max 3 running jobs per user)
+    const runningJobs = syncJobStore.getAll(user.id, 100, 0).filter(
+      job => job.status === 'running' || job.status === 'pending'
+    );
+    if (runningJobs.length >= 3) {
+      return NextResponse.json(
+        { success: false, error: 'Maximum concurrent jobs reached (3). Wait for existing jobs to complete.' },
+        { status: 400 }
+      );
     }
     
     // Create sync job (with user ID)

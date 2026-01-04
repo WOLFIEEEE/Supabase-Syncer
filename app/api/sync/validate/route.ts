@@ -4,21 +4,14 @@ import { decrypt } from '@/lib/services/encryption';
 import { validateSchemas, getValidationSummary } from '@/lib/services/schema-validator';
 import { inspectDatabaseSchema } from '@/lib/services/schema-inspector';
 import { getUser } from '@/lib/supabase/server';
-import type { SyncDirection, TableConfig } from '@/types';
+import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
+import { ValidateInputSchema, validateInput } from '@/lib/validations/schemas';
 
 /**
  * POST /api/sync/validate
  * 
  * Comprehensive pre-sync validation between source and target databases.
  * Returns categorized validation issues with severity levels.
- * 
- * Request body:
- * {
- *   sourceConnectionId: string;
- *   targetConnectionId: string;
- *   tables: string[];  // List of table names to validate
- *   direction?: SyncDirection;
- * }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -31,26 +24,32 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Rate limit check
+    const rateLimitResult = checkRateLimit(user.id, 'read');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'read') }
+      );
+    }
+    
     const body = await request.json();
+    
+    // Validate input with Zod
+    const validation = validateInput(ValidateInputSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: validation.errors.join(', ') },
+        { status: 400 }
+      );
+    }
+    
     const {
       sourceConnectionId,
       targetConnectionId,
       tables,
-      direction = 'one_way',
-    } = body as {
-      sourceConnectionId: string;
-      targetConnectionId: string;
-      tables: string[] | TableConfig[];
-      direction?: SyncDirection;
-    };
-    
-    // Validate input
-    if (!sourceConnectionId || !targetConnectionId) {
-      return NextResponse.json(
-        { success: false, error: 'Source and target connection IDs are required' },
-        { status: 400 }
-      );
-    }
+      direction,
+    } = validation.data;
     
     // Get connections (scoped to user)
     const sourceConnection = connectionStore.getById(sourceConnectionId, user.id);

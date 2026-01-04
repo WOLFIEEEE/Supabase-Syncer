@@ -260,3 +260,37 @@ export interface EnhancedDryRunResult extends DryRunResult {
   validation: SchemaValidationResult;
 }
 
+// ============================================
+// Scheduled Sync Types
+// ============================================
+
+export interface ScheduledSync {
+  id: string;
+  userId: string;
+  name: string;
+  sourceConnectionId: string;
+  targetConnectionId: string;
+  tables: TableConfig[];
+  direction: SyncDirection;
+  cronExpression: string;
+  timezone: string;
+  enabled: boolean;
+  lastRunAt: Date | null;
+  nextRunAt: Date | null;
+  lastRunStatus: 'success' | 'failed' | 'running' | null;
+  lastRunJobId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ScheduleInput {
+  name: string;
+  sourceConnectionId: string;
+  targetConnectionId: string;
+  tables: TableConfig[];
+  direction: SyncDirection;
+  cronExpression: string;
+  timezone?: string;
+  enabled?: boolean;
+}
+

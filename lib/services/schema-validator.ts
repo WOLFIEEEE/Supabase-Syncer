@@ -480,6 +480,188 @@ function compareIndexes(
 }
 
 /**
+ * Check for circular foreign key dependencies
+ */
+export function detectCircularDependencies(
+  tables: DetailedTableSchema[]
+): { hasCircular: boolean; cycles: string[][] } {
+  const graph = new Map<string, string[]>();
+  
+  // Build dependency graph
+  for (const table of tables) {
+    const dependencies = table.foreignKeys.map((fk) => fk.referencedTable);
+    graph.set(table.tableName, dependencies);
+  }
+  
+  const visited = new Set<string>();
+  const recursionStack = new Set<string>();
+  const cycles: string[][] = [];
+  
+  function dfs(node: string, path: string[]): boolean {
+    visited.add(node);
+    recursionStack.add(node);
+    
+    const neighbors = graph.get(node) || [];
+    for (const neighbor of neighbors) {
+      if (!visited.has(neighbor)) {
+        if (dfs(neighbor, [...path, neighbor])) {
+          return true;
+        }
+      } else if (recursionStack.has(neighbor)) {
+        // Found cycle
+        const cycleStart = path.indexOf(neighbor);
+        if (cycleStart >= 0) {
+          cycles.push(path.slice(cycleStart));
+        } else {
+          cycles.push([...path, neighbor]);
+        }
+        return true;
+      }
+    }
+    
+    recursionStack.delete(node);
+    return false;
+  }
+  
+  for (const table of tables) {
+    if (!visited.has(table.tableName)) {
+      dfs(table.tableName, [table.tableName]);
+    }
+  }
+  
+  return { hasCircular: cycles.length > 0, cycles };
+}
+
+/**
+ * Determine optimal sync order based on FK dependencies
+ */
+export function getSyncOrder(tables: DetailedTableSchema[]): string[] {
+  const graph = new Map<string, string[]>();
+  const inDegree = new Map<string, number>();
+  
+  // Initialize
+  for (const table of tables) {
+    graph.set(table.tableName, []);
+    inDegree.set(table.tableName, 0);
+  }
+  
+  // Build graph
+  for (const table of tables) {
+    for (const fk of table.foreignKeys) {
+      if (graph.has(fk.referencedTable)) {
+        const deps = graph.get(fk.referencedTable) || [];
+        deps.push(table.tableName);
+        graph.set(fk.referencedTable, deps);
+        inDegree.set(table.tableName, (inDegree.get(table.tableName) || 0) + 1);
+      }
+    }
+  }
+  
+  // Topological sort
+  const order: string[] = [];
+  const queue = tables
+    .map((t) => t.tableName)
+    .filter((t) => inDegree.get(t) === 0);
+  
+  while (queue.length > 0) {
+    const node = queue.shift()!;
+    order.push(node);
+    
+    for (const neighbor of graph.get(node) || []) {
+      const newDegree = (inDegree.get(neighbor) || 0) - 1;
+      inDegree.set(neighbor, newDegree);
+      if (newDegree === 0) {
+        queue.push(neighbor);
+      }
+    }
+  }
+  
+  // Add any remaining tables (in cycles)
+  for (const table of tables) {
+    if (!order.includes(table.tableName)) {
+      order.push(table.tableName);
+    }
+  }
+  
+  return order;
+}
+
+/**
+ * Estimate sync data volume and duration
+ */
+export function estimateSyncVolume(
+  sourceSchema: DatabaseSchema,
+  tableNames: string[]
+): {
+  totalRows: number;
+  totalSize: string;
+  estimatedDuration: number;
+  largestTable: { name: string; rows: number } | null;
+  warnings: string[];
+} {
+  let totalRows = 0;
+  let totalBytes = 0;
+  let largestTable: { name: string; rows: number } | null = null;
+  const warnings: string[] = [];
+  
+  for (const tableName of tableNames) {
+    const table = sourceSchema.tables.find((t) => t.tableName === tableName);
+    if (table) {
+      totalRows += table.rowCount;
+      
+      // Parse estimated size (e.g., "10 MB", "2 GB")
+      const sizeMatch = table.estimatedSize.match(/^([\d.]+)\s*(bytes?|KB|MB|GB)?$/i);
+      if (sizeMatch) {
+        let bytes = parseFloat(sizeMatch[1]);
+        const unit = (sizeMatch[2] || 'bytes').toLowerCase();
+        if (unit === 'kb') bytes *= 1024;
+        else if (unit === 'mb') bytes *= 1024 * 1024;
+        else if (unit === 'gb') bytes *= 1024 * 1024 * 1024;
+        totalBytes += bytes;
+      }
+      
+      if (!largestTable || table.rowCount > largestTable.rows) {
+        largestTable = { name: table.tableName, rows: table.rowCount };
+      }
+    }
+  }
+  
+  // Generate warnings
+  if (totalRows > 1000000) {
+    warnings.push(`Very large sync: ${totalRows.toLocaleString()} total rows. Consider syncing in batches.`);
+  }
+  if (totalRows > 100000) {
+    warnings.push(`Large dataset: ${totalRows.toLocaleString()} rows. This may take significant time.`);
+  }
+  if (largestTable && largestTable.rows > 500000) {
+    warnings.push(`Large table: "${largestTable.name}" has ${largestTable.rows.toLocaleString()} rows.`);
+  }
+  
+  // Estimate duration (conservative: 500 rows/sec)
+  const estimatedDuration = Math.ceil(totalRows / 500);
+  
+  // Format total size
+  let totalSize: string;
+  if (totalBytes >= 1024 * 1024 * 1024) {
+    totalSize = `${(totalBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  } else if (totalBytes >= 1024 * 1024) {
+    totalSize = `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`;
+  } else if (totalBytes >= 1024) {
+    totalSize = `${(totalBytes / 1024).toFixed(2)} KB`;
+  } else {
+    totalSize = `${totalBytes} bytes`;
+  }
+  
+  return {
+    totalRows,
+    totalSize,
+    estimatedDuration,
+    largestTable,
+    warnings,
+  };
+}
+
+/**
  * Get a human-readable summary of validation results
  */
 export function getValidationSummary(result: SchemaValidationResult): string {
