@@ -81,6 +81,22 @@ const LoaderIcon = () => (
   </svg>
 );
 
+const StopIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="3 6 5 6 21 6"/>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    <line x1="10" y1="11" x2="10" y2="17"/>
+    <line x1="14" y1="11" x2="14" y2="17"/>
+  </svg>
+);
+
+
 // Helper functions
 function formatDuration(seconds: number): string {
   if (seconds < 0 || isNaN(seconds)) return '--';
@@ -195,19 +211,46 @@ export default function SyncDetailPage() {
     return () => clearInterval(interval);
   }, [fetchJob, job?.status]);
 
-  const handleAction = async (action: 'start' | 'pause') => {
+  const handleAction = async (action: 'start' | 'pause' | 'stop') => {
     setIsActioning(true);
     try {
       const response = await fetch(`/api/sync/${jobId}/${action}`, { method: 'POST' });
       const data = await response.json();
       if (data.success) {
-        toast({ title: action === 'start' ? 'Sync started' : 'Pause requested', status: 'success', duration: 2000 });
+        const messages: Record<string, string> = {
+          start: 'Sync started',
+          pause: 'Pause requested',
+          stop: 'Sync stopped',
+        };
+        toast({ title: messages[action], status: action === 'stop' ? 'warning' : 'success', duration: 2000 });
         fetchJob();
       } else {
         toast({ title: `Failed to ${action}`, description: data.error, status: 'error', duration: 3000 });
       }
     } catch {
       toast({ title: `Failed to ${action}`, status: 'error', duration: 3000 });
+    } finally {
+      setIsActioning(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this sync job? This action cannot be undone.')) {
+      return;
+    }
+    
+    setIsActioning(true);
+    try {
+      const response = await fetch(`/api/sync/${jobId}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (data.success) {
+        toast({ title: 'Sync job deleted', status: 'success', duration: 2000 });
+        router.push('/');
+      } else {
+        toast({ title: 'Failed to delete', description: data.error, status: 'error', duration: 3000 });
+      }
+    } catch {
+      toast({ title: 'Failed to delete', status: 'error', duration: 3000 });
     } finally {
       setIsActioning(false);
     }
@@ -276,24 +319,65 @@ export default function SyncDetailPage() {
                 {status.label}
               </Badge>
               
-              {job.status === 'running' && (
-                <Button size="xs" colorScheme="orange" variant="ghost" onClick={() => handleAction('pause')} isLoading={isActioning}>
-                  <PauseIcon />
-                </Button>
-              )}
+              {/* Play/Resume button for non-running jobs */}
               {['paused', 'failed', 'pending'].includes(job.status) && (
-                <Button size="xs" colorScheme="teal" variant="ghost" onClick={() => handleAction('start')} isLoading={isActioning}>
-                  <PlayIcon />
-                </Button>
+                <Tooltip label="Start/Resume sync">
+                  <Button size="xs" colorScheme="teal" variant="ghost" onClick={() => handleAction('start')} isLoading={isActioning}>
+                    <PlayIcon />
+                  </Button>
+                </Tooltip>
               )}
-              <IconButton
-                aria-label="Refresh"
-                icon={<RefreshIcon />}
-                variant="ghost"
-                size="xs"
-                color="gray.500"
-                onClick={fetchJob}
-              />
+              
+              {/* Pause button for running jobs */}
+              {job.status === 'running' && (
+                <Tooltip label="Pause sync">
+                  <Button size="xs" colorScheme="orange" variant="ghost" onClick={() => handleAction('pause')} isLoading={isActioning}>
+                    <PauseIcon />
+                  </Button>
+                </Tooltip>
+              )}
+              
+              {/* Force stop button for running/pending jobs */}
+              {['running', 'pending'].includes(job.status) && (
+                <Tooltip label="Force stop">
+                  <Button 
+                    size="xs" 
+                    colorScheme="red" 
+                    variant="ghost" 
+                    onClick={() => handleAction('stop')} 
+                    isLoading={isActioning}
+                  >
+                    <StopIcon />
+                  </Button>
+                </Tooltip>
+              )}
+              
+              {/* Refresh button */}
+              <Tooltip label="Refresh">
+                <IconButton
+                  aria-label="Refresh"
+                  icon={<RefreshIcon />}
+                  variant="ghost"
+                  size="xs"
+                  color="gray.500"
+                  onClick={fetchJob}
+                />
+              </Tooltip>
+              
+              {/* Delete button - only for completed/failed/paused jobs */}
+              {['completed', 'failed', 'paused'].includes(job.status) && (
+                <Tooltip label="Delete job">
+                  <Button 
+                    size="xs" 
+                    colorScheme="red" 
+                    variant="ghost" 
+                    onClick={handleDelete} 
+                    isLoading={isActioning}
+                  >
+                    <TrashIcon />
+                  </Button>
+                </Tooltip>
+              )}
             </HStack>
           </Flex>
         </Container>
