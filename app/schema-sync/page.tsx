@@ -254,16 +254,45 @@ export default function SchemaSyncPage() {
       const data = await response.json();
       const fullScript = data.data?.migrationPlan?.fullScript || data.data?.fullScript;
       const hasScripts = data.data?.migrationPlan?.scripts?.length > 0;
+      const scripts = data.data?.migrationPlan?.scripts || [];
+      
+      // Check if all scripts are dangerous DROP scripts (tables exist only in target)
+      const allDropScripts = scripts.length > 0 && scripts.every((s: { severity: string; description: string }) => 
+        s.severity === 'dangerous' && s.description.includes('DROP')
+      );
       
       if (data.success && fullScript && hasScripts) {
+        if (allDropScripts) {
+          // Show warning about reversed direction
+          toast({
+            title: 'Tables exist only in target database',
+            description: 'Your source database is empty. Did you mean to swap source and target? The generated script will DROP tables (commented out for safety).',
+            status: 'warning',
+            duration: 8000,
+          });
+        }
         setMigrationScript(fullScript);
         setStep('fix');
       } else {
-        toast({
-          title: 'No migration needed',
-          description: data.error || 'Schemas are already in sync',
-          status: 'info',
-        });
+        // Check if there are validation issues that indicate swapped databases
+        const hasMissingInSource = validationResult?.validation?.issues?.some(
+          (i: ValidationIssue) => i.message.includes('does not exist in source')
+        );
+        
+        if (hasMissingInSource) {
+          toast({
+            title: 'Consider swapping databases',
+            description: 'Tables exist in target but not source. Try selecting your databases in reverse order.',
+            status: 'warning',
+            duration: 6000,
+          });
+        } else {
+          toast({
+            title: 'No migration needed',
+            description: data.error || 'Schemas are already in sync',
+            status: 'info',
+          });
+        }
       }
     } catch (error) {
       toast({ title: 'Failed to generate migration', status: 'error' });
@@ -728,6 +757,45 @@ export default function SchemaSyncPage() {
                   <Alert status="success" borderRadius="md">
                     <AlertIcon />
                     <Text>Schemas are already in sync! No migration needed.</Text>
+                  </Alert>
+                )}
+
+                {/* Alert when tables exist only in target (source is empty) */}
+                {hasCriticalIssues && validationResult.validation.issues.every(
+                  (i: ValidationIssue) => i.message.includes('does not exist in source')
+                ) && (
+                  <Alert status="warning" borderRadius="md">
+                    <AlertIcon />
+                    <Box>
+                      <AlertTitle>Source database appears empty</AlertTitle>
+                      <AlertDescription>
+                        <Text mb={2}>
+                          All {validationResult.validation.summary.critical} tables exist in <strong>{targetConnection?.name}</strong> but not in <strong>{sourceConnection?.name}</strong>.
+                        </Text>
+                        <Text mb={2}>
+                          If you want to <strong>create</strong> these tables in {sourceConnection?.name}, try swapping your source and target:
+                        </Text>
+                        <Button 
+                          size="sm" 
+                          colorScheme="teal" 
+                          onClick={() => {
+                            const temp = sourceId;
+                            setSourceId(targetId);
+                            setTargetId(temp);
+                            setStep('select');
+                            setValidationResult(null);
+                            toast({
+                              title: 'Databases swapped',
+                              description: 'Click "Compare Schemas" to re-compare with swapped databases.',
+                              status: 'info',
+                            });
+                          }}
+                          mt={2}
+                        >
+                          Swap Source ↔ Target
+                        </Button>
+                      </AlertDescription>
+                    </Box>
                   </Alert>
                 )}
               </VStack>

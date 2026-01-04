@@ -101,9 +101,16 @@ function generateTableMigrationScripts(
 ): MigrationScript[] {
   const scripts: MigrationScript[] = [];
   
-  // Handle missing table
+  // Handle table missing in target (need to CREATE)
   if (!targetTable && referenceTable) {
     scripts.push(generateCreateTableScript(referenceTable));
+    return scripts;
+  }
+  
+  // Handle table missing in source/reference but exists in target (need to DROP or skip)
+  if (!referenceTable && targetTable) {
+    // Generate DROP TABLE script - this is DANGEROUS
+    scripts.push(generateDropTableScript(targetTable));
     return scripts;
   }
   
@@ -201,6 +208,39 @@ END $$;
     sql,
     isDestructive: false,
     severity: 'safe',
+  };
+}
+
+/**
+ * Generate DROP TABLE script
+ * WARNING: This is a DANGEROUS operation that will delete all data!
+ */
+function generateDropTableScript(table: DetailedTableSchema): MigrationScript {
+  const sql = `-- DROP table: ${table.tableName}
+-- ⚠️  WARNING: This will DELETE ALL DATA in this table!
+-- ⚠️  This table exists in target but NOT in source.
+-- ⚠️  If you want to KEEP this table, swap your source and target databases.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = '${table.tableName}'
+    ) THEN
+        -- Uncomment the line below to actually drop the table:
+        -- DROP TABLE public."${table.tableName}" CASCADE;
+        RAISE NOTICE 'Table "${table.tableName}" exists in target but not source. Skipping drop for safety.';
+        RAISE NOTICE 'To drop this table, uncomment the DROP TABLE line above.';
+    END IF;
+END $$;
+`;
+
+  return {
+    tableName: table.tableName,
+    description: `DROP table "${table.tableName}" (exists in target but not source) - COMMENTED OUT FOR SAFETY`,
+    sql,
+    isDestructive: true,
+    severity: 'dangerous',
   };
 }
 
