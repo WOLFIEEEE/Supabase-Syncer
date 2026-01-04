@@ -250,10 +250,17 @@ export default function CreateSyncPage() {
 
   const runDryRun = async () => {
     setIsDryRunning(true);
+    
+    // Build headers - include production confirmation if targeting production
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (targetConnection?.environment === 'production') {
+      headers['X-Confirm-Production'] = 'true';
+    }
+    
     try {
       const response = await fetch('/api/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           sourceConnectionId: sourceId,
           targetConnectionId: targetId,
