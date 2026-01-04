@@ -24,6 +24,33 @@ function generateIssueId(): string {
 }
 
 /**
+ * Safely get columns as an array (handles PostgreSQL string format {col1,col2})
+ */
+function getColumns(columns: unknown): string[] {
+  if (!columns) return [];
+  if (Array.isArray(columns)) return columns.map(String);
+  if (typeof columns === 'string') {
+    const trimmed = columns.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      const inner = trimmed.slice(1, -1);
+      if (inner === '') return [];
+      return inner.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+    }
+    return [columns];
+  }
+  return [];
+}
+
+/**
+ * Safely compare two column arrays (sorted)
+ */
+function columnsMatch(cols1: unknown, cols2: unknown): boolean {
+  const arr1 = getColumns(cols1).sort();
+  const arr2 = getColumns(cols2).sort();
+  return JSON.stringify(arr1) === JSON.stringify(arr2);
+}
+
+/**
  * Validate schema compatibility between source and target databases
  */
 export async function validateSchemas(
@@ -479,20 +506,21 @@ function compareConstraints(
   
   for (const targetUnique of targetUniques) {
     const hasMatchingSource = sourceUniques.some(
-      (su) => JSON.stringify(su.columns.sort()) === JSON.stringify(targetUnique.columns.sort())
+      (su) => columnsMatch(su.columns, targetUnique.columns)
     );
     
     if (!hasMatchingSource) {
+      const cols = getColumns(targetUnique.columns);
       issues.push({
         id: generateIssueId(),
         severity: 'MEDIUM',
         category: 'Constraints',
         tableName,
         message: `Target has UNIQUE constraint not in source: ${targetUnique.name}`,
-        details: `Target enforces uniqueness on (${targetUnique.columns.join(', ')}) but source doesn't. Duplicate source data may cause sync failures.`,
+        details: `Target enforces uniqueness on (${cols.join(', ')}) but source doesn't. Duplicate source data may cause sync failures.`,
         recommendation: 'Verify source data meets the uniqueness constraint before syncing.',
       });
-      constraintIssues.push(`UNIQUE (${targetUnique.columns.join(', ')})`);
+      constraintIssues.push(`UNIQUE (${cols.join(', ')})`);
     }
   }
   
@@ -530,11 +558,12 @@ function compareIndexes(
     if (targetIdx.isPrimary) continue; // Skip primary key
     
     const hasMatchingSource = sourceTable.indexes.some(
-      (si) => JSON.stringify(si.columns.sort()) === JSON.stringify(targetIdx.columns.sort())
+      (si) => columnsMatch(si.columns, targetIdx.columns)
     );
     
     if (!hasMatchingSource) {
-      indexDiffs.push(`Target has index: ${targetIdx.name} on (${targetIdx.columns.join(', ')})`);
+      const cols = getColumns(targetIdx.columns);
+      indexDiffs.push(`Target has index: ${targetIdx.name} on (${cols.join(', ')})`);
     }
   }
   
@@ -543,11 +572,12 @@ function compareIndexes(
     if (sourceIdx.isPrimary) continue;
     
     const hasMatchingTarget = targetTable.indexes.some(
-      (ti) => JSON.stringify(ti.columns.sort()) === JSON.stringify(sourceIdx.columns.sort())
+      (ti) => columnsMatch(ti.columns, sourceIdx.columns)
     );
     
     if (!hasMatchingTarget) {
-      indexDiffs.push(`Source has index: ${sourceIdx.name} on (${sourceIdx.columns.join(', ')})`);
+      const cols = getColumns(sourceIdx.columns);
+      indexDiffs.push(`Source has index: ${sourceIdx.name} on (${cols.join(', ')})`);
     }
   }
   

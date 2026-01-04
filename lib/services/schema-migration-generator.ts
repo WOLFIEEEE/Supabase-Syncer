@@ -35,6 +35,33 @@ export interface MigrationPlan {
 }
 
 /**
+ * Safely get columns as an array (handles PostgreSQL string format {col1,col2})
+ */
+function getColumns(columns: unknown): string[] {
+  if (!columns) return [];
+  if (Array.isArray(columns)) return columns.map(String);
+  if (typeof columns === 'string') {
+    const trimmed = columns.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      const inner = trimmed.slice(1, -1);
+      if (inner === '') return [];
+      return inner.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+    }
+    return [columns];
+  }
+  return [];
+}
+
+/**
+ * Safely compare two column arrays (sorted)
+ */
+function columnsMatch(cols1: unknown, cols2: unknown): boolean {
+  const arr1 = getColumns(cols1).sort();
+  const arr2 = getColumns(cols2).sort();
+  return JSON.stringify(arr1) === JSON.stringify(arr2);
+}
+
+/**
  * Generate migration scripts from validation results
  */
 export function generateMigrationPlan(
@@ -156,7 +183,7 @@ function generateTableMigrationScripts(
   // Add missing indexes
   for (const refIndex of referenceTable.indexes) {
     const hasMatchingIndex = targetTable.indexes.some(
-      (ti) => JSON.stringify(ti.columns.sort()) === JSON.stringify(refIndex.columns.sort())
+      (ti) => columnsMatch(ti.columns, refIndex.columns)
     );
     if (!hasMatchingIndex && !refIndex.isPrimary) {
       scripts.push(generateCreateIndexScript(tableName, refIndex));
@@ -546,11 +573,12 @@ END $$;
  */
 function generateCreateIndexScript(
   tableName: string,
-  index: { name: string; columns: string[]; isUnique: boolean; indexType: string }
+  index: { name: string; columns: string[] | unknown; isUnique: boolean; indexType: string }
 ): MigrationScript {
   const uniqueKeyword = index.isUnique ? 'UNIQUE ' : '';
-  const columns = index.columns.map((c) => `"${c}"`).join(', ');
-  const indexName = `idx_${tableName}_${index.columns.join('_')}`;
+  const colsArray = getColumns(index.columns);
+  const columns = colsArray.map((c) => `"${c}"`).join(', ');
+  const indexName = `idx_${tableName}_${colsArray.join('_')}`;
   
   const sql = `-- Create index: ${indexName}
 DO $$
