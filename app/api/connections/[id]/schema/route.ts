@@ -5,6 +5,24 @@ import { inspectDatabaseSchema } from '@/lib/services/schema-inspector';
 import { getUser } from '@/lib/supabase/server';
 import type { DetailedTableSchema, DetailedColumn, ForeignKey, TableIndex } from '@/types';
 
+/**
+ * Safely get columns as an array (handles PostgreSQL string format {col1,col2})
+ */
+function safeColumnsArray(columns: unknown): string[] {
+  if (!columns) return [];
+  if (Array.isArray(columns)) return columns.map(String);
+  if (typeof columns === 'string') {
+    const trimmed = columns.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      const inner = trimmed.slice(1, -1);
+      if (inner === '') return [];
+      return inner.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+    }
+    return [columns];
+  }
+  return [];
+}
+
 interface RouteParams {
   params: Promise<{
     id: string;
@@ -73,14 +91,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           foreignKeyRef: fkMap.get(col.name) || null,
         })),
         rowCount: table.rowCount || 0,
-        primaryKeys: table.primaryKey?.columns || [],
+        primaryKeys: safeColumnsArray(table.primaryKey?.columns),
         foreignKeys: table.foreignKeys.map((fk: ForeignKey) => ({
           column: fk.columnName,
           references: `${fk.referencedTable}(${fk.referencedColumn})`,
         })),
-        indexes: table.indexes.map((idx: TableIndex) => 
-          `${idx.name} (${idx.columns.join(', ')})${idx.isUnique ? ' UNIQUE' : ''}`
-        ),
+        indexes: table.indexes.map((idx: TableIndex) => {
+          const cols = safeColumnsArray(idx.columns);
+          return `${idx.name} (${cols.join(', ')})${idx.isUnique ? ' UNIQUE' : ''}`;
+        }),
       };
     });
     

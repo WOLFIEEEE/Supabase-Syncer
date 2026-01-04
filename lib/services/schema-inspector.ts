@@ -646,7 +646,7 @@ async function getConstraints(
   return result.map((row) => ({
     name: row.constraint_name as string,
     type: row.constraint_type as TableConstraint['type'],
-    columns: (row.columns as string[]) || [],
+    columns: parsePostgresArray(row.columns),
     definition: (row.definition as string) || '',
   }));
 }
@@ -678,7 +678,7 @@ async function getIndexes(
   
   return result.map((row) => ({
     name: row.index_name as string,
-    columns: (row.columns as string[]) || [],
+    columns: parsePostgresArray(row.columns),
     isUnique: row.is_unique as boolean,
     isPrimary: row.is_primary as boolean,
     indexType: row.index_type as string,
