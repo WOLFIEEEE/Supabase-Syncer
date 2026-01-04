@@ -50,12 +50,21 @@ npm run dev
 git clone https://github.com/WOLFIEEEE/Supabase-Syncer.git
 cd Supabase-Syncer
 
-# Create .env file
-cp .env.example .env
+# Create .env file with your external service URLs
+cat > .env << EOF
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+ENCRYPTION_KEY=$(openssl rand -hex 16)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Optional: Add if you have external Redis
+# REDIS_URL=redis://your-redis-host:6379
+EOF
 
 # Build and run
 docker-compose up -d
 ```
+
+> **Note**: Supabase and Redis are expected to be hosted externally. Just provide their URLs in the environment variables.
 
 ### Option 3: Coolify (Recommended for Production)
 
@@ -116,20 +125,29 @@ In the application settings:
 
 ### Step 3: Set Environment Variables
 
-Go to **Environment Variables** and add:
+Go to **Environment Variables** and add your external service URLs:
 
 ```env
-# Required
+# Required: Your externally hosted Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+
+# Required: Encryption key (generate with: openssl rand -hex 16)
 ENCRYPTION_KEY=your_32_character_hex_key
 
-# Recommended
+# Recommended: Your Coolify domain
 NEXT_PUBLIC_APP_URL=https://your-domain.com
+
+# Optional: External Redis for background jobs
+REDIS_URL=redis://your-redis-host:6379
+
+# Environment
 NODE_ENV=production
 ```
 
-> **Security Tip**: Mark sensitive variables as "Secret" in Coolify
+> **Note**: Supabase and Redis should be hosted on external cloud services (Supabase Cloud, Upstash, Redis Cloud, etc.). This application only needs their connection URLs.
+
+> **Security Tip**: Mark `ENCRYPTION_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `REDIS_URL` as "Secret" in Coolify
 
 ### Step 4: Configure Domain
 

@@ -2,8 +2,16 @@
 # Supabase Syncer - Docker Compose
 # For local development and testing
 # =========================================
-
-version: "3.8"
+# 
+# Note: This setup assumes Supabase and Redis 
+# are hosted externally (separate cloud services).
+# Just provide their URLs via environment variables.
+#
+# Usage:
+#   1. Copy .env.example to .env
+#   2. Fill in your external service URLs
+#   3. Run: docker-compose up -d
+# =========================================
 
 services:
   app:
@@ -15,20 +23,20 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Required: Supabase Configuration
+      # Required: Supabase Configuration (external hosted)
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       
-      # Required: Encryption
+      # Required: Encryption key for database URLs
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       
       # Optional: App URL (for OAuth callbacks)
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       
-      # Optional: Database for persistent storage
+      # Optional: External PostgreSQL for persistent storage
       - DATABASE_URL=${DATABASE_URL:-}
       
-      # Optional: Redis for background jobs
+      # Optional: External Redis for background jobs
       - REDIS_URL=${REDIS_URL:-}
       
       # Node environment
@@ -39,34 +47,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    networks:
-      - supabase-syncer-network
-
-  # Optional: Redis for background job processing
-  redis:
-    image: redis:7-alpine
-    container_name: supabase-syncer-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - supabase-syncer-network
-    profiles:
-      - with-redis
-
-networks:
-  supabase-syncer-network:
-    driver: bridge
-
-volumes:
-  redis-data:
-    driver: local
-
