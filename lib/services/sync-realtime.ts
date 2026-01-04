@@ -177,6 +177,13 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
       onLog('info', `Processing table: ${tableName} (${i + 1}/${enabledTables.length})`);
       
       try {
+        // Get row count for this table first
+        const rowCountResult = await sourceConn.client.unsafe(
+          `SELECT COUNT(*) as count FROM "${tableName}"`
+        );
+        const tableRowCount = parseInt(rowCountResult[0]?.count as string || '0', 10);
+        onLog('info', `Table ${tableName} has ${tableRowCount.toLocaleString()} rows to process`);
+        
         // Sync this table with retry
         const result = await syncTableWithRetry({
           sourceConn,
@@ -343,10 +350,16 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
   let hasMore = true;
   let processedRows = 0;
   let checkpointCounter = 0;
+  let batchNumber = 0;
+  
+  onLog('info', `Starting batch processing for ${tableName}...`);
   
   while (hasMore) {
+    batchNumber++;
+    
     // Check for cancellation
     if (isSyncCancelled(jobId)) {
+      onLog('warn', `Sync cancelled during ${tableName} processing`);
       result.cancelled = true;
       result.lastRowId = currentAfterId;
       cancelledJobs.delete(jobId);
@@ -355,12 +368,16 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
     
     // Check for timeout
     if (isJobTimedOut(jobId)) {
+      onLog('error', `Timeout during ${tableName} processing`);
       result.cancelled = true;
       result.lastRowId = currentAfterId;
       return result;
     }
     
     // Get batch of rows to sync with timeout
+    onLog('info', `Fetching batch #${batchNumber} for ${tableName}...`);
+    const batchStartTime = Date.now();
+    
     const batch = await withTimeout(
       async () => getRowsToSync(
         sourceConn,
@@ -373,6 +390,9 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       SYNC_CONFIG.batchTimeout,
       `Batch fetch timeout for table ${tableName}`
     );
+    
+    const fetchDuration = Date.now() - batchStartTime;
+    onLog('info', `Batch #${batchNumber}: fetched ${batch.rows.length} rows in ${fetchDuration}ms`);
     
     hasMore = batch.hasMore;
     currentAfterId = batch.lastId || currentAfterId;
@@ -487,10 +507,8 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       skipped: result.skipped,
     });
     
-    // Log batch progress
-    if (processedRows > 0 && processedRows % (batchSize * 5) === 0) {
-      onLog('info', `${tableName}: Processed ${processedRows} rows (${result.inserted} inserted, ${result.updated} updated)`);
-    }
+    // Log batch completion
+    onLog('info', `Batch #${batchNumber} complete: ${processedRows} total rows (${result.inserted} ins, ${result.updated} upd, ${result.skipped} skip)`);
     
     // Store last processed row for checkpoint
     result.lastRowId = currentAfterId || undefined;

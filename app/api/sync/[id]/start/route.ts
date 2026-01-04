@@ -5,125 +5,162 @@ import { executeSyncRealtime } from '@/lib/services/sync-realtime';
 import { getUser } from '@/lib/supabase/server';
 import type { Json } from '@/types/supabase';
 
+// Allow longer execution time for sync operations (Vercel Pro: max 300s, Hobby: max 60s)
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
+
 interface RouteParams {
   params: Promise<{
     id: string;
   }>;
 }
 
-// POST - Start/resume a sync job (runs in real-time, not queued)
+// POST - Start/resume a sync job with streaming progress
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  try {
-    const user = await getUser();
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
-    const { id } = await params;
-    
-    // Get job details (scoped to user)
-    const job = await supabaseSyncJobStore.getById(id, user.id);
-    
-    if (!job) {
-      return NextResponse.json(
-        { success: false, error: 'Sync job not found' },
-        { status: 404 }
-      );
-    }
-    
-    // Check if job can be started
-    if (!['pending', 'paused', 'failed'].includes(job.status)) {
-      return NextResponse.json(
-        { success: false, error: `Cannot start job with status "${job.status}"` },
-        { status: 400 }
-      );
-    }
-    
-    // Get connections (scoped to user)
-    const [sourceConnection, targetConnection] = await Promise.all([
-      supabaseConnectionStore.getById(job.source_connection_id, user.id),
-      supabaseConnectionStore.getById(job.target_connection_id, user.id),
-    ]);
-    
-    if (!sourceConnection || !targetConnection) {
-      return NextResponse.json(
-        { success: false, error: 'Source or target connection not found' },
-        { status: 404 }
-      );
-    }
-    
-    // Update job status to running
-    await supabaseSyncJobStore.update(id, user.id, { 
-      status: 'running',
-      startedAt: new Date().toISOString(),
-    });
-    
-    await supabaseSyncLogStore.add(id, 'info', 'Sync job started');
-    
-    // Decrypt database URLs
-    const sourceUrl = decrypt(sourceConnection.encrypted_url);
-    const targetUrl = decrypt(targetConnection.encrypted_url);
-    
-    // Parse tables config
-    const tablesConfig = job.tables_config as { tableName: string; enabled: boolean; conflictStrategy?: string }[];
-    
-    // Parse checkpoint if exists
-    const checkpoint = job.checkpoint as {
-      lastTable: string;
-      lastRowId: string;
-      lastUpdatedAt: string;
-      processedTables: string[];
-    } | null;
-    
-    // Execute sync in real-time (non-blocking response)
-    // We start the sync but don't wait for it to complete
-    executeSyncRealtime({
-      jobId: id,
-      sourceUrl,
-      targetUrl,
-      tables: tablesConfig,
-      direction: job.direction,
-      checkpoint: checkpoint || undefined,
-      onProgress: async (progress) => {
-        await supabaseSyncJobStore.update(id, user.id, { progress: progress as unknown as Json });
-      },
-      onLog: async (level, message, metadata) => {
-        await supabaseSyncLogStore.add(id, level, message, metadata);
-      },
-      onComplete: async (success, newCheckpoint) => {
-        await supabaseSyncJobStore.update(id, user.id, {
-          status: success ? 'completed' : 'failed',
-          completedAt: new Date().toISOString(),
-          checkpoint: (newCheckpoint as unknown as Json) || null,
-        });
-      },
-    }).catch(async (error) => {
-      console.error('Sync execution error:', error);
-      await supabaseSyncJobStore.update(id, user.id, { 
-        status: 'failed',
-        completedAt: new Date().toISOString(),
-      });
-      await supabaseSyncLogStore.add(id, 'error', `Sync failed: ${error.message}`);
-    });
-    
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: job.id,
-        status: 'running',
-        message: 'Sync job started. Check /api/sync/{id} for progress.',
-      },
-    });
-    
-  } catch (error) {
-    console.error('Error starting sync job:', error);
+  const user = await getUser();
+  
+  if (!user) {
     return NextResponse.json(
-      { success: false, error: 'Failed to start sync job' },
-      { status: 500 }
+      { success: false, error: 'Authentication required' },
+      { status: 401 }
     );
   }
+  
+  const { id } = await params;
+  
+  // Get job details (scoped to user)
+  const job = await supabaseSyncJobStore.getById(id, user.id);
+  
+  if (!job) {
+    return NextResponse.json(
+      { success: false, error: 'Sync job not found' },
+      { status: 404 }
+    );
+  }
+  
+  // Check if job can be started
+  if (!['pending', 'paused', 'failed'].includes(job.status)) {
+    return NextResponse.json(
+      { success: false, error: `Cannot start job with status "${job.status}"` },
+      { status: 400 }
+    );
+  }
+  
+  // Get connections (scoped to user)
+  const [sourceConnection, targetConnection] = await Promise.all([
+    supabaseConnectionStore.getById(job.source_connection_id, user.id),
+    supabaseConnectionStore.getById(job.target_connection_id, user.id),
+  ]);
+  
+  if (!sourceConnection || !targetConnection) {
+    return NextResponse.json(
+      { success: false, error: 'Source or target connection not found' },
+      { status: 404 }
+    );
+  }
+  
+  // Update job status to running
+  await supabaseSyncJobStore.update(id, user.id, { 
+    status: 'running',
+    startedAt: new Date().toISOString(),
+  });
+  
+  await supabaseSyncLogStore.add(id, 'info', 'Sync job started');
+  
+  // Decrypt database URLs
+  const sourceUrl = decrypt(sourceConnection.encrypted_url);
+  const targetUrl = decrypt(targetConnection.encrypted_url);
+  
+  // Parse tables config
+  const tablesConfig = job.tables_config as { tableName: string; enabled: boolean; conflictStrategy?: string }[];
+  
+  // Parse checkpoint if exists
+  const checkpoint = job.checkpoint as {
+    lastTable: string;
+    lastRowId: string;
+    lastUpdatedAt: string;
+    processedTables: string[];
+  } | null;
+  
+  // Create a streaming response to keep connection alive
+  const encoder = new TextEncoder();
+  
+  const stream = new ReadableStream({
+    async start(controller) {
+      // Send initial message
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'started', jobId: id })}\n\n`));
+      
+      let lastProgressUpdate = 0;
+      
+      try {
+        await executeSyncRealtime({
+          jobId: id,
+          sourceUrl,
+          targetUrl,
+          tables: tablesConfig,
+          direction: job.direction,
+          checkpoint: checkpoint || undefined,
+          onProgress: async (progress) => {
+            try {
+              await supabaseSyncJobStore.update(id, user.id, { progress: progress as unknown as Json });
+              
+              // Send progress update every 2 seconds to keep connection alive
+              const now = Date.now();
+              if (now - lastProgressUpdate > 2000) {
+                lastProgressUpdate = now;
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', progress })}\n\n`));
+              }
+            } catch (err) {
+              console.error('Failed to update progress:', err);
+            }
+          },
+          onLog: async (level, message, metadata) => {
+            try {
+              await supabaseSyncLogStore.add(id, level, message, metadata);
+              // Send log to stream
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'log', level, message })}\n\n`));
+            } catch (err) {
+              console.error('Failed to add log:', err);
+            }
+          },
+          onComplete: async (success, newCheckpoint) => {
+            const finalStatus = success ? 'completed' : 'failed';
+            try {
+              await supabaseSyncJobStore.update(id, user.id, {
+                status: finalStatus,
+                completedAt: new Date().toISOString(),
+                checkpoint: (newCheckpoint as unknown as Json) || null,
+              });
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'complete', success, status: finalStatus })}\n\n`));
+            } catch (err) {
+              console.error('Failed to update completion:', err);
+            }
+          },
+        });
+      } catch (error) {
+        console.error('Sync execution error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        try {
+          await supabaseSyncJobStore.update(id, user.id, { 
+            status: 'failed',
+            completedAt: new Date().toISOString(),
+          });
+          await supabaseSyncLogStore.add(id, 'error', `Sync failed: ${errorMessage}`);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: errorMessage })}\n\n`));
+        } catch (err) {
+          console.error('Failed to update failure status:', err);
+        }
+      }
+      
+      controller.close();
+    },
+  });
+  
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
 }

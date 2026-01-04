@@ -215,6 +215,61 @@ export default function SyncDetailPage() {
     setIsActioning(true);
     try {
       const response = await fetch(`/api/sync/${jobId}/${action}`, { method: 'POST' });
+      
+      // Handle streaming response for start action
+      if (action === 'start' && response.headers.get('content-type')?.includes('text/event-stream')) {
+        toast({ title: 'Sync started', status: 'success', duration: 2000 });
+        
+        // Read the stream in the background
+        const reader = response.body?.getReader();
+        if (reader) {
+          const decoder = new TextDecoder();
+          
+          const readStream = async () => {
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const text = decoder.decode(value);
+                const lines = text.split('\n');
+                
+                for (const line of lines) {
+                  if (line.startsWith('data: ')) {
+                    try {
+                      const data = JSON.parse(line.slice(6));
+                      if (data.type === 'complete') {
+                        toast({ 
+                          title: data.success ? 'Sync completed' : 'Sync failed', 
+                          status: data.success ? 'success' : 'error', 
+                          duration: 3000 
+                        });
+                        fetchJob();
+                      } else if (data.type === 'error') {
+                        toast({ title: 'Sync error', description: data.error, status: 'error', duration: 5000 });
+                        fetchJob();
+                      }
+                    } catch {
+                      // Ignore parse errors
+                    }
+                  }
+                }
+              }
+            } catch (err) {
+              console.error('Stream read error:', err);
+            } finally {
+              setIsActioning(false);
+            }
+          };
+          
+          // Don't await - let it run in background
+          readStream();
+          fetchJob(); // Immediately refresh to show running status
+          return;
+        }
+      }
+      
+      // Handle regular JSON response
       const data = await response.json();
       if (data.success) {
         const messages: Record<string, string> = {
