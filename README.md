@@ -5,6 +5,8 @@ A powerful, self-hosted tool for synchronizing database schemas and data between
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
+![Coolify](https://img.shields.io/badge/Coolify-Compatible-blueviolet)
 
 ## Features
 
@@ -15,85 +17,60 @@ A powerful, self-hosted tool for synchronizing database schemas and data between
 - **Encrypted Storage** - Database URLs encrypted with AES-256-GCM
 - **Safety First** - Dry-run previews, production confirmations, breaking change warnings
 - **Responsive UI** - Works on desktop and mobile
-- **Supabase Auth** - Secure authentication with email/password, Google, GitHub
+- **Supabase Auth** - Secure authentication with email/password
+- **Rate Limiting** - Built-in API protection
+- **Scheduled Syncs** - Cron-like scheduling support
+
+---
 
 ## Quick Start
 
-### 1. Clone & Install
+### Option 1: Local Development
 
 ```bash
-git clone https://github.com/your-repo/supabase-syncer.git
-cd supabase-syncer
+# Clone repository
+git clone https://github.com/WOLFIEEEE/Supabase-Syncer.git
+cd Supabase-Syncer
+
+# Install dependencies
 npm install
+
+# Create environment file
+cp .env.example .env.local
+
+# Edit .env.local with your credentials
+# Then run development server
+npm run dev
 ```
 
-### 2. Create Supabase Project
-
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Navigate to **Project Settings > API** to get your credentials
-3. Enable authentication providers in **Authentication > Providers**:
-   - Email/Password (enabled by default)
-   - Google OAuth (optional)
-   - GitHub OAuth (optional)
-
-### 3. Configure Environment
-
-Create a `.env.local` file:
-
-```env
-# ============================================
-# SUPABASE CONFIGURATION (REQUIRED)
-# ============================================
-
-# Your Supabase project URL
-# Found in: Project Settings > API > Project URL
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-
-# Your Supabase anon/public key
-# Found in: Project Settings > API > Project API keys > anon public
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
-
-# ============================================
-# ENCRYPTION (REQUIRED)
-# ============================================
-
-# Encryption key for storing database URLs securely
-# Generate with: openssl rand -hex 16
-ENCRYPTION_KEY=your_32_character_secret_key_here
-
-# ============================================
-# OPTIONAL CONFIGURATION
-# ============================================
-
-# Persistent database for storing connections and sync jobs
-# If not set, data is stored in memory (lost on restart)
-# DATABASE_URL=postgresql://user:password@host:5432/dbname
-
-# Redis for background job processing
-# If not set, sync jobs run synchronously
-# REDIS_URL=redis://localhost:6379
-```
-
-### 4. Run the Server
+### Option 2: Docker
 
 ```bash
-# Development
-npm run dev
+# Clone repository
+git clone https://github.com/WOLFIEEEE/Supabase-Syncer.git
+cd Supabase-Syncer
 
-# Production
-npm run build
-npm start
+# Create .env file
+cp .env.example .env
+
+# Build and run
+docker-compose up -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to access the application.
+### Option 3: Coolify (Recommended for Production)
+
+See [Coolify Deployment](#coolify-deployment) section below.
+
+---
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Your Supabase anon/public API key |
-| `ENCRYPTION_KEY` | Yes | 32-character key for AES-256-GCM encryption |
+| `NEXT_PUBLIC_SUPABASE_URL` | **Yes** | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Yes** | Your Supabase anon/public API key |
+| `ENCRYPTION_KEY` | **Yes** | 32-character key for AES-256-GCM encryption |
+| `NEXT_PUBLIC_APP_URL` | No | Application URL (for OAuth callbacks) |
 | `DATABASE_URL` | No | PostgreSQL URL for persistent storage |
 | `REDIS_URL` | No | Redis URL for background job processing |
 
@@ -102,32 +79,115 @@ Open [http://localhost:3000](http://localhost:3000) to access the application.
 ```bash
 # Generate ENCRYPTION_KEY (32 hex characters = 16 bytes)
 openssl rand -hex 16
+
+# Example output: a1b2c3d4e5f6789012345678abcdef12
 ```
+
+---
+
+## Coolify Deployment
+
+Coolify is a self-hosted Heroku/Netlify alternative. This application is fully optimized for Coolify deployment.
+
+### Prerequisites
+
+1. A running Coolify instance (v4.x recommended)
+2. A Supabase project with credentials
+3. A domain (optional, Coolify can generate one)
+
+### Step 1: Create New Service
+
+1. Log into your Coolify dashboard
+2. Go to **Projects** → Select or create a project
+3. Click **+ Add Resource** → **Application**
+4. Select **GitHub** (or GitLab/Custom Git)
+5. Connect your repository: `WOLFIEEEE/Supabase-Syncer`
+6. Select branch: `main`
+
+### Step 2: Configure Build Settings
+
+In the application settings:
+
+| Setting | Value |
+|---------|-------|
+| Build Pack | **Dockerfile** |
+| Dockerfile Location | `./Dockerfile` |
+| Port | `3000` |
+
+### Step 3: Set Environment Variables
+
+Go to **Environment Variables** and add:
+
+```env
+# Required
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+ENCRYPTION_KEY=your_32_character_hex_key
+
+# Recommended
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+NODE_ENV=production
+```
+
+> **Security Tip**: Mark sensitive variables as "Secret" in Coolify
+
+### Step 4: Configure Domain
+
+1. Go to **Domains** in your application settings
+2. Add your domain (e.g., `syncer.yourdomain.com`)
+3. Enable **HTTPS** (Let's Encrypt)
+
+### Step 5: Deploy
+
+1. Click **Deploy** button
+2. Wait for build to complete (3-5 minutes first time)
+3. Access your application at your configured domain
+
+### Step 6: Configure Supabase Redirect
+
+After deployment, add your Coolify URL to Supabase:
+
+1. Go to Supabase Dashboard → **Authentication** → **URL Configuration**
+2. Add your domain to **Site URL**: `https://your-domain.com`
+3. Add to **Redirect URLs**: `https://your-domain.com/**`
+
+### Coolify Health Checks
+
+The application includes a built-in health check endpoint:
+
+- **Endpoint**: `/api/status`
+- **Method**: GET
+- **Success**: Returns system health status
+
+Coolify automatically uses this for container health monitoring.
+
+### Scaling on Coolify
+
+For high availability:
+
+1. Go to **Advanced** settings
+2. Increase **Replicas** (e.g., 2-3)
+3. Coolify handles load balancing automatically
+
+---
 
 ## Supabase Setup
 
-### 1. Authentication Providers
+### 1. Create a Supabase Project
 
-In your Supabase Dashboard, go to **Authentication > Providers**:
+1. Go to [supabase.com](https://supabase.com)
+2. Create a new project
+3. Navigate to **Project Settings > API** to get credentials
 
-#### Email/Password
-- Enabled by default
-- Users can sign up with email and password
-- Email confirmation can be enabled/disabled
+### 2. Enable Email Authentication
 
-#### Google OAuth (Optional)
-1. Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com)
-2. Add authorized redirect URI: `https://your-project-id.supabase.co/auth/v1/callback`
-3. Enter Client ID and Secret in Supabase Dashboard
+In **Authentication > Providers**:
+- Email/Password is enabled by default
+- Configure email templates if desired
 
-#### GitHub OAuth (Optional)
-1. Create OAuth App in [GitHub Developer Settings](https://github.com/settings/developers)
-2. Add callback URL: `https://your-project-id.supabase.co/auth/v1/callback`
-3. Enter Client ID and Secret in Supabase Dashboard
+### 3. Database Tables (Optional)
 
-### 2. Database Tables (Optional)
-
-For persistent storage, create these tables in your Supabase project:
+For persistent storage, create these tables:
 
 ```sql
 -- Enable RLS
@@ -192,7 +252,7 @@ CREATE TABLE sync_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS Policy for sync_logs (inherit from parent job)
+-- RLS Policy for sync_logs
 CREATE POLICY "Users can view own sync_logs" ON sync_logs
   FOR SELECT USING (
     EXISTS (
@@ -203,13 +263,14 @@ CREATE POLICY "Users can view own sync_logs" ON sync_logs
   );
 ```
 
+---
+
 ## Usage
 
 ### 1. Create an Account
 
 1. Go to `/signup` to create a new account
-2. Or sign in with Google/GitHub if configured
-3. Verify your email (if email confirmation is enabled)
+2. Verify your email (if email confirmation is enabled)
 
 ### 2. Add Database Connections
 
@@ -235,6 +296,8 @@ CREATE POLICY "Users can view own sync_logs" ON sync_logs
 5. Preview changes with dry-run
 6. Execute sync
 
+---
+
 ## Pages
 
 | Path | Description | Auth Required |
@@ -251,6 +314,8 @@ CREATE POLICY "Users can view own sync_logs" ON sync_logs
 | `/sync/create` | Create sync job | Yes |
 | `/sync/history` | View past syncs | Yes |
 | `/settings` | User settings | Yes |
+
+---
 
 ## API Endpoints
 
@@ -281,6 +346,16 @@ POST /api/sync/:id/start           - Start sync job
 POST /api/sync/:id/pause           - Pause sync job
 ```
 
+### Rate Limits
+
+| Operation | Limit |
+|-----------|-------|
+| Read (GET) | 100 requests/minute |
+| Write (POST, PUT, DELETE) | 20 requests/minute |
+| Sync operations | 10 requests/minute |
+
+---
+
 ## Architecture
 
 ```
@@ -291,8 +366,13 @@ POST /api/sync/:id/pause           - Pause sync job
 │  ├── Dashboard, Connections, Schema Sync, Data Sync         │
 │  └── Real-time status updates, responsive design            │
 ├─────────────────────────────────────────────────────────────┤
+│  Security Layer                                              │
+│  ├── Rate Limiting (in-memory, per-user)                    │
+│  ├── Input Validation (Zod schemas)                         │
+│  └── SSL enforcement for database connections               │
+├─────────────────────────────────────────────────────────────┤
 │  Authentication (Supabase Auth)                              │
-│  ├── Email/Password, Google, GitHub OAuth                   │
+│  ├── Email/Password authentication                          │
 │  ├── Session management with SSR                            │
 │  └── Row Level Security (RLS) ready                         │
 ├─────────────────────────────────────────────────────────────┤
@@ -308,7 +388,9 @@ POST /api/sync/:id/pause           - Pause sync job
 │  ├── Schema Validator (compatibility checks)                │
 │  ├── Migration Generator (SQL DDL scripts)                  │
 │  ├── Diff Engine (row-level comparisons)                    │
-│  └── Sync Engine (batched UPSERT operations)                │
+│  ├── Sync Engine (batched UPSERT operations)                │
+│  ├── Retry Handler (exponential backoff)                    │
+│  └── Scheduler (cron-like scheduling)                       │
 ├─────────────────────────────────────────────────────────────┤
 │  Storage                                                     │
 │  ├── In-Memory Store (default, per-user scoped)             │
@@ -316,6 +398,8 @@ POST /api/sync/:id/pause           - Pause sync job
 │  └── Redis (optional, background job queue)                 │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+---
 
 ## Safety Features
 
@@ -343,6 +427,8 @@ POST /api/sync/:id/pause           - Pause sync job
 - Shows exact insert/update counts
 - Identifies potential issues
 
+---
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
@@ -350,7 +436,11 @@ POST /api/sync/:id/pause           - Pause sync job
 - **Authentication**: Supabase Auth (@supabase/ssr)
 - **Database ORM**: Drizzle ORM + postgres-js
 - **UI**: Chakra UI + Framer Motion
+- **Validation**: Zod
 - **Encryption**: AES-256-GCM
+- **Container**: Docker (multi-stage build)
+
+---
 
 ## Development
 
@@ -366,43 +456,74 @@ npm run lint
 
 # Build for production
 npm run build
+
+# Build Docker image
+docker build -t supabase-syncer .
+
+# Run with Docker Compose
+docker-compose up -d
 ```
 
+---
+
 ## Troubleshooting
+
+### Coolify Build Fails
+
+**"Cannot find module" errors**
+- Ensure all dependencies are in `package.json`
+- Check that `.dockerignore` isn't excluding needed files
+
+**Build timeout**
+- Increase build timeout in Coolify settings
+- First builds may take 5-10 minutes
 
 ### Authentication Issues
 
 **"Invalid login credentials"**
 - Verify email is confirmed (check spam folder)
-- For OAuth, ensure redirect URL is configured correctly in Supabase
+- Check Supabase Auth settings
 
-**OAuth not working**
-- Check that provider is enabled in Supabase Dashboard
-- Verify client ID and secret are correct
-- Ensure callback URL matches: `https://your-project.supabase.co/auth/v1/callback`
+**Session not persisting**
+- Verify `NEXT_PUBLIC_APP_URL` matches your domain
+- Check Supabase redirect URLs include your domain
 
 ### Connection Failed
+
 - Verify PostgreSQL URL format: `postgresql://user:pass@host:5432/db`
 - Check if database allows external connections
 - Supabase requires SSL - ensure URL has `?sslmode=require`
 
-### Schema Loading Slow
-- System uses estimated row counts for performance
-- Large databases may take longer on first load
-- Check network latency to database
-
 ### Data Not Persisting
+
 - By default, data is stored in memory (lost on restart)
 - Set up Supabase database tables for persistent storage
 - Or configure `DATABASE_URL` for external PostgreSQL
+
+---
 
 ## Contributing
 
 Contributions welcome! Please read our contributing guidelines first.
 
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+---
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/WOLFIEEEE/Supabase-Syncer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/WOLFIEEEE/Supabase-Syncer/discussions)
 
 ---
 

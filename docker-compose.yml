@@ -1,0 +1,72 @@
+# =========================================
+# Supabase Syncer - Docker Compose
+# For local development and testing
+# =========================================
+
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: supabase-syncer
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Required: Supabase Configuration
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      
+      # Required: Encryption
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      
+      # Optional: App URL (for OAuth callbacks)
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      
+      # Optional: Database for persistent storage
+      - DATABASE_URL=${DATABASE_URL:-}
+      
+      # Optional: Redis for background jobs
+      - REDIS_URL=${REDIS_URL:-}
+      
+      # Node environment
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - supabase-syncer-network
+
+  # Optional: Redis for background job processing
+  redis:
+    image: redis:7-alpine
+    container_name: supabase-syncer-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - supabase-syncer-network
+    profiles:
+      - with-redis
+
+networks:
+  supabase-syncer-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+
