@@ -624,6 +624,7 @@ function generateFullScript(scripts: MigrationScript[]): string {
   const header = `-- =============================================================================
 -- SCHEMA MIGRATION SCRIPT
 -- Generated: ${new Date().toISOString()}
+-- Total statements: ${scripts.length}
 -- =============================================================================
 -- 
 -- This script will modify your database schema to match the source database.
@@ -634,13 +635,8 @@ function generateFullScript(scripts: MigrationScript[]): string {
 -- - Test in a non-production environment first
 -- - Some operations marked as DANGEROUS may cause data loss
 --
+-- NOTE: Each statement is executed individually with automatic error handling.
 -- =============================================================================
-
--- Start transaction (recommended for safety)
-BEGIN;
-
--- Set search path
-SET search_path TO public;
 
 `;
 
@@ -648,17 +644,8 @@ SET search_path TO public;
   
   const footer = `
 -- =============================================================================
--- COMMIT or ROLLBACK
+-- END OF MIGRATION SCRIPT
 -- =============================================================================
--- If everything looks good, run: COMMIT;
--- If something went wrong, run: ROLLBACK;
--- =============================================================================
-
--- Uncomment the line below to commit changes:
--- COMMIT;
-
--- Or rollback if needed:
--- ROLLBACK;
 `;
 
   return header + body + footer;

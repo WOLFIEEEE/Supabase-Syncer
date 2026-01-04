@@ -12,56 +12,100 @@ interface RouteParams {
 
 /**
  * Split SQL into executable statements, properly handling DO $$ blocks
+ * This parser tracks dollar-quoted strings character by character
  */
 function splitSqlStatements(sql: string): string[] {
   const statements: string[] = [];
   let current = '';
   let inDollarQuote = false;
   let dollarTag = '';
+  let i = 0;
   
-  const lines = sql.split('\n');
+  // Remove transaction wrappers - postgres.js handles transactions differently
+  let cleanedSql = sql
+    .replace(/^\s*BEGIN\s*;\s*/im, '')
+    .replace(/\s*COMMIT\s*;\s*$/im, '')
+    .replace(/\s*ROLLBACK\s*;\s*$/im, '')
+    .replace(/--\s*Uncomment.*COMMIT.*\n?/gi, '')
+    .replace(/--\s*Or rollback.*\n?/gi, '');
   
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    
-    // Skip comment-only lines at the statement level
-    if (!inDollarQuote && current.trim() === '' && trimmedLine.startsWith('--')) {
-      continue;
-    }
-    
-    current += line + '\n';
+  while (i < cleanedSql.length) {
+    const char = cleanedSql[i];
     
     // Check for dollar quote start/end
-    const dollarMatches = line.match(/\$([a-zA-Z_]*)\$/g);
-    if (dollarMatches) {
-      for (const match of dollarMatches) {
+    if (char === '$') {
+      // Look for complete dollar tag like $$ or $tag$
+      let tag = '$';
+      let j = i + 1;
+      
+      // Collect tag name (if any)
+      while (j < cleanedSql.length && /[a-zA-Z0-9_]/.test(cleanedSql[j])) {
+        tag += cleanedSql[j];
+        j++;
+      }
+      
+      // Check for closing $
+      if (j < cleanedSql.length && cleanedSql[j] === '$') {
+        tag += '$';
+        
         if (!inDollarQuote) {
+          // Starting a dollar-quoted string
           inDollarQuote = true;
-          dollarTag = match;
-        } else if (match === dollarTag) {
+          dollarTag = tag;
+          current += tag;
+          i = j + 1;
+          continue;
+        } else if (tag === dollarTag) {
+          // Ending the dollar-quoted string
           inDollarQuote = false;
           dollarTag = '';
+          current += tag;
+          i = j + 1;
+          continue;
         }
       }
     }
     
-    // If we're not in a dollar quote and line ends with semicolon, complete the statement
-    if (!inDollarQuote && trimmedLine.endsWith(';')) {
+    current += char;
+    
+    // Check for statement end (semicolon outside dollar quotes)
+    if (char === ';' && !inDollarQuote) {
       const stmt = current.trim();
-      if (stmt && !stmt.startsWith('--')) {
-        statements.push(stmt);
+      
+      // Skip empty statements and pure comments
+      if (stmt && !isOnlyComments(stmt)) {
+        // Skip SET search_path and other setup commands that might cause issues
+        if (!stmt.toUpperCase().startsWith('SET SEARCH_PATH')) {
+          statements.push(stmt);
+        }
       }
       current = '';
     }
+    
+    i++;
   }
   
   // Handle any remaining content
   const remaining = current.trim();
-  if (remaining && !remaining.startsWith('--')) {
+  if (remaining && !isOnlyComments(remaining)) {
     statements.push(remaining);
   }
   
   return statements;
+}
+
+/**
+ * Check if a string contains only SQL comments
+ */
+function isOnlyComments(sql: string): boolean {
+  const lines = sql.split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('--')) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
