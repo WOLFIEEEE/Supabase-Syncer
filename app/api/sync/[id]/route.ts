@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { syncJobStore, syncLogStore, getJobWithConnections } from '@/lib/db/memory-store';
+import { supabaseSyncJobStore, supabaseSyncLogStore, getJobWithConnections } from '@/lib/db/supabase-store';
 import { getUser } from '@/lib/supabase/server';
 
 interface RouteParams {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const logLimit = parseInt(searchParams.get('logLimit') || '100', 10);
     
     // Get job details (scoped to user)
-    const job = syncJobStore.getById(id, user.id);
+    const job = await supabaseSyncJobStore.getById(id, user.id);
     
     if (!job) {
       return NextResponse.json(
@@ -35,12 +35,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
     
-    const jobWithConnections = getJobWithConnections(job, user.id);
+    const jobWithConnections = await getJobWithConnections(job, user.id);
     
     // Get logs if requested
-    let logs: ReturnType<typeof syncLogStore.getByJobId> = [];
+    let logs: Awaited<ReturnType<typeof supabaseSyncLogStore.getByJobId>> = [];
     if (includeLogs) {
-      logs = syncLogStore.getByJobId(id, logLimit);
+      logs = await supabaseSyncLogStore.getByJobId(id, logLimit);
     }
     
     return NextResponse.json({
@@ -74,7 +74,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     
     const { id } = await params;
     
-    const job = syncJobStore.getById(id, user.id);
+    const job = await supabaseSyncJobStore.getById(id, user.id);
     
     if (!job) {
       return NextResponse.json(
@@ -91,7 +91,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
     
     // Delete job and logs
-    syncJobStore.delete(id, user.id);
+    await supabaseSyncJobStore.delete(id, user.id);
     
     return NextResponse.json({
       success: true,

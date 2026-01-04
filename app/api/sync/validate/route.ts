@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectionStore } from '@/lib/db/memory-store';
+import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { validateSchemas, getValidationSummary } from '@/lib/services/schema-validator';
 import { inspectDatabaseSchema } from '@/lib/services/schema-inspector';
@@ -52,8 +52,10 @@ export async function POST(request: NextRequest) {
     } = validation.data;
     
     // Get connections (scoped to user)
-    const sourceConnection = connectionStore.getById(sourceConnectionId, user.id);
-    const targetConnection = connectionStore.getById(targetConnectionId, user.id);
+    const [sourceConnection, targetConnection] = await Promise.all([
+      supabaseConnectionStore.getById(sourceConnectionId, user.id),
+      supabaseConnectionStore.getById(targetConnectionId, user.id),
+    ]);
     
     if (!sourceConnection) {
       return NextResponse.json(
@@ -70,8 +72,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Decrypt URLs
-    const sourceUrl = decrypt(sourceConnection.encryptedUrl);
-    const targetUrl = decrypt(targetConnection.encryptedUrl);
+    const sourceUrl = decrypt(sourceConnection.encrypted_url);
+    const targetUrl = decrypt(targetConnection.encrypted_url);
     
     // Normalize table list (handle both string[] and TableConfig[])
     let tableNames: string[] = [];

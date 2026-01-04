@@ -72,6 +72,31 @@ See [Coolify Deployment](#coolify-deployment) section below.
 
 ---
 
+## Supabase Database Setup
+
+**Important**: Before using the application, you need to create the required tables in your Supabase project.
+
+### Create Tables
+
+1. Go to your [Supabase Dashboard](https://app.supabase.com)
+2. Select your project
+3. Navigate to **SQL Editor** → **New Query**
+4. Copy and paste the contents of `supabase/migrations/001_create_tables.sql`
+5. Click **Run** to execute
+
+This creates the following tables with Row Level Security (RLS):
+
+| Table | Description |
+|-------|-------------|
+| `connections` | Stores encrypted database connection strings |
+| `sync_jobs` | Tracks synchronization jobs and progress |
+| `sync_logs` | Stores detailed logs for each sync job |
+| `user_settings` | User preferences and settings |
+
+All tables include RLS policies so users can only access their own data.
+
+---
+
 ## Environment Variables
 
 | Variable | Required | Description |

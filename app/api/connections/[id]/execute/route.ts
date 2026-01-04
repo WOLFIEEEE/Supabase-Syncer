@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectionStore } from '@/lib/db/memory-store';
+import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { createDrizzleClient } from '@/lib/services/drizzle-factory';
 import { getUser } from '@/lib/supabase/server';
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     
     // Get connection (scoped to user)
-    const connection = connectionStore.getById(id, user.id);
+    const connection = await supabaseConnectionStore.getById(id, user.id);
     
     if (!connection) {
       return NextResponse.json(
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     
     // Decrypt database URL
-    const databaseUrl = decrypt(connection.encryptedUrl);
+    const databaseUrl = decrypt(connection.encrypted_url);
     
     // Execute SQL
     const client = createDrizzleClient(databaseUrl);

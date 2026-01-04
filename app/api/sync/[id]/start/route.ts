@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectionStore, syncJobStore, syncLogStore } from '@/lib/db/memory-store';
+import { supabaseConnectionStore, supabaseSyncJobStore, supabaseSyncLogStore } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { executeSyncRealtime } from '@/lib/services/sync-realtime';
 import { getUser } from '@/lib/supabase/server';
+import type { Json } from '@/types/supabase';
 
 interface RouteParams {
   params: Promise<{
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     
     // Get job details (scoped to user)
-    const job = syncJobStore.getById(id, user.id);
+    const job = await supabaseSyncJobStore.getById(id, user.id);
     
     if (!job) {
       return NextResponse.json(
@@ -43,8 +44,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     
     // Get connections (scoped to user)
-    const sourceConnection = connectionStore.getById(job.sourceConnectionId, user.id);
-    const targetConnection = connectionStore.getById(job.targetConnectionId, user.id);
+    const [sourceConnection, targetConnection] = await Promise.all([
+      supabaseConnectionStore.getById(job.source_connection_id, user.id),
+      supabaseConnectionStore.getById(job.target_connection_id, user.id),
+    ]);
     
     if (!sourceConnection || !targetConnection) {
       return NextResponse.json(
@@ -54,16 +57,27 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     
     // Update job status to running
-    syncJobStore.update(id, user.id, { 
+    await supabaseSyncJobStore.update(id, user.id, { 
       status: 'running',
-      startedAt: new Date(),
+      startedAt: new Date().toISOString(),
     });
     
-    syncLogStore.add(id, 'info', 'Sync job started');
+    await supabaseSyncLogStore.add(id, 'info', 'Sync job started');
     
     // Decrypt database URLs
-    const sourceUrl = decrypt(sourceConnection.encryptedUrl);
-    const targetUrl = decrypt(targetConnection.encryptedUrl);
+    const sourceUrl = decrypt(sourceConnection.encrypted_url);
+    const targetUrl = decrypt(targetConnection.encrypted_url);
+    
+    // Parse tables config
+    const tablesConfig = job.tables_config as { tableName: string; enabled: boolean; conflictStrategy?: string }[];
+    
+    // Parse checkpoint if exists
+    const checkpoint = job.checkpoint as {
+      lastTable: string;
+      lastRowId: string;
+      lastUpdatedAt: string;
+      processedTables: string[];
+    } | null;
     
     // Execute sync in real-time (non-blocking response)
     // We start the sync but don't wait for it to complete
@@ -71,29 +85,29 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       jobId: id,
       sourceUrl,
       targetUrl,
-      tables: job.tablesConfig,
+      tables: tablesConfig,
       direction: job.direction,
-      checkpoint: job.checkpoint || undefined,
-      onProgress: (progress) => {
-        syncJobStore.updateInternal(id, { progress });
+      checkpoint: checkpoint || undefined,
+      onProgress: async (progress) => {
+        await supabaseSyncJobStore.update(id, user.id, { progress: progress as unknown as Json });
       },
-      onLog: (level, message, metadata) => {
-        syncLogStore.add(id, level, message, metadata);
+      onLog: async (level, message, metadata) => {
+        await supabaseSyncLogStore.add(id, level, message, metadata);
       },
-      onComplete: (success, checkpoint) => {
-        syncJobStore.updateInternal(id, {
+      onComplete: async (success, newCheckpoint) => {
+        await supabaseSyncJobStore.update(id, user.id, {
           status: success ? 'completed' : 'failed',
-          completedAt: new Date(),
-          checkpoint: checkpoint || null,
+          completedAt: new Date().toISOString(),
+          checkpoint: (newCheckpoint as unknown as Json) || null,
         });
       },
-    }).catch((error) => {
+    }).catch(async (error) => {
       console.error('Sync execution error:', error);
-      syncJobStore.updateInternal(id, { 
+      await supabaseSyncJobStore.update(id, user.id, { 
         status: 'failed',
-        completedAt: new Date(),
+        completedAt: new Date().toISOString(),
       });
-      syncLogStore.add(id, 'error', `Sync failed: ${error.message}`);
+      await supabaseSyncLogStore.add(id, 'error', `Sync failed: ${error.message}`);
     });
     
     return NextResponse.json({

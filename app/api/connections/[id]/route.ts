@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectionStore } from '@/lib/db/memory-store';
+import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { getSyncableTables, testConnection } from '@/lib/services/drizzle-factory';
 import { getUser } from '@/lib/supabase/server';
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     
     const { id } = await params;
     
-    const connection = connectionStore.getById(id, user.id);
+    const connection = await supabaseConnectionStore.getById(id, user.id);
     
     if (!connection) {
       return NextResponse.json(
@@ -39,8 +39,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         id: connection.id,
         name: connection.name,
         environment: connection.environment,
-        createdAt: connection.createdAt,
-        updatedAt: connection.updatedAt,
+        createdAt: connection.created_at,
+        updatedAt: connection.updated_at,
       },
     });
     
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     
     const { id } = await params;
     
-    const connection = connectionStore.getById(id, user.id);
+    const connection = await supabaseConnectionStore.getById(id, user.id);
     
     if (!connection) {
       return NextResponse.json(
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     
     // Decrypt and test connection
-    const databaseUrl = decrypt(connection.encryptedUrl);
+    const databaseUrl = decrypt(connection.encrypted_url);
     const testResult = await testConnection(databaseUrl);
     
     if (!testResult.success) {
@@ -124,7 +124,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     
     const { id } = await params;
     
-    const connection = connectionStore.getById(id, user.id);
+    const connection = await supabaseConnectionStore.getById(id, user.id);
     
     if (!connection) {
       return NextResponse.json(
@@ -133,7 +133,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
     
-    connectionStore.delete(id, user.id);
+    await supabaseConnectionStore.delete(id, user.id);
     
     return NextResponse.json({
       success: true,

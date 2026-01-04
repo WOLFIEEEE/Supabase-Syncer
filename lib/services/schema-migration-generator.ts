@@ -123,7 +123,8 @@ function generateTableMigrationScripts(
   }
   
   // Find columns with type mismatches
-  for (const colComparison of comparison.columnComparison) {
+  const colComparisons = comparison.columnComparisons || comparison.columnComparison || [];
+  for (const colComparison of colComparisons) {
     if (colComparison.sourceColumn && colComparison.targetColumn && !colComparison.isCompatible) {
       scripts.push(generateAlterColumnScript(
         tableName,

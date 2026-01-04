@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectionStore } from '@/lib/db/memory-store';
+import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { encrypt, validateDatabaseUrl, maskDatabaseUrl } from '@/lib/services/encryption';
 import { testConnection, getSyncableTables } from '@/lib/services/drizzle-factory';
 import { getUser } from '@/lib/supabase/server';
@@ -27,12 +27,15 @@ export async function GET() {
       );
     }
     
-    const allConnections = connectionStore.getAll(user.id).map((conn) => ({
+    const connections = await supabaseConnectionStore.getAll(user.id);
+    
+    // Map to API response format
+    const allConnections = connections.map((conn) => ({
       id: conn.id,
       name: conn.name,
       environment: conn.environment,
-      createdAt: conn.createdAt,
-      updatedAt: conn.updatedAt,
+      createdAt: conn.created_at,
+      updatedAt: conn.updated_at,
     }));
     
     return NextResponse.json({
@@ -92,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check connection limit per user (max 10 connections)
-    const existingConnections = connectionStore.getAll(user.id);
+    const existingConnections = await supabaseConnectionStore.getAll(user.id);
     if (existingConnections.length >= 10) {
       return NextResponse.json(
         { success: false, error: 'Maximum connection limit reached (10). Please delete an existing connection first.' },
@@ -117,7 +120,7 @@ export async function POST(request: NextRequest) {
     const encryptedUrl = encrypt(databaseUrl);
     
     // Create the connection with user ID
-    const connection = connectionStore.create(user.id, {
+    const connection = await supabaseConnectionStore.create(user.id, {
       name,
       encryptedUrl,
       environment,
@@ -138,8 +141,9 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Error creating connection:', error);
+    const message = error instanceof Error ? error.message : 'Failed to create connection';
     return NextResponse.json(
-      { success: false, error: 'Failed to create connection' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
@@ -185,7 +189,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    const deleted = connectionStore.delete(id, user.id);
+    const deleted = await supabaseConnectionStore.delete(id, user.id);
     
     if (!deleted) {
       return NextResponse.json(

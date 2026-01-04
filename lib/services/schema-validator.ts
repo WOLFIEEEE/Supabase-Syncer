@@ -610,7 +610,7 @@ export function estimateSyncVolume(
       totalRows += table.rowCount;
       
       // Parse estimated size (e.g., "10 MB", "2 GB")
-      const sizeMatch = table.estimatedSize.match(/^([\d.]+)\s*(bytes?|KB|MB|GB)?$/i);
+      const sizeMatch = table.estimatedSize?.match(/^([\d.]+)\s*(bytes?|KB|MB|GB)?$/i);
       if (sizeMatch) {
         let bytes = parseFloat(sizeMatch[1]);
         const unit = (sizeMatch[2] || 'bytes').toLowerCase();

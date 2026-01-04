@@ -1,161 +1,32 @@
-// Core type definitions for Supabase Syncer
-
-export type Environment = 'production' | 'development';
-export type SyncDirection = 'one_way' | 'two_way';
-export type SyncStatus = 'pending' | 'running' | 'completed' | 'failed' | 'paused';
-export type LogLevel = 'info' | 'warn' | 'error';
-export type ConflictStrategy = 'last_write_wins' | 'source_wins' | 'target_wins' | 'manual';
-
-// Database Connection
-export interface Connection {
-  id: string;
-  name: string;
-  encryptedUrl: string;
-  environment: Environment;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface ConnectionInput {
-  name: string;
-  databaseUrl: string;
-  environment: Environment;
-}
-
-// Table configuration for sync
-export interface TableConfig {
-  tableName: string;
-  enabled: boolean;
-  conflictStrategy?: ConflictStrategy;
-}
-
-// Sync Job
-export interface SyncJob {
-  id: string;
-  sourceConnectionId: string;
-  targetConnectionId: string;
-  direction: SyncDirection;
-  status: SyncStatus;
-  tablesConfig: TableConfig[];
-  progress: SyncProgress | null;
-  checkpoint: SyncCheckpoint | null;
-  startedAt: Date | null;
-  completedAt: Date | null;
-  createdAt: Date;
-}
-
-export interface SyncProgress {
-  totalTables: number;
-  completedTables: number;
-  currentTable: string | null;
-  totalRows: number;
-  processedRows: number;
-  insertedRows: number;
-  updatedRows: number;
-  skippedRows: number;
-  errors: number;
-}
-
-export interface SyncCheckpoint {
-  lastTable: string;
-  lastRowId: string;
-  lastUpdatedAt: string;
-  processedTables: string[];
-}
-
-// Sync Log
-export interface SyncLog {
-  id: string;
-  syncJobId: string;
-  level: LogLevel;
-  message: string;
-  metadata: Record<string, unknown> | null;
-  createdAt: Date;
-}
-
-// Diff Engine Types
-export interface TableDiff {
-  tableName: string;
-  inserts: number;
-  updates: number;
-  sourceRowCount: number;
-  targetRowCount: number;
-  sampleInserts: Record<string, unknown>[];
-  sampleUpdates: Record<string, unknown>[];
-}
-
-export interface SchemaDiff {
-  tableName: string;
-  missingInTarget: boolean;
-  missingInSource: boolean;
-  columnDifferences: ColumnDiff[];
-}
-
-export interface ColumnDiff {
-  columnName: string;
-  sourceType: string | null;
-  targetType: string | null;
-  issue: 'missing_in_target' | 'missing_in_source' | 'type_mismatch';
-}
-
-// Conflict for two-way sync
-export interface Conflict {
-  id: string;
-  tableName: string;
-  rowId: string;
-  sourceData: Record<string, unknown>;
-  targetData: Record<string, unknown>;
-  sourceUpdatedAt: Date;
-  targetUpdatedAt: Date;
-  resolution: 'pending' | 'source' | 'target' | 'merged';
-}
-
-// API Response types
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
-
-// Dry run result
-export interface DryRunResult {
-  tables: TableDiff[];
-  schemaIssues: SchemaDiff[];
-  estimatedDuration: number; // in seconds
-  warnings: string[];
-}
-
-// Worker job data
-export interface SyncJobData {
-  jobId: string;
-  sourceConnectionId: string;
-  targetConnectionId: string;
-  direction: SyncDirection;
-  tablesConfig: TableConfig[];
-  checkpoint?: SyncCheckpoint;
-}
-
-// Session types
-export interface SessionPayload {
-  authenticated: boolean;
-  expiresAt: number;
-}
+/**
+ * Common Type Definitions
+ * 
+ * Types used across the application for schema inspection,
+ * validation, and migration generation.
+ */
 
 // ============================================
-// Schema Inspection Types
+// Column Types
 // ============================================
 
 export interface DetailedColumn {
   name: string;
   dataType: string;
-  udtName: string;  // underlying type (e.g., uuid, timestamptz)
+  udtName: string;
   isNullable: boolean;
   defaultValue: string | null;
-  isPrimaryKey: boolean;
   maxLength: number | null;
   numericPrecision: number | null;
+  isPrimaryKey: boolean;
   ordinalPosition: number;
+  // Legacy aliases for backward compatibility
+  characterMaxLength?: number | null;
+  numericScale?: number | null;
 }
+
+// ============================================
+// Constraint Types
+// ============================================
 
 export interface ForeignKey {
   constraintName: string;
@@ -181,18 +52,24 @@ export interface TableIndex {
   indexType: string;
 }
 
+// ============================================
+// Table Schema Types
+// ============================================
+
+export interface PrimaryKey {
+  constraintName: string;
+  columns: string[];
+}
+
 export interface DetailedTableSchema {
   tableName: string;
   columns: DetailedColumn[];
-  primaryKey: {
-    columns: string[];
-    constraintName: string;
-  } | null;
+  primaryKey: PrimaryKey | null;
   foreignKeys: ForeignKey[];
   constraints: TableConstraint[];
   indexes: TableIndex[];
   rowCount: number;
-  estimatedSize: string;
+  estimatedSize?: string;
 }
 
 export interface DatabaseSchema {
@@ -203,7 +80,7 @@ export interface DatabaseSchema {
 }
 
 // ============================================
-// Schema Validation Types
+// Validation Types
 // ============================================
 
 export type ValidationSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
@@ -211,12 +88,58 @@ export type ValidationSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO'
 export interface ValidationIssue {
   id: string;
   severity: ValidationSeverity;
-  category: string;
   tableName: string;
   columnName?: string;
+  category?: string;
+  issue?: string;
   message: string;
-  details: string;
+  details?: string;
   recommendation: string;
+  canAutoFix?: boolean;
+}
+
+export interface ColumnComparisonResult {
+  columnName: string;
+  column?: string; // Alias for columnName
+  sourceColumn: DetailedColumn | null;
+  targetColumn: DetailedColumn | null;
+  sourceType?: string | null;
+  targetType?: string | null;
+  sourcePrecision?: number | null;
+  targetPrecision?: number | null;
+  sourceNullable?: boolean | null;
+  targetNullable?: boolean | null;
+  sourceDefault?: string | null;
+  targetDefault?: string | null;
+  status?: 'match' | 'missing_in_source' | 'missing_in_target' | 'type_mismatch' | 'nullable_mismatch';
+  canAutoMigrate?: boolean;
+  isCompatible: boolean;
+  issues: string[];
+}
+
+export interface TableComparisonResult {
+  tableName: string;
+  table?: string; // Alias for tableName
+  existsInSource: boolean;
+  existsInTarget: boolean;
+  isCompatible: boolean;
+  status?: 'match' | 'missing_in_source' | 'missing_in_target' | 'schema_mismatch';
+  sourceColumns?: string[];
+  targetColumns?: string[];
+  columnComparisons?: ColumnComparisonResult[];
+  columnComparison: ColumnComparisonResult[]; // Used by schema-validator
+  foreignKeyIssues: string[];
+  constraintIssues: string[];
+  indexDifferences: string[];
+  indexIssues?: string[];
+}
+
+export interface ValidationSummary {
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  info: number;
 }
 
 export interface SchemaValidationResult {
@@ -224,73 +147,133 @@ export interface SchemaValidationResult {
   canProceed: boolean;
   requiresConfirmation: boolean;
   issues: ValidationIssue[];
-  summary: {
-    critical: number;
-    high: number;
-    medium: number;
-    low: number;
-    info: number;
-  };
+  summary: ValidationSummary;
   sourceSchema: DatabaseSchema;
   targetSchema: DatabaseSchema;
   comparisonDetails: TableComparisonResult[];
+  // Legacy properties for backward compatibility
+  isCompatible?: boolean;
+  canSync?: boolean;
+  tableComparisons?: TableComparisonResult[];
+  totalTables?: number;
+  matchingTables?: number;
+  missingInSource?: number;
+  missingInTarget?: number;
+  schemaMismatch?: number;
 }
 
-export interface TableComparisonResult {
+// ============================================
+// Migration Types
+// ============================================
+
+export interface MigrationScript {
   tableName: string;
-  existsInSource: boolean;
-  existsInTarget: boolean;
-  isCompatible: boolean;
-  columnComparison: ColumnComparisonResult[];
-  foreignKeyIssues: string[];
-  constraintIssues: string[];
-  indexDifferences: string[];
+  operation: 'CREATE_TABLE' | 'ADD_COLUMN' | 'ALTER_COLUMN' | 'ADD_CONSTRAINT' | 'ADD_INDEX' | 'DROP_COLUMN' | 'DROP_TABLE';
+  sql: string;
+  isBreaking: boolean;
+  requiresManualReview: boolean;
+  estimatedImpact: 'low' | 'medium' | 'high';
+  description: string;
 }
 
-export interface ColumnComparisonResult {
-  columnName: string;
-  sourceColumn: DetailedColumn | null;
-  targetColumn: DetailedColumn | null;
-  isCompatible: boolean;
-  issues: string[];
-}
-
-// Extended dry run result with validation
-export interface EnhancedDryRunResult extends DryRunResult {
-  validation: SchemaValidationResult;
+export interface MigrationPlan {
+  scripts: MigrationScript[];
+  safeScripts: MigrationScript[];
+  breakingScripts: MigrationScript[];
+  manualReviewRequired: MigrationScript[];
+  combinedSQL: string;
+  rollbackSQL: string;
+  estimatedDuration: string;
+  riskLevel: 'low' | 'medium' | 'high';
 }
 
 // ============================================
-// Scheduled Sync Types
+// Sync Types
 // ============================================
 
-export interface ScheduledSync {
-  id: string;
-  userId: string;
-  name: string;
-  sourceConnectionId: string;
-  targetConnectionId: string;
-  tables: TableConfig[];
-  direction: SyncDirection;
-  cronExpression: string;
-  timezone: string;
+export interface SyncProgress {
+  totalTables: number;
+  completedTables: number;
+  currentTable: string | null;
+  totalRows: number;
+  processedRows: number;
+  insertedRows: number;
+  updatedRows: number;
+  skippedRows: number;
+  errors: number;
+}
+
+export interface SyncCheckpoint {
+  lastTable: string;
+  lastRowId: string;
+  lastUpdatedAt: string;
+  processedTables: string[];
+}
+
+export interface TableConfig {
+  tableName: string;
   enabled: boolean;
-  lastRunAt: Date | null;
-  nextRunAt: Date | null;
-  lastRunStatus: 'success' | 'failed' | 'running' | null;
-  lastRunJobId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  conflictStrategy?: 'source_wins' | 'target_wins' | 'last_write_wins' | 'manual';
 }
 
-export interface ScheduleInput {
-  name: string;
+// ============================================
+// Queue Types
+// ============================================
+
+export interface SyncJobData {
+  jobId: string;
   sourceConnectionId: string;
   targetConnectionId: string;
-  tables: TableConfig[];
-  direction: SyncDirection;
-  cronExpression: string;
-  timezone?: string;
-  enabled?: boolean;
+  tablesConfig: TableConfig[];
+  direction: 'one_way' | 'two_way';
+  checkpoint?: SyncCheckpoint;
+  // Alternative properties for direct URL usage
+  sourceUrl?: string;
+  targetUrl?: string;
+  tables?: TableConfig[];
 }
 
+// ============================================
+// Conflict Types
+// ============================================
+
+export type ConflictStrategy = 'last_write_wins' | 'source_wins' | 'target_wins' | 'manual';
+
+export interface Conflict {
+  id: string;
+  tableName: string;
+  rowId: string;
+  sourceData: Record<string, unknown>;
+  targetData: Record<string, unknown>;
+  sourceUpdatedAt: Date;
+  targetUpdatedAt: Date;
+  resolution: 'pending' | 'source' | 'target' | 'merged';
+}
+
+// ============================================
+// Diff Types
+// ============================================
+
+export interface ColumnDiff {
+  columnName: string;
+  sourceType: string | null;
+  targetType: string | null;
+  issue: 'missing_in_source' | 'missing_in_target' | 'type_mismatch' | 'compatible';
+}
+
+export interface SchemaDiff {
+  tableName: string;
+  missingInSource: boolean;
+  missingInTarget: boolean;
+  columnDifferences: ColumnDiff[];
+}
+
+export interface TableDiff {
+  tableName: string;
+  sourceRowCount: number;
+  targetRowCount: number;
+  inserts: number;
+  updates: number;
+  sampleInserts: Record<string, unknown>[];
+  sampleUpdates: Record<string, unknown>[];
+}

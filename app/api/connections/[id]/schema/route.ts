@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectionStore } from '@/lib/db/memory-store';
+import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { inspectDatabaseSchema } from '@/lib/services/schema-inspector';
 import { getUser } from '@/lib/supabase/server';
+import type { DetailedTableSchema, DetailedColumn, ForeignKey, TableIndex } from '@/types';
 
 interface RouteParams {
   params: Promise<{
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     
     // Get connection
-    const connection = connectionStore.getById(id, user.id);
+    const connection = await supabaseConnectionStore.getById(id, user.id);
     
     if (!connection) {
       return NextResponse.json(
@@ -44,13 +45,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
     
     // Decrypt database URL
-    const databaseUrl = decrypt(connection.encryptedUrl);
+    const databaseUrl = decrypt(connection.encrypted_url);
     
     // Inspect schema
     const schema = await inspectDatabaseSchema(databaseUrl);
     
     // Transform to UI-friendly format
-    const tables = schema.tables.map((table) => {
+    const tables = schema.tables.map((table: DetailedTableSchema) => {
       // Build a map of column name -> foreign key reference
       const fkMap = new Map<string, string>();
       for (const fk of table.foreignKeys) {
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       
       return {
         name: table.tableName,
-        columns: table.columns.map((col) => ({
+        columns: table.columns.map((col: DetailedColumn) => ({
           name: col.name,
           type: col.udtName || col.dataType,
           nullable: col.isNullable,
@@ -73,11 +74,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         })),
         rowCount: table.rowCount || 0,
         primaryKeys: table.primaryKey?.columns || [],
-        foreignKeys: table.foreignKeys.map((fk) => ({
+        foreignKeys: table.foreignKeys.map((fk: ForeignKey) => ({
           column: fk.columnName,
           references: `${fk.referencedTable}(${fk.referencedColumn})`,
         })),
-        indexes: table.indexes.map((idx) => 
+        indexes: table.indexes.map((idx: TableIndex) => 
           `${idx.name} (${idx.columns.join(', ')})${idx.isUnique ? ' UNIQUE' : ''}`
         ),
       };

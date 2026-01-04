@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { syncJobStore, syncLogStore } from '@/lib/db/memory-store';
+import { supabaseSyncJobStore, supabaseSyncLogStore } from '@/lib/db/supabase-store';
 import { markSyncCancelled } from '@/lib/services/sync-realtime';
 import { getUser } from '@/lib/supabase/server';
 
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     
     // Get job details (scoped to user)
-    const job = syncJobStore.getById(id, user.id);
+    const job = await supabaseSyncJobStore.getById(id, user.id);
     
     if (!job) {
       return NextResponse.json(
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Mark job for cancellation
     markSyncCancelled(id);
     
-    syncLogStore.add(id, 'warn', 'Pause requested - job will pause after current batch');
+    await supabaseSyncLogStore.add(id, 'warn', 'Pause requested - job will pause after current batch');
     
     return NextResponse.json({
       success: true,

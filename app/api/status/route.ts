@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectionStore } from '@/lib/db/memory-store';
+import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 
 // Track server start time for uptime
 const serverStartTime = Date.now();
@@ -126,8 +126,12 @@ function checkSupabaseAuth(): { status: string; message: string } {
   };
 }
 
-function getConnectionStats() {
-  return connectionStore.getSystemStats();
+async function getConnectionStats() {
+  try {
+    return await supabaseConnectionStore.getSystemStats();
+  } catch {
+    return { total: 0, production: 0, development: 0 };
+  }
 }
 
 /**
@@ -150,7 +154,7 @@ export async function GET() {
 
     const encryption = checkEncryption();
     const auth = checkSupabaseAuth();
-    const connections = getConnectionStats();
+    const connections = await getConnectionStats();
 
     const uptime = Date.now() - serverStartTime;
 

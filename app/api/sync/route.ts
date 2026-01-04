@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectionStore, syncJobStore, getJobWithConnections } from '@/lib/db/memory-store';
+import { supabaseConnectionStore, supabaseSyncJobStore, getJobWithConnections } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { calculateDiff } from '@/lib/services/diff-engine';
 import { getUser } from '@/lib/supabase/server';
@@ -39,8 +39,10 @@ export async function GET(request: NextRequest) {
       ? paginationValidation.data 
       : { limit: 50, offset: 0 };
     
-    const jobs = syncJobStore.getAll(user.id, limit, offset);
-    const jobsWithConnections = jobs.map(job => getJobWithConnections(job, user.id));
+    const jobs = await supabaseSyncJobStore.getAll(user.id, limit, offset);
+    const jobsWithConnections = await Promise.all(
+      jobs.map(job => getJobWithConnections(job, user.id))
+    );
     
     return NextResponse.json({
       success: true,
@@ -98,8 +100,10 @@ export async function POST(request: NextRequest) {
     } = validation.data;
     
     // Get connections (scoped to user)
-    const sourceConnection = connectionStore.getById(sourceConnectionId, user.id);
-    const targetConnection = connectionStore.getById(targetConnectionId, user.id);
+    const [sourceConnection, targetConnection] = await Promise.all([
+      supabaseConnectionStore.getById(sourceConnectionId, user.id),
+      supabaseConnectionStore.getById(targetConnectionId, user.id),
+    ]);
     
     if (!sourceConnection || !targetConnection) {
       return NextResponse.json(
@@ -125,8 +129,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Decrypt URLs
-    const sourceUrl = decrypt(sourceConnection.encryptedUrl);
-    const targetUrl = decrypt(targetConnection.encryptedUrl);
+    const sourceUrl = decrypt(sourceConnection.encrypted_url);
+    const targetUrl = decrypt(targetConnection.encrypted_url);
     
     // Get enabled tables
     const enabledTables = tables.filter((t) => t.enabled).map((t) => t.tableName);
@@ -193,7 +197,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Check concurrent job limit (max 3 running jobs per user)
-    const runningJobs = syncJobStore.getAll(user.id, 100, 0).filter(
+    const allJobs = await supabaseSyncJobStore.getAll(user.id, 100, 0);
+    const runningJobs = allJobs.filter(
       job => job.status === 'running' || job.status === 'pending'
     );
     if (runningJobs.length >= 3) {
@@ -204,7 +209,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Create sync job (with user ID)
-    const job = syncJobStore.create(user.id, {
+    const job = await supabaseSyncJobStore.create(user.id, {
       sourceConnectionId,
       targetConnectionId,
       direction,
