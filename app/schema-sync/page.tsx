@@ -252,8 +252,11 @@ export default function SchemaSyncPage() {
       });
 
       const data = await response.json();
-      if (data.success && data.data?.fullScript) {
-        setMigrationScript(data.data.fullScript);
+      const fullScript = data.data?.migrationPlan?.fullScript || data.data?.fullScript;
+      const hasScripts = data.data?.migrationPlan?.scripts?.length > 0;
+      
+      if (data.success && fullScript && hasScripts) {
+        setMigrationScript(fullScript);
         setStep('fix');
       } else {
         toast({
