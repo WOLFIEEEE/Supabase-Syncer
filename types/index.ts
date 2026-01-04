@@ -72,8 +72,19 @@ export interface DetailedTableSchema {
   estimatedSize?: string;
 }
 
+// ============================================
+// ENUM Types
+// ============================================
+
+export interface EnumType {
+  name: string;
+  schema: string;
+  values: string[];
+}
+
 export interface DatabaseSchema {
   tables: DetailedTableSchema[];
+  enums: EnumType[];
   syncableTables: string[];
   version: string;
   inspectedAt: Date;

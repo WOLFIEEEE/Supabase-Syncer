@@ -13,6 +13,7 @@ import type {
   TableIndex,
   DetailedTableSchema,
   DatabaseSchema,
+  EnumType,
 } from '@/types';
 
 /**
@@ -27,6 +28,9 @@ export async function inspectDatabaseSchema(databaseUrl: string): Promise<Databa
     // Get PostgreSQL version
     const versionResult = await connection.client`SELECT version()`;
     const version = (versionResult[0]?.version as string) || 'Unknown';
+    
+    // Get all ENUM types first
+    const enums = await getEnumTypes(connection);
     
     // Get all public tables
     const tablesResult = await connection.client`
@@ -67,6 +71,7 @@ export async function inspectDatabaseSchema(databaseUrl: string): Promise<Databa
     
     return {
       tables,
+      enums,
       syncableTables,
       version,
       inspectedAt: new Date(),
@@ -77,6 +82,30 @@ export async function inspectDatabaseSchema(databaseUrl: string): Promise<Databa
       await connection.close();
     }
   }
+}
+
+/**
+ * Get all ENUM types from the database
+ */
+async function getEnumTypes(connection: DrizzleConnection): Promise<EnumType[]> {
+  const result = await connection.client`
+    SELECT 
+      t.typname as enum_name,
+      n.nspname as schema_name,
+      array_agg(e.enumlabel ORDER BY e.enumsortorder) as enum_values
+    FROM pg_type t
+    JOIN pg_enum e ON t.oid = e.enumtypid
+    JOIN pg_namespace n ON t.typnamespace = n.oid
+    WHERE n.nspname = 'public'
+    GROUP BY t.typname, n.nspname
+    ORDER BY t.typname
+  `;
+  
+  return result.map((row) => ({
+    name: row.enum_name as string,
+    schema: row.schema_name as string,
+    values: (row.enum_values as string[]) || [],
+  }));
 }
 
 /**

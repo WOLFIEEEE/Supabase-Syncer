@@ -11,6 +11,7 @@ import type {
   ValidationIssue,
   SchemaValidationResult,
   TableComparisonResult,
+  EnumType,
 } from '@/types';
 
 export interface MigrationScript {
@@ -41,6 +42,17 @@ export function generateMigrationPlan(
   direction: 'source_to_target' | 'target_to_source' = 'source_to_target'
 ): MigrationPlan {
   const scripts: MigrationScript[] = [];
+  
+  // Get source and target enums (with fallback for backward compatibility)
+  const sourceEnums = validationResult.sourceSchema.enums || [];
+  const targetEnums = validationResult.targetSchema.enums || [];
+  
+  // Process ENUM differences first (ENUMs must be created before tables that use them)
+  if (direction === 'source_to_target') {
+    scripts.push(...generateEnumMigrationScripts(sourceEnums, targetEnums));
+  } else {
+    scripts.push(...generateEnumMigrationScripts(targetEnums, sourceEnums));
+  }
   
   // Process each table comparison
   for (const comparison of validationResult.comparisonDetails) {
@@ -238,6 +250,167 @@ END $$;
   return {
     tableName: table.tableName,
     description: `DROP table "${table.tableName}" (exists in target but not source) - COMMENTED OUT FOR SAFETY`,
+    sql,
+    isDestructive: true,
+    severity: 'dangerous',
+  };
+}
+
+/**
+ * Generate migration scripts for ENUM type differences
+ */
+function generateEnumMigrationScripts(
+  sourceEnums: EnumType[],
+  targetEnums: EnumType[]
+): MigrationScript[] {
+  const scripts: MigrationScript[] = [];
+  
+  const sourceEnumMap = new Map(sourceEnums.map((e) => [e.name, e]));
+  const targetEnumMap = new Map(targetEnums.map((e) => [e.name, e]));
+  
+  // Find ENUMs that exist in source but not in target (need to CREATE)
+  for (const [enumName, sourceEnum] of sourceEnumMap) {
+    const targetEnum = targetEnumMap.get(enumName);
+    
+    if (!targetEnum) {
+      // ENUM doesn't exist in target - create it
+      scripts.push(generateCreateEnumScript(sourceEnum));
+    } else {
+      // ENUM exists in both - check for value differences
+      const sourceValues = new Set(sourceEnum.values);
+      const targetValues = new Set(targetEnum.values);
+      
+      // Find values in source but not in target (need to ADD)
+      for (const value of sourceValues) {
+        if (!targetValues.has(value)) {
+          scripts.push(generateAddEnumValueScript(enumName, value, sourceEnum.values));
+        }
+      }
+    }
+  }
+  
+  // Find ENUMs that exist in target but not in source (may need to DROP)
+  for (const [enumName, targetEnum] of targetEnumMap) {
+    if (!sourceEnumMap.has(enumName)) {
+      scripts.push(generateDropEnumScript(targetEnum));
+    }
+  }
+  
+  return scripts;
+}
+
+/**
+ * Generate CREATE TYPE script for ENUM
+ */
+function generateCreateEnumScript(enumType: EnumType): MigrationScript {
+  const values = enumType.values.map((v) => `'${v.replace(/'/g, "''")}'`).join(', ');
+  
+  const sql = `-- Create ENUM type: ${enumType.name}
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON t.typnamespace = n.oid
+        WHERE t.typname = '${enumType.name}'
+        AND n.nspname = 'public'
+    ) THEN
+        CREATE TYPE public."${enumType.name}" AS ENUM (${values});
+        RAISE NOTICE 'Created ENUM type: ${enumType.name}';
+    ELSE
+        RAISE NOTICE 'ENUM type already exists: ${enumType.name}';
+    END IF;
+END $$;
+`;
+
+  return {
+    tableName: `ENUM:${enumType.name}`,
+    description: `Create ENUM type "${enumType.name}" with values: ${enumType.values.join(', ')}`,
+    sql,
+    isDestructive: false,
+    severity: 'safe',
+  };
+}
+
+/**
+ * Generate ALTER TYPE script to add a new ENUM value
+ */
+function generateAddEnumValueScript(
+  enumName: string,
+  newValue: string,
+  allValues: string[]
+): MigrationScript {
+  // Find the position to insert the new value (after the previous value in source order)
+  const valueIndex = allValues.indexOf(newValue);
+  const afterValue = valueIndex > 0 ? allValues[valueIndex - 1] : null;
+  
+  const afterClause = afterValue 
+    ? ` AFTER '${afterValue.replace(/'/g, "''")}'` 
+    : '';
+  
+  const sql = `-- Add value to ENUM type: ${enumName}
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        JOIN pg_namespace n ON t.typnamespace = n.oid
+        WHERE t.typname = '${enumName}'
+        AND n.nspname = 'public'
+        AND e.enumlabel = '${newValue.replace(/'/g, "''")}'
+    ) THEN
+        ALTER TYPE public."${enumName}" ADD VALUE '${newValue.replace(/'/g, "''")}'${afterClause};
+        RAISE NOTICE 'Added value "${newValue}" to ENUM: ${enumName}';
+    ELSE
+        RAISE NOTICE 'ENUM value already exists: ${enumName}.${newValue}';
+    END IF;
+END $$;
+`;
+
+  return {
+    tableName: `ENUM:${enumName}`,
+    description: `Add value "${newValue}" to ENUM type "${enumName}"`,
+    sql,
+    isDestructive: false,
+    severity: 'safe',
+  };
+}
+
+/**
+ * Generate DROP TYPE script for ENUM
+ * WARNING: This will fail if any tables still use this type!
+ */
+function generateDropEnumScript(enumType: EnumType): MigrationScript {
+  const sql = `-- DROP ENUM type: ${enumType.name}
+-- ⚠️  WARNING: This ENUM exists in target but NOT in source.
+-- ⚠️  This will FAIL if any tables still use this type!
+-- ⚠️  If you want to KEEP this ENUM, swap your source and target databases.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON t.typnamespace = n.oid
+        WHERE t.typname = '${enumType.name}'
+        AND n.nspname = 'public'
+    ) THEN
+        -- Check if ENUM is still in use
+        IF EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE udt_name = '${enumType.name}'
+            AND table_schema = 'public'
+        ) THEN
+            RAISE NOTICE 'ENUM "${enumType.name}" is still in use by tables. Skipping drop.';
+        ELSE
+            -- Uncomment the line below to actually drop the ENUM:
+            -- DROP TYPE public."${enumType.name}";
+            RAISE NOTICE 'ENUM "${enumType.name}" exists in target but not source. Skipping drop for safety.';
+        END IF;
+    END IF;
+END $$;
+`;
+
+  return {
+    tableName: `ENUM:${enumType.name}`,
+    description: `DROP ENUM type "${enumType.name}" (exists in target but not source) - COMMENTED OUT FOR SAFETY`,
     sql,
     isDestructive: true,
     severity: 'dangerous',
@@ -492,7 +665,11 @@ function generateRollbackScript(
 ): string {
   const rollbackStatements: string[] = [];
   
-  for (const script of scripts) {
+  // Process scripts in reverse order for proper rollback sequence
+  // (e.g., drop tables before dropping ENUMs they depend on)
+  const reversedScripts = [...scripts].reverse();
+  
+  for (const script of reversedScripts) {
     // Generate inverse operations where possible
     if (script.description.startsWith('Add column')) {
       const match = script.description.match(/Add column "(.+)" .+ to "(.+)"/);
@@ -508,7 +685,29 @@ ALTER TABLE public."${match[2]}" DROP COLUMN IF EXISTS "${match[1]}";
 DROP TABLE IF EXISTS public."${match[1]}" CASCADE;
 `);
       }
-    } else if (script.description.startsWith('Create')) {
+    } else if (script.description.startsWith('Create ENUM type')) {
+      const match = script.description.match(/Create ENUM type "(.+)"/);
+      if (match) {
+        rollbackStatements.push(`-- Rollback: ${script.description}
+DROP TYPE IF EXISTS public."${match[1]}";
+`);
+      }
+    } else if (script.description.startsWith('Add value')) {
+      // ENUM values cannot be easily removed in PostgreSQL
+      // You would need to recreate the type
+      const match = script.description.match(/Add value "(.+)" to ENUM type "(.+)"/);
+      if (match) {
+        rollbackStatements.push(`-- Rollback: ${script.description}
+-- WARNING: PostgreSQL does not support removing ENUM values directly.
+-- To remove value "${match[1]}" from ENUM "${match[2]}", you would need to:
+-- 1. Create a new ENUM type without the value
+-- 2. Update all columns to use the new type
+-- 3. Drop the old type
+-- 4. Rename the new type
+-- This requires manual intervention.
+`);
+      }
+    } else if (script.description.startsWith('Create') && script.description.includes('index')) {
       const match = script.description.match(/Create .+index on "(.+)"/);
       if (match) {
         const indexName = script.sql.match(/CREATE .+INDEX "(.+?)"/)?.[1];
@@ -531,6 +730,7 @@ DROP INDEX IF EXISTS public."${indexName}";
 -- =============================================================================
 -- WARNING: This will undo the migration changes
 -- Some changes (like type alterations) cannot be automatically rolled back
+-- ENUM value additions cannot be automatically rolled back in PostgreSQL
 -- =============================================================================
 
 BEGIN;
@@ -575,7 +775,32 @@ function getFullDataType(column: DetailedColumn): string {
     'bpchar': 'CHAR',
   };
   
-  return typeMap[type] || type.toUpperCase();
+  // Check if it's a mapped type
+  if (typeMap[type]) {
+    return typeMap[type];
+  }
+  
+  // Check if it's likely a user-defined type (ENUM) - don't uppercase these
+  // User-defined types in PostgreSQL have dataType = 'USER-DEFINED'
+  // Also, don't uppercase if it's not a known PostgreSQL type
+  const knownTypes = [
+    'uuid', 'text', 'varchar', 'char', 'int4', 'int8', 'int2',
+    'float4', 'float8', 'numeric', 'decimal', 'bool', 'boolean',
+    'timestamp', 'timestamptz', 'date', 'time', 'timetz',
+    'json', 'jsonb', 'bytea', 'serial', 'bigserial', 'smallserial',
+    'money', 'inet', 'cidr', 'macaddr', 'bit', 'varbit',
+    'point', 'line', 'lseg', 'box', 'path', 'polygon', 'circle',
+    'interval', 'xml', 'oid', 'regproc', 'regclass',
+  ];
+  
+  const isKnownType = knownTypes.some(kt => type.toLowerCase().includes(kt));
+  
+  if (column.dataType === 'USER-DEFINED' || !isKnownType) {
+    // It's an ENUM or custom type - keep original name with proper quoting
+    return `public."${type}"`;
+  }
+  
+  return type.toUpperCase();
 }
 
 /**
