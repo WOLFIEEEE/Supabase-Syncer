@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectionStore } from '@/lib/db/memory-store';
 import { decrypt } from '@/lib/services/encryption';
 import { validateSchemas } from '@/lib/services/schema-validator';
+import { inspectDatabaseSchema } from '@/lib/services/schema-inspector';
 import { generateMigrationPlan, generateQuickFixSQL } from '@/lib/services/schema-migration-generator';
 import { getUser } from '@/lib/supabase/server';
 
@@ -53,13 +54,6 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (!tables || !Array.isArray(tables) || tables.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'At least one table must be specified' },
-        { status: 400 }
-      );
-    }
-    
     // Get connections (scoped to user)
     const sourceConnection = connectionStore.getById(sourceConnectionId, user.id);
     const targetConnection = connectionStore.getById(targetConnectionId, user.id);
@@ -82,8 +76,52 @@ export async function POST(request: NextRequest) {
     const sourceUrl = decrypt(sourceConnection.encryptedUrl);
     const targetUrl = decrypt(targetConnection.encryptedUrl);
     
+    // Auto-discover tables if not specified
+    let tableNames = tables;
+    
+    if (!tables || !Array.isArray(tables) || tables.length === 0) {
+      // Auto-discover tables from both databases
+      const [sourceSchema, targetSchema] = await Promise.all([
+        inspectDatabaseSchema(sourceUrl),
+        inspectDatabaseSchema(targetUrl),
+      ]);
+      
+      // Get union of all table names from both databases
+      const allTables = new Set([
+        ...sourceSchema.tables.map((t) => t.tableName),
+        ...targetSchema.tables.map((t) => t.tableName),
+      ]);
+      
+      tableNames = Array.from(allTables);
+      
+      // If both databases are empty, return empty migration
+      if (tableNames.length === 0) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            type: 'full_migration',
+            migrationPlan: {
+              scripts: [],
+              summary: {
+                totalScripts: 0,
+                safeScripts: 0,
+                cautionScripts: 0,
+                dangerousScripts: 0,
+              },
+              fullScript: '-- No tables found in either database\n-- Nothing to migrate',
+              rollbackScript: '-- No rollback needed',
+            },
+            validation: {
+              summary: { critical: 0, high: 0, medium: 0, low: 0, info: 0 },
+              canProceed: true,
+            },
+          },
+        });
+      }
+    }
+    
     // Run validation to get schema differences
-    const validationResult = await validateSchemas(sourceUrl, targetUrl, tables);
+    const validationResult = await validateSchemas(sourceUrl, targetUrl, tableNames);
     
     // If specific issue requested, generate quick fix
     if (issueId) {
