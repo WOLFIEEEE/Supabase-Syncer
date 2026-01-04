@@ -246,9 +246,8 @@ function compareTable(
     return result;
   }
   
-  // Validate required columns
-  validateRequiredColumns(tableName, sourceTable, issues);
-  validateRequiredColumns(tableName, targetTable, issues);
+  // Validate required columns (check both tables together to avoid duplicates)
+  validateRequiredColumnsForSync(tableName, sourceTable, targetTable, issues);
   
   // Compare columns
   result.columnComparison = compareColumns(tableName, sourceTable, targetTable, issues);
@@ -271,64 +270,101 @@ function compareTable(
 }
 
 /**
- * Validate required sync columns
+ * Validate required sync columns for both source and target tables
+ * Reports each issue only once, indicating which database(s) are affected
  */
-function validateRequiredColumns(
+function validateRequiredColumnsForSync(
   tableName: string,
-  table: DetailedTableSchema,
+  sourceTable: DetailedTableSchema,
+  targetTable: DetailedTableSchema,
   issues: ValidationIssue[]
 ): void {
-  const idColumn = table.columns.find((c) => c.name === 'id');
-  const updatedAtColumn = table.columns.find((c) => c.name === 'updated_at');
+  const sourceIdCol = sourceTable.columns.find((c) => c.name === 'id');
+  const targetIdCol = targetTable.columns.find((c) => c.name === 'id');
+  const sourceUpdatedAtCol = sourceTable.columns.find((c) => c.name === 'updated_at');
+  const targetUpdatedAtCol = targetTable.columns.find((c) => c.name === 'updated_at');
   
   // Check id column
-  if (!idColumn) {
+  const sourceMissingId = !sourceIdCol;
+  const targetMissingId = !targetIdCol;
+  
+  if (sourceMissingId || targetMissingId) {
+    const location = sourceMissingId && targetMissingId 
+      ? 'both databases' 
+      : sourceMissingId ? 'source database' : 'target database';
     issues.push({
       id: generateIssueId(),
       severity: 'CRITICAL',
       category: 'Required Columns',
       tableName,
       columnName: 'id',
-      message: 'Missing required "id" column',
+      message: `Missing required "id" column in ${location}`,
       details: 'Sync requires an "id" column of type UUID as the primary key.',
       recommendation: 'Add an "id UUID PRIMARY KEY" column to the table.',
     });
-  } else if (idColumn.udtName !== 'uuid') {
-    issues.push({
-      id: generateIssueId(),
-      severity: 'CRITICAL',
-      category: 'Required Columns',
-      tableName,
-      columnName: 'id',
-      message: `"id" column has wrong type: ${idColumn.udtName}`,
-      details: 'The "id" column must be of type UUID for sync to work correctly.',
-      recommendation: 'Alter the "id" column to be UUID type.',
-    });
+  } else {
+    // Check id column type
+    const sourceIdWrongType = sourceIdCol.udtName !== 'uuid';
+    const targetIdWrongType = targetIdCol.udtName !== 'uuid';
+    
+    if (sourceIdWrongType || targetIdWrongType) {
+      const location = sourceIdWrongType && targetIdWrongType 
+        ? 'both databases' 
+        : sourceIdWrongType ? 'source database' : 'target database';
+      const wrongType = sourceIdWrongType ? sourceIdCol.udtName : targetIdCol.udtName;
+      issues.push({
+        id: generateIssueId(),
+        severity: 'CRITICAL',
+        category: 'Required Columns',
+        tableName,
+        columnName: 'id',
+        message: `"id" column has wrong type (${wrongType}) in ${location}`,
+        details: 'The "id" column must be of type UUID for sync to work correctly.',
+        recommendation: 'Alter the "id" column to be UUID type.',
+      });
+    }
   }
   
   // Check updated_at column
-  if (!updatedAtColumn) {
+  const sourceMissingUpdatedAt = !sourceUpdatedAtCol;
+  const targetMissingUpdatedAt = !targetUpdatedAtCol;
+  
+  if (sourceMissingUpdatedAt || targetMissingUpdatedAt) {
+    const location = sourceMissingUpdatedAt && targetMissingUpdatedAt 
+      ? 'both databases' 
+      : sourceMissingUpdatedAt ? 'source database' : 'target database';
     issues.push({
       id: generateIssueId(),
       severity: 'CRITICAL',
       category: 'Required Columns',
       tableName,
       columnName: 'updated_at',
-      message: 'Missing required "updated_at" column',
+      message: `Missing required "updated_at" column in ${location}`,
       details: 'Sync requires an "updated_at" column of type TIMESTAMPTZ for incremental sync.',
-      recommendation: 'Add an "updated_at TIMESTAMPTZ NOT NULL" column to the table.',
+      recommendation: 'Add an "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()" column and create an update trigger.',
     });
-  } else if (!['timestamptz', 'timestamp'].includes(updatedAtColumn.udtName)) {
-    issues.push({
-      id: generateIssueId(),
-      severity: 'CRITICAL',
-      category: 'Required Columns',
-      tableName,
-      columnName: 'updated_at',
-      message: `"updated_at" column has wrong type: ${updatedAtColumn.udtName}`,
-      details: 'The "updated_at" column must be of type TIMESTAMPTZ or TIMESTAMP.',
-      recommendation: 'Alter the "updated_at" column to be TIMESTAMPTZ type.',
-    });
+  } else {
+    // Check updated_at column type
+    const validTypes = ['timestamptz', 'timestamp'];
+    const sourceWrongType = !validTypes.includes(sourceUpdatedAtCol.udtName);
+    const targetWrongType = !validTypes.includes(targetUpdatedAtCol.udtName);
+    
+    if (sourceWrongType || targetWrongType) {
+      const location = sourceWrongType && targetWrongType 
+        ? 'both databases' 
+        : sourceWrongType ? 'source database' : 'target database';
+      const wrongType = sourceWrongType ? sourceUpdatedAtCol.udtName : targetUpdatedAtCol.udtName;
+      issues.push({
+        id: generateIssueId(),
+        severity: 'CRITICAL',
+        category: 'Required Columns',
+        tableName,
+        columnName: 'updated_at',
+        message: `"updated_at" column has wrong type (${wrongType}) in ${location}`,
+        details: 'The "updated_at" column must be of type TIMESTAMPTZ or TIMESTAMP.',
+        recommendation: 'Alter the "updated_at" column to be TIMESTAMPTZ type.',
+      });
+    }
   }
 }
 
