@@ -109,36 +109,25 @@ function checkEncryption(): { status: string; message: string } {
   };
 }
 
-function checkSession(): { status: string; message: string } {
-  const sessionSecret = process.env.SESSION_SECRET;
+function checkSupabaseAuth(): { status: string; message: string } {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
-  if (!sessionSecret) {
+  if (!supabaseUrl || !supabaseKey) {
     return {
       status: 'error',
-      message: 'SESSION_SECRET not set. Authentication will not work.',
-    };
-  }
-
-  if (sessionSecret.length < 32) {
-    return {
-      status: 'error',
-      message: 'SESSION_SECRET should be at least 32 characters.',
+      message: 'Supabase not configured. Authentication will not work.',
     };
   }
 
   return {
     status: 'ok',
-    message: 'Session security configured',
+    message: 'Supabase authentication configured',
   };
 }
 
 function getConnectionStats() {
-  const connections = connectionStore.getAll();
-  return {
-    total: connections.length,
-    production: connections.filter(c => c.environment === 'production').length,
-    development: connections.filter(c => c.environment === 'development').length,
-  };
+  return connectionStore.getSystemStats();
 }
 
 /**
@@ -160,7 +149,7 @@ export async function GET() {
     ]);
 
     const encryption = checkEncryption();
-    const session = checkSession();
+    const auth = checkSupabaseAuth();
     const connections = getConnectionStats();
 
     const uptime = Date.now() - serverStartTime;
@@ -168,7 +157,7 @@ export async function GET() {
     // Determine overall application status
     const hasErrors = 
       encryption.status === 'error' || 
-      session.status === 'error' ||
+      auth.status === 'error' ||
       database.status === 'error' ||
       redis.status === 'error';
 
@@ -183,7 +172,7 @@ export async function GET() {
         database,
         redis,
         encryption,
-        session,
+        auth,
         connections,
       },
     });

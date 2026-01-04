@@ -80,7 +80,7 @@ interface SystemStatus {
     status: 'ok' | 'error';
     message: string;
   };
-  session: {
+  auth: {
     status: 'ok' | 'error';
     message: string;
   };
@@ -260,19 +260,19 @@ export default function StatusPage() {
                 </CardBody>
               </Card>
 
-              {/* Session */}
+              {/* Authentication */}
               <Card bg="surface.800" borderColor="surface.700">
                 <CardBody>
                   <HStack spacing={4} mb={3}>
-                    {getStatusIcon(status.session.status)}
+                    {getStatusIcon(status.auth.status)}
                     <VStack align="start" spacing={0} flex={1}>
-                      <Text color="white" fontWeight="bold">Session Security</Text>
-                      <Badge colorScheme={getStatusColor(status.session.status)} size="sm">
-                        {status.session.status.toUpperCase()}
+                      <Text color="white" fontWeight="bold">Authentication</Text>
+                      <Badge colorScheme={getStatusColor(status.auth.status)} size="sm">
+                        {status.auth.status.toUpperCase()}
                       </Badge>
                     </VStack>
                   </HStack>
-                  <Text color="surface.400" fontSize="sm">{status.session.message}</Text>
+                  <Text color="surface.400" fontSize="sm">{status.auth.message}</Text>
                 </CardBody>
               </Card>
             </SimpleGrid>

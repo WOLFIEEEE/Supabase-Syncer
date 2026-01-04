@@ -88,6 +88,16 @@ export const connectionStore = {
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   },
   
+  // System-level stats (no user filtering) - for status endpoint
+  getSystemStats: (): { total: number; production: number; development: number } => {
+    const all = Array.from(connections.values());
+    return {
+      total: all.length,
+      production: all.filter(c => c.environment === 'production').length,
+      development: all.filter(c => c.environment === 'development').length,
+    };
+  },
+  
   getById: (id: string, userId: string): StoredConnection | undefined => {
     const connection = connections.get(id);
     // Only return if the connection belongs to the user
