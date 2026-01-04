@@ -271,19 +271,19 @@ function generateEnumMigrationScripts(
   // Find ENUMs that exist in source but not in target (need to CREATE)
   for (const [enumName, sourceEnum] of sourceEnumMap) {
     const targetEnum = targetEnumMap.get(enumName);
+    const sourceValues = getEnumValues(sourceEnum);
     
     if (!targetEnum) {
       // ENUM doesn't exist in target - create it
       scripts.push(generateCreateEnumScript(sourceEnum));
     } else {
       // ENUM exists in both - check for value differences
-      const sourceValues = new Set(sourceEnum.values);
-      const targetValues = new Set(targetEnum.values);
+      const targetValues = new Set(getEnumValues(targetEnum));
       
       // Find values in source but not in target (need to ADD)
       for (const value of sourceValues) {
         if (!targetValues.has(value)) {
-          scripts.push(generateAddEnumValueScript(enumName, value, sourceEnum.values));
+          scripts.push(generateAddEnumValueScript(enumName, value, sourceValues));
         }
       }
     }
@@ -300,10 +300,18 @@ function generateEnumMigrationScripts(
 }
 
 /**
+ * Safely get values array from enum type
+ */
+function getEnumValues(enumType: EnumType): string[] {
+  return Array.isArray(enumType.values) ? enumType.values : [];
+}
+
+/**
  * Generate CREATE TYPE script for ENUM
  */
 function generateCreateEnumScript(enumType: EnumType): MigrationScript {
-  const values = enumType.values.map((v) => `'${v.replace(/'/g, "''")}'`).join(', ');
+  const enumValues = getEnumValues(enumType);
+  const values = enumValues.map((v) => `'${v.replace(/'/g, "''")}'`).join(', ');
   
   const sql = `-- Create ENUM type: ${enumType.name}
 DO $$
@@ -324,7 +332,7 @@ END $$;
 
   return {
     tableName: `ENUM:${enumType.name}`,
-    description: `Create ENUM type "${enumType.name}" with values: ${enumType.values.join(', ')}`,
+    description: `Create ENUM type "${enumType.name}" with values: ${enumValues.join(', ')}`,
     sql,
     isDestructive: false,
     severity: 'safe',

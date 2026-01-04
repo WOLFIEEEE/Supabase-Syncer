@@ -104,8 +104,60 @@ async function getEnumTypes(connection: DrizzleConnection): Promise<EnumType[]> 
   return result.map((row) => ({
     name: row.enum_name as string,
     schema: row.schema_name as string,
-    values: (row.enum_values as string[]) || [],
+    values: parsePostgresArray(row.enum_values),
   }));
+}
+
+/**
+ * Parse PostgreSQL array to JavaScript array
+ * Handles both native arrays and string representations like {val1,val2}
+ */
+function parsePostgresArray(value: unknown): string[] {
+  if (!value) {
+    return [];
+  }
+  
+  // If it's already an array, return it
+  if (Array.isArray(value)) {
+    return value.map(String);
+  }
+  
+  // If it's a string (PostgreSQL array notation), parse it
+  if (typeof value === 'string') {
+    // Remove the curly braces and split by comma
+    const trimmed = value.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      const inner = trimmed.slice(1, -1);
+      if (inner === '') {
+        return [];
+      }
+      // Handle quoted values and simple values
+      const values: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < inner.length; i++) {
+        const char = inner[i];
+        if (char === '"' && (i === 0 || inner[i - 1] !== '\\')) {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          values.push(current.replace(/^"|"$/g, '').replace(/\\"/g, '"'));
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      // Don't forget the last value
+      if (current) {
+        values.push(current.replace(/^"|"$/g, '').replace(/\\"/g, '"'));
+      }
+      return values;
+    }
+    // Single value without braces
+    return [value];
+  }
+  
+  return [];
 }
 
 /**

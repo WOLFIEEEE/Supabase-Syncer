@@ -96,9 +96,15 @@ function compareEnumTypes(
   const sourceEnumMap = new Map(sourceEnums.map((e) => [e.name, e]));
   const targetEnumMap = new Map(targetEnums.map((e) => [e.name, e]));
   
+  // Helper to safely get values array
+  const getValues = (enumObj: { values: string[] }): string[] => {
+    return Array.isArray(enumObj.values) ? enumObj.values : [];
+  };
+  
   // Check for ENUMs in source but not in target
   for (const [enumName, sourceEnum] of sourceEnumMap) {
     const targetEnum = targetEnumMap.get(enumName);
+    const sourceValues = getValues(sourceEnum);
     
     if (!targetEnum) {
       issues.push({
@@ -107,16 +113,17 @@ function compareEnumTypes(
         category: 'ENUM Types',
         tableName: `ENUM:${enumName}`,
         message: `ENUM type "${enumName}" does not exist in target database`,
-        details: `Source has ENUM "${enumName}" with values: ${sourceEnum.values.join(', ')}. Tables using this ENUM will fail to sync.`,
+        details: `Source has ENUM "${enumName}" with values: ${sourceValues.join(', ')}. Tables using this ENUM will fail to sync.`,
         recommendation: 'The migration will create this ENUM type automatically.',
       });
     } else {
       // Check for value differences
-      const sourceValues = new Set(sourceEnum.values);
-      const targetValues = new Set(targetEnum.values);
+      const targetValues = getValues(targetEnum);
+      const sourceValuesSet = new Set(sourceValues);
+      const targetValuesSet = new Set(targetValues);
       
       // Values in source but not in target
-      const missingInTarget = sourceEnum.values.filter((v) => !targetValues.has(v));
+      const missingInTarget = sourceValues.filter((v) => !targetValuesSet.has(v));
       if (missingInTarget.length > 0) {
         issues.push({
           id: generateIssueId(),
@@ -124,13 +131,13 @@ function compareEnumTypes(
           category: 'ENUM Types',
           tableName: `ENUM:${enumName}`,
           message: `ENUM "${enumName}" is missing values in target: ${missingInTarget.join(', ')}`,
-          details: `Source values: [${sourceEnum.values.join(', ')}], Target values: [${targetEnum.values.join(', ')}]`,
+          details: `Source values: [${sourceValues.join(', ')}], Target values: [${targetValues.join(', ')}]`,
           recommendation: 'The migration will add the missing values to the target ENUM.',
         });
       }
       
       // Values in target but not in source (informational - won't cause sync issues)
-      const extraInTarget = targetEnum.values.filter((v) => !sourceValues.has(v));
+      const extraInTarget = targetValues.filter((v) => !sourceValuesSet.has(v));
       if (extraInTarget.length > 0) {
         issues.push({
           id: generateIssueId(),
@@ -148,13 +155,14 @@ function compareEnumTypes(
   // Check for ENUMs in target but not in source
   for (const [enumName, targetEnum] of targetEnumMap) {
     if (!sourceEnumMap.has(enumName)) {
+      const targetValues = getValues(targetEnum);
       issues.push({
         id: generateIssueId(),
         severity: 'INFO',
         category: 'ENUM Types',
         tableName: `ENUM:${enumName}`,
         message: `ENUM type "${enumName}" exists in target but not in source`,
-        details: `Target has ENUM "${enumName}" with values: ${targetEnum.values.join(', ')}. This won't affect sync from source to target.`,
+        details: `Target has ENUM "${enumName}" with values: ${targetValues.join(', ')}. This won't affect sync from source to target.`,
         recommendation: 'No action needed unless you want to keep schemas identical.',
       });
     }
