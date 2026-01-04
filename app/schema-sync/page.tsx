@@ -170,6 +170,7 @@ export default function SchemaSyncPage() {
   const [isComparing, setIsComparing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [executionStatus, setExecutionStatus] = useState<string>('');
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [migrationScript, setMigrationScript] = useState<string>('');
   const [executionResults, setExecutionResults] = useState<MigrationResult[]>([]);
@@ -313,7 +314,24 @@ export default function SchemaSyncPage() {
     }
 
     setIsExecuting(true);
+    setExecutionStatus('Connecting to database...');
+    
+    // Show a toast to indicate execution has started
+    toast({
+      title: 'Executing migration...',
+      description: 'This may take a few minutes for large migrations. Please wait.',
+      status: 'info',
+      duration: null, // Keep it open
+      isClosable: true,
+      id: 'migration-progress',
+    });
+    
     try {
+      setExecutionStatus('Running SQL statements...');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
+      
       const response = await fetch(`/api/connections/${targetId}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -321,9 +339,16 @@ export default function SchemaSyncPage() {
           sql: migrationScript,
           confirmationPhrase: isTargetProduction ? confirmationInput : undefined,
         }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       const data = await response.json();
+      
+      // Close the progress toast
+      toast.close('migration-progress');
+      
       if (data.data?.results) {
         setExecutionResults(data.data.results);
         setStep('complete');
@@ -344,12 +369,34 @@ export default function SchemaSyncPage() {
           });
         }
       } else {
-        toast({ title: 'Migration failed', description: data.error, status: 'error' });
+        toast({ 
+          title: 'Migration failed', 
+          description: data.error || 'Unknown error occurred', 
+          status: 'error',
+          duration: 10000,
+        });
       }
     } catch (error) {
-      toast({ title: 'Execution failed', status: 'error' });
+      toast.close('migration-progress');
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast({ 
+          title: 'Migration timed out', 
+          description: 'The migration took too long. Check server logs for progress.',
+          status: 'error',
+          duration: 10000,
+        });
+      } else {
+        toast({ 
+          title: 'Execution failed', 
+          description: error instanceof Error ? error.message : 'Network error',
+          status: 'error',
+          duration: 10000,
+        });
+      }
     } finally {
       setIsExecuting(false);
+      setExecutionStatus('');
     }
   };
 
@@ -864,7 +911,7 @@ export default function SchemaSyncPage() {
                     size="lg"
                     onClick={executeMigration}
                     isLoading={isExecuting}
-                    loadingText="Executing..."
+                    loadingText={executionStatus || 'Executing...'}
                     isDisabled={isTargetProduction && confirmationInput !== targetConnection?.name}
                     leftIcon={<PlayIcon />}
                     flex={2}
@@ -876,6 +923,22 @@ export default function SchemaSyncPage() {
                 <Text color="surface.500" fontSize="sm" textAlign="center">
                   Or copy the script and run it manually in psql, pgAdmin, or Supabase SQL Editor
                 </Text>
+
+                {/* Execution Progress Indicator */}
+                {isExecuting && (
+                  <Alert status="info" borderRadius="md" mt={4}>
+                    <Spinner size="sm" mr={3} />
+                    <Box>
+                      <AlertTitle>Migration in progress</AlertTitle>
+                      <AlertDescription>
+                        <Text>{executionStatus || 'Running SQL statements...'}</Text>
+                        <Text fontSize="xs" color="blue.200" mt={1}>
+                          This may take several minutes for large migrations. Please don&apos;t close this page.
+                        </Text>
+                      </AlertDescription>
+                    </Box>
+                  </Alert>
+                )}
               </VStack>
             )}
 
