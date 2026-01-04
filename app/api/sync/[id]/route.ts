@@ -37,10 +37,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     
     const jobWithConnections = await getJobWithConnections(job, user.id);
     
-    // Get logs if requested
-    let logs: Awaited<ReturnType<typeof supabaseSyncLogStore.getByJobId>> = [];
+    // Get logs if requested and transform to camelCase
+    let logs: { id: string; level: string; message: string; metadata: unknown; createdAt: string }[] = [];
     if (includeLogs) {
-      logs = await supabaseSyncLogStore.getByJobId(id, logLimit);
+      const rawLogs = await supabaseSyncLogStore.getByJobId(id, logLimit);
+      logs = rawLogs.map(log => ({
+        id: log.id,
+        level: log.level,
+        message: log.message,
+        metadata: log.metadata,
+        createdAt: log.created_at, // Transform snake_case to camelCase
+      }));
     }
     
     return NextResponse.json({

@@ -174,7 +174,7 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
       
       progress.currentTable = tableName;
       onProgress(progress);
-      onLog('info', `Processing table: ${tableName}`);
+      onLog('info', `Processing table: ${tableName} (${i + 1}/${enabledTables.length})`);
       
       try {
         // Sync this table with retry
@@ -486,6 +486,11 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       updated: result.updated,
       skipped: result.skipped,
     });
+    
+    // Log batch progress
+    if (processedRows > 0 && processedRows % (batchSize * 5) === 0) {
+      onLog('info', `${tableName}: Processed ${processedRows} rows (${result.inserted} inserted, ${result.updated} updated)`);
+    }
     
     // Store last processed row for checkpoint
     result.lastRowId = currentAfterId || undefined;
