@@ -3,6 +3,9 @@
  * 
  * Provides comprehensive schema inspection for PostgreSQL databases.
  * Extracts columns, primary keys, foreign keys, constraints, and indexes.
+ * 
+ * OPTIMIZED: Uses bulk queries to fetch all schema info in ~6 queries total
+ * instead of 6 queries per table (e.g., 252 queries → 6 queries for 42 tables)
  */
 
 import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
@@ -17,7 +20,8 @@ import type {
 } from '@/types';
 
 /**
- * Inspect the full schema of a database
+ * Inspect the full schema of a database - OPTIMIZED VERSION
+ * Uses bulk queries to fetch all data at once instead of per-table queries
  */
 export async function inspectDatabaseSchema(databaseUrl: string): Promise<DatabaseSchema> {
   let connection: DrizzleConnection | null = null;
@@ -25,40 +29,83 @@ export async function inspectDatabaseSchema(databaseUrl: string): Promise<Databa
   try {
     connection = createDrizzleClient(databaseUrl);
     
-    // Get PostgreSQL version
-    const versionResult = await connection.client`SELECT version()`;
+    console.log('[Schema Inspector] Starting optimized bulk inspection...');
+    const startTime = Date.now();
+    
+    // Run ALL bulk queries in parallel for maximum speed
+    const [
+      versionResult,
+      enums,
+      tableNames,
+      allColumns,
+      allPrimaryKeys,
+      allForeignKeys,
+      allConstraints,
+      allIndexes,
+      allStats,
+    ] = await Promise.all([
+      connection.client`SELECT version()`,
+      getEnumTypes(connection),
+      getTableNames(connection),
+      getAllColumns(connection),
+      getAllPrimaryKeys(connection),
+      getAllForeignKeys(connection),
+      getAllConstraints(connection),
+      getAllIndexes(connection),
+      getAllTableStats(connection),
+    ]);
+    
     const version = (versionResult[0]?.version as string) || 'Unknown';
     
-    // Get all ENUM types first
-    const enums = await getEnumTypes(connection);
+    console.log(`[Schema Inspector] Bulk queries completed in ${Date.now() - startTime}ms`);
+    console.log(`[Schema Inspector] Processing ${tableNames.length} tables...`);
     
-    // Get all public tables
-    const tablesResult = await connection.client`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-        AND table_type = 'BASE TABLE'
-        AND table_name NOT LIKE 'pg_%'
-        AND table_name NOT LIKE '_prisma_%'
-        AND table_name NOT LIKE 'drizzle_%'
-      ORDER BY table_name
-    `;
+    // Build lookup maps for O(1) access
+    const columnsMap = groupByTable(allColumns, 'table_name');
+    const pkMap = groupByTable(allPrimaryKeys, 'table_name');
+    const fkMap = groupByTable(allForeignKeys, 'table_name');
+    const constraintsMap = groupByTable(allConstraints, 'table_name');
+    const indexesMap = groupByTable(allIndexes, 'table_name');
+    const statsMap = new Map(allStats.map(s => [s.table_name as string, s]));
     
-    const tableNames = tablesResult.map((row) => row.table_name as string);
-    
-    // Inspect each table in detail
+    // Assemble tables from pre-fetched data (no more DB queries!)
     const tables: DetailedTableSchema[] = [];
     const syncableTables: string[] = [];
     
     for (const tableName of tableNames) {
-      const tableSchema = await inspectTable(connection, tableName);
+      const columns = buildColumns(columnsMap.get(tableName) || []);
+      const primaryKey = buildPrimaryKey(pkMap.get(tableName) || []);
+      
+      // Mark primary key columns
+      if (primaryKey) {
+        for (const col of columns) {
+          col.isPrimaryKey = primaryKey.columns.includes(col.name);
+        }
+      }
+      
+      const foreignKeys = buildForeignKeys(fkMap.get(tableName) || []);
+      const constraints = buildConstraints(constraintsMap.get(tableName) || []);
+      const indexes = buildIndexes(indexesMap.get(tableName) || []);
+      const stats = statsMap.get(tableName);
+      
+      const tableSchema: DetailedTableSchema = {
+        tableName,
+        columns,
+        primaryKey,
+        foreignKeys,
+        constraints,
+        indexes,
+        rowCount: parseInt(stats?.estimated_rows as string || '0', 10),
+        estimatedSize: (stats?.size as string) || 'Unknown',
+      };
+      
       tables.push(tableSchema);
       
       // Check if table is syncable (has id UUID and updated_at timestamp)
-      const hasIdColumn = tableSchema.columns.some(
+      const hasIdColumn = columns.some(
         (col) => col.name === 'id' && (col.udtName === 'uuid' || col.dataType === 'uuid')
       );
-      const hasUpdatedAt = tableSchema.columns.some(
+      const hasUpdatedAt = columns.some(
         (col) => col.name === 'updated_at' && 
           (col.udtName === 'timestamptz' || col.udtName === 'timestamp' || 
            col.dataType.includes('timestamp'))
@@ -68,6 +115,8 @@ export async function inspectDatabaseSchema(databaseUrl: string): Promise<Databa
         syncableTables.push(tableName);
       }
     }
+    
+    console.log(`[Schema Inspector] Total time: ${Date.now() - startTime}ms`);
     
     return {
       tables,
@@ -82,6 +131,265 @@ export async function inspectDatabaseSchema(databaseUrl: string): Promise<Databa
       await connection.close();
     }
   }
+}
+
+// ============================================================================
+// BULK QUERY FUNCTIONS - Fetch all data for all tables in single queries
+// ============================================================================
+
+/**
+ * Get all table names in one query
+ */
+async function getTableNames(connection: DrizzleConnection): Promise<string[]> {
+  const result = await connection.client`
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_type = 'BASE TABLE'
+      AND table_name NOT LIKE 'pg_%'
+      AND table_name NOT LIKE '_prisma_%'
+      AND table_name NOT LIKE 'drizzle_%'
+    ORDER BY table_name
+  `;
+  return result.map((row) => row.table_name as string);
+}
+
+/**
+ * Get ALL columns for ALL tables in one query
+ */
+async function getAllColumns(connection: DrizzleConnection): Promise<Record<string, unknown>[]> {
+  return connection.client`
+    SELECT 
+      c.table_name,
+      c.column_name,
+      c.data_type,
+      c.udt_name,
+      c.is_nullable = 'YES' as is_nullable,
+      c.column_default,
+      c.character_maximum_length,
+      c.numeric_precision,
+      c.ordinal_position
+    FROM information_schema.columns c
+    JOIN information_schema.tables t 
+      ON c.table_name = t.table_name AND c.table_schema = t.table_schema
+    WHERE c.table_schema = 'public'
+      AND t.table_type = 'BASE TABLE'
+      AND c.table_name NOT LIKE 'pg_%'
+      AND c.table_name NOT LIKE '_prisma_%'
+      AND c.table_name NOT LIKE 'drizzle_%'
+    ORDER BY c.table_name, c.ordinal_position
+  `;
+}
+
+/**
+ * Get ALL primary keys for ALL tables in one query
+ */
+async function getAllPrimaryKeys(connection: DrizzleConnection): Promise<Record<string, unknown>[]> {
+  return connection.client`
+    SELECT 
+      tc.table_name,
+      tc.constraint_name,
+      kcu.column_name,
+      kcu.ordinal_position
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.key_column_usage kcu 
+      ON tc.constraint_name = kcu.constraint_name
+      AND tc.table_schema = kcu.table_schema
+    WHERE tc.constraint_type = 'PRIMARY KEY'
+      AND tc.table_schema = 'public'
+      AND tc.table_name NOT LIKE 'pg_%'
+      AND tc.table_name NOT LIKE '_prisma_%'
+      AND tc.table_name NOT LIKE 'drizzle_%'
+    ORDER BY tc.table_name, kcu.ordinal_position
+  `;
+}
+
+/**
+ * Get ALL foreign keys for ALL tables in one query
+ */
+async function getAllForeignKeys(connection: DrizzleConnection): Promise<Record<string, unknown>[]> {
+  return connection.client`
+    SELECT
+      tc.table_name,
+      tc.constraint_name,
+      kcu.column_name,
+      ccu.table_name AS referenced_table,
+      ccu.column_name AS referenced_column,
+      rc.delete_rule,
+      rc.update_rule
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.key_column_usage kcu
+      ON tc.constraint_name = kcu.constraint_name
+      AND tc.table_schema = kcu.table_schema
+    JOIN information_schema.constraint_column_usage ccu
+      ON ccu.constraint_name = tc.constraint_name
+      AND ccu.table_schema = tc.table_schema
+    JOIN information_schema.referential_constraints rc
+      ON rc.constraint_name = tc.constraint_name
+      AND rc.constraint_schema = tc.table_schema
+    WHERE tc.constraint_type = 'FOREIGN KEY'
+      AND tc.table_schema = 'public'
+      AND tc.table_name NOT LIKE 'pg_%'
+      AND tc.table_name NOT LIKE '_prisma_%'
+      AND tc.table_name NOT LIKE 'drizzle_%'
+  `;
+}
+
+/**
+ * Get ALL constraints for ALL tables in one query
+ */
+async function getAllConstraints(connection: DrizzleConnection): Promise<Record<string, unknown>[]> {
+  return connection.client`
+    SELECT
+      tc.table_name,
+      tc.constraint_name,
+      tc.constraint_type,
+      array_agg(kcu.column_name ORDER BY kcu.ordinal_position) as columns,
+      pg_get_constraintdef(pgc.oid) as definition
+    FROM information_schema.table_constraints tc
+    LEFT JOIN information_schema.key_column_usage kcu
+      ON tc.constraint_name = kcu.constraint_name
+      AND tc.table_schema = kcu.table_schema
+    LEFT JOIN pg_constraint pgc
+      ON pgc.conname = tc.constraint_name
+    WHERE tc.table_schema = 'public'
+      AND tc.table_name NOT LIKE 'pg_%'
+      AND tc.table_name NOT LIKE '_prisma_%'
+      AND tc.table_name NOT LIKE 'drizzle_%'
+    GROUP BY tc.table_name, tc.constraint_name, tc.constraint_type, pgc.oid
+  `;
+}
+
+/**
+ * Get ALL indexes for ALL tables in one query
+ */
+async function getAllIndexes(connection: DrizzleConnection): Promise<Record<string, unknown>[]> {
+  return connection.client`
+    SELECT
+      t.relname as table_name,
+      i.relname as index_name,
+      array_agg(a.attname ORDER BY array_position(ix.indkey, a.attnum)) as columns,
+      ix.indisunique as is_unique,
+      ix.indisprimary as is_primary,
+      am.amname as index_type
+    FROM pg_class t
+    JOIN pg_index ix ON t.oid = ix.indrelid
+    JOIN pg_class i ON i.oid = ix.indexrelid
+    JOIN pg_am am ON i.relam = am.oid
+    JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
+    JOIN pg_namespace n ON t.relnamespace = n.oid
+    WHERE n.nspname = 'public'
+      AND t.relkind = 'r'
+      AND t.relname NOT LIKE 'pg_%'
+      AND t.relname NOT LIKE '_prisma_%'
+      AND t.relname NOT LIKE 'drizzle_%'
+    GROUP BY t.relname, i.relname, ix.indisunique, ix.indisprimary, am.amname
+  `;
+}
+
+/**
+ * Get ALL table stats in one query (uses pg_class for speed, no COUNT(*))
+ */
+async function getAllTableStats(connection: DrizzleConnection): Promise<Record<string, unknown>[]> {
+  return connection.client`
+    SELECT 
+      c.relname as table_name,
+      COALESCE(c.reltuples, 0)::bigint as estimated_rows,
+      pg_size_pretty(pg_total_relation_size(c.oid)) as size
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relkind = 'r'
+      AND c.relname NOT LIKE 'pg_%'
+      AND c.relname NOT LIKE '_prisma_%'
+      AND c.relname NOT LIKE 'drizzle_%'
+  `;
+}
+
+// ============================================================================
+// DATA TRANSFORMATION HELPERS - Convert raw query results to typed objects
+// ============================================================================
+
+/**
+ * Group rows by table name for O(1) lookup
+ */
+function groupByTable(rows: Record<string, unknown>[], tableKey: string): Map<string, Record<string, unknown>[]> {
+  const map = new Map<string, Record<string, unknown>[]>();
+  for (const row of rows) {
+    const tableName = row[tableKey] as string;
+    if (!map.has(tableName)) {
+      map.set(tableName, []);
+    }
+    map.get(tableName)!.push(row);
+  }
+  return map;
+}
+
+/**
+ * Build DetailedColumn array from raw rows
+ */
+function buildColumns(rows: Record<string, unknown>[]): DetailedColumn[] {
+  return rows.map((row) => ({
+    name: row.column_name as string,
+    dataType: row.data_type as string,
+    udtName: row.udt_name as string,
+    isNullable: row.is_nullable as boolean,
+    defaultValue: row.column_default as string | null,
+    isPrimaryKey: false,
+    maxLength: row.character_maximum_length as number | null,
+    numericPrecision: row.numeric_precision as number | null,
+    ordinalPosition: row.ordinal_position as number,
+  }));
+}
+
+/**
+ * Build primary key object from raw rows
+ */
+function buildPrimaryKey(rows: Record<string, unknown>[]): { columns: string[]; constraintName: string } | null {
+  if (rows.length === 0) return null;
+  return {
+    constraintName: rows[0].constraint_name as string,
+    columns: rows.map((row) => row.column_name as string),
+  };
+}
+
+/**
+ * Build ForeignKey array from raw rows
+ */
+function buildForeignKeys(rows: Record<string, unknown>[]): ForeignKey[] {
+  return rows.map((row) => ({
+    constraintName: row.constraint_name as string,
+    columnName: row.column_name as string,
+    referencedTable: row.referenced_table as string,
+    referencedColumn: row.referenced_column as string,
+    onDelete: row.delete_rule as string,
+    onUpdate: row.update_rule as string,
+  }));
+}
+
+/**
+ * Build TableConstraint array from raw rows
+ */
+function buildConstraints(rows: Record<string, unknown>[]): TableConstraint[] {
+  return rows.map((row) => ({
+    name: row.constraint_name as string,
+    type: row.constraint_type as TableConstraint['type'],
+    columns: parsePostgresArray(row.columns) || [],
+    definition: (row.definition as string) || '',
+  }));
+}
+
+/**
+ * Build TableIndex array from raw rows
+ */
+function buildIndexes(rows: Record<string, unknown>[]): TableIndex[] {
+  return rows.map((row) => ({
+    name: row.index_name as string,
+    columns: parsePostgresArray(row.columns) || [],
+    isUnique: row.is_unique as boolean,
+    isPrimary: row.is_primary as boolean,
+    indexType: row.index_type as string,
+  }));
 }
 
 /**
