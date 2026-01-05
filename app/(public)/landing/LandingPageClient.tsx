@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   Box,
   Container,
@@ -23,14 +24,6 @@ import { motion } from 'framer-motion';
 const MotionBox = motion.div;
 
 // Icons
-const DatabaseIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-    <ellipse cx="12" cy="5" rx="9" ry="3"/>
-    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-  </svg>
-);
-
 const SyncIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <polyline points="23 4 23 10 17 10"/>
@@ -158,8 +151,19 @@ export default function LandingPageClient() {
             transition={{ duration: 0.6 }}
           >
             <VStack spacing={8} textAlign="center">
-              <Box color="brand.400">
-                <DatabaseIcon />
+              <Box>
+                <Image
+                  src="/logo.png"
+                  alt="suparbase logo"
+                  width={64}
+                  height={64}
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    objectFit: 'contain',
+                  }}
+                  priority
+                />
               </Box>
               
               <VStack spacing={4}>
@@ -174,7 +178,7 @@ export default function LandingPageClient() {
                   bgClip="text"
                   lineHeight="1.2"
                 >
-                  Supabase Database Syncer
+                  suparbase
                 </Heading>
                 <Text 
                   color="surface.300" 
@@ -260,7 +264,7 @@ export default function LandingPageClient() {
         <Container maxW="4xl">
           <VStack spacing={8}>
             <Heading as="h2" size="lg" color="white" textAlign="center">
-              Why Supabase Syncer?
+              Why suparbase?
             </Heading>
             
             <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4} w="100%">
@@ -322,11 +326,21 @@ export default function LandingPageClient() {
             gap={4}
           >
             <HStack spacing={2}>
-              <Box color="brand.400" transform="scale(0.7)">
-                <DatabaseIcon />
+              <Box width="20px" height="20px" position="relative" flexShrink={0}>
+                <Image
+                  src="/logo.png"
+                  alt="suparbase logo"
+                  width={20}
+                  height={20}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                  }}
+                />
               </Box>
               <Text color="surface.400" fontSize="sm">
-                Supabase Syncer • Open Source
+                suparbase • Open Source
               </Text>
             </HStack>
             <HStack spacing={6} flexWrap="wrap" justify="center">

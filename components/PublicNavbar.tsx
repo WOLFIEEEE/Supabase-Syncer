@@ -15,20 +15,12 @@ import {
   DrawerCloseButton,
   DrawerBody,
   VStack,
-  Text,
 } from '@chakra-ui/react';
+import { SuparbaseLogo } from '@/components/Logo';
 
 // Icons
-const DatabaseIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <ellipse cx="12" cy="5" rx="9" ry="3"/>
-    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-  </svg>
-);
-
 const MenuIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <line x1="3" y1="12" x2="21" y2="12"/>
     <line x1="3" y1="6" x2="21" y2="6"/>
     <line x1="3" y1="18" x2="21" y2="18"/>
@@ -60,27 +52,14 @@ export default function PublicNavbar() {
       <Container maxW="6xl" py={3}>
         <Flex justify="space-between" align="center">
           {/* Logo */}
-          <HStack 
-            spacing={2} 
-            cursor="pointer" 
+          <Box
+            cursor="pointer"
             onClick={() => router.push('/landing')}
             _hover={{ opacity: 0.8 }}
             transition="opacity 0.2s"
           >
-            <Box color="brand.400">
-              <DatabaseIcon />
-            </Box>
-            <Text
-              fontFamily="mono"
-              fontWeight="bold"
-              fontSize="lg"
-              bgGradient="linear(to-r, brand.300, brand.500)"
-              bgClip="text"
-              display={{ base: 'none', sm: 'block' }}
-            >
-              Supabase Syncer
-            </Text>
-          </HStack>
+            <SuparbaseLogo size="md" showText={true} variant="full" />
+          </Box>
 
           {/* Desktop Nav */}
           <HStack spacing={1} display={{ base: 'none', md: 'flex' }}>
