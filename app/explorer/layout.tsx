@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Flex, HStack, Text, Badge, IconButton, Tooltip, useToast, Kbd, Button, useDisclosure } from '@chakra-ui/react';
+import { Box, Flex, HStack, VStack, Text, Badge, IconButton, Tooltip, useToast, Kbd, Button, useDisclosure } from '@chakra-ui/react';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -250,41 +250,53 @@ export default function ExplorerLayout({
             </Tooltip>
             
             {/* Logo */}
-            <HStack spacing={2} mr={4}>
-              <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
-                <defs>
-                  <linearGradient id="epg" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#3ECF8E"/>
-                    <stop offset="100%" stopColor="#14B8A6"/>
-                  </linearGradient>
-                </defs>
-                <rect x="14" y="12" width="6" height="24" rx="3" fill="url(#epg)" />
-                <path d="M20 18 C 26 18, 34 18, 34 28" stroke="url(#epg)" strokeWidth="6" strokeLinecap="round" />
-                <circle cx="34" cy="34" r="4" fill="#3ECF8E" />
-              </svg>
-              <HStack spacing={0}>
-                <Text fontSize="xs" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
-                  SUPA
-                </Text>
-                <Box 
-                  mx={1} 
-                  px={1.5} 
-                  py={0.5} 
-                  bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
-                  borderRadius="full" 
-                  display="flex" 
-                  alignItems="center"
-                  boxShadow="0 0 10px rgba(62, 207, 142, 0.2)"
-                >
-                  <Text fontSize="xs" fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
-                    r
+            <VStack spacing={0.5} align="start" mr={4}>
+              <HStack spacing={2}>
+                <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                  <defs>
+                    <linearGradient id="epg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#3ECF8E"/>
+                      <stop offset="100%" stopColor="#14B8A6"/>
+                    </linearGradient>
+                  </defs>
+                  <rect x="14" y="12" width="6" height="24" rx="3" fill="url(#epg)" />
+                  <path d="M20 18 C 26 18, 34 18, 34 28" stroke="url(#epg)" strokeWidth="6" strokeLinecap="round" />
+                  <circle cx="34" cy="34" r="4" fill="#3ECF8E" />
+                </svg>
+                <HStack spacing={0}>
+                  <Text fontSize="xs" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                    SUPA
                   </Text>
-                </Box>
-                <Text fontSize="xs" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
-                  BASE
-                </Text>
+                  <Box 
+                    mx={1} 
+                    px={1.5} 
+                    py={0.5} 
+                    bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
+                    borderRadius="full" 
+                    display="flex" 
+                    alignItems="center"
+                    boxShadow="0 0 10px rgba(62, 207, 142, 0.2)"
+                  >
+                    <Text fontSize="xs" fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
+                      R
+                    </Text>
+                  </Box>
+                  <Text fontSize="xs" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                    BASE
+                  </Text>
+                </HStack>
               </HStack>
-            </HStack>
+              <Text 
+                fontSize="2xs" 
+                fontWeight="400" 
+                color="surface.400"
+                letterSpacing="0.1em"
+                textTransform="uppercase"
+                ml="32px"
+              >
+                reimagining
+              </Text>
+            </VStack>
             
             <Tooltip label="Back to Dashboard" hasArrow>
               <IconButton

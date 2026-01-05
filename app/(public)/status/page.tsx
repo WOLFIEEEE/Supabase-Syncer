@@ -219,28 +219,39 @@ export default function StatusPage() {
                         <path d="M20 18 C 26 18, 34 18, 34 28" stroke="url(#spg)" strokeWidth="6" strokeLinecap="round" />
                         <circle cx="34" cy="34" r="4" fill="#3ECF8E" />
                       </svg>
-                      <HStack spacing={0}>
-                        <Text fontSize="lg" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
-                          SUPA
-                        </Text>
-                        <Box 
-                          mx={1.5} 
-                          px={2} 
-                          py={0.5} 
-                          bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
-                          borderRadius="full" 
-                          display="flex" 
-                          alignItems="center"
-                          boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
-                        >
-                          <Text fontSize="xl" fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
-                            r
+                      <VStack spacing={0.5} align="start">
+                        <HStack spacing={0}>
+                          <Text fontSize="lg" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                            SUPA
                           </Text>
-                        </Box>
-                        <Text fontSize="lg" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
-                          BASE
+                          <Box 
+                            mx={1.5} 
+                            px={2} 
+                            py={0.5} 
+                            bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
+                            borderRadius="full" 
+                            display="flex" 
+                            alignItems="center"
+                            boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
+                          >
+                            <Text fontSize="xl" fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
+                              R
+                            </Text>
+                          </Box>
+                          <Text fontSize="lg" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                            BASE
+                          </Text>
+                        </HStack>
+                        <Text 
+                          fontSize="xs" 
+                          fontWeight="400" 
+                          color="surface.400"
+                          letterSpacing="0.1em"
+                          textTransform="uppercase"
+                        >
+                          reimagining
                         </Text>
-                      </HStack>
+                      </VStack>
                     </HStack>
                     <Text color="surface.400" fontSize="sm">
                       v{status.application.version} • Uptime: {status.application.uptime}

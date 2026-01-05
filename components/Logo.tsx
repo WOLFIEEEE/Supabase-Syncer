@@ -1,6 +1,6 @@
 'use client';
 
-import { HStack, Text, Box } from '@chakra-ui/react';
+import { HStack, Text, Box, VStack } from '@chakra-ui/react';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -19,107 +19,122 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
   const { icon, text } = sizes[size];
   
   return (
-    <HStack spacing={size === 'sm' ? 2 : 3}>
-      <Box 
-        width={`${icon}px`} 
-        height={`${icon}px`}
-        position="relative"
-      >
-        <svg 
-          viewBox="0 0 48 48" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ width: '100%', height: '100%' }}
+    <VStack spacing={1} align="start">
+      <HStack spacing={size === 'sm' ? 2 : 3}>
+        <Box 
+          width={`${icon}px`} 
+          height={`${icon}px`}
+          position="relative"
         >
-          <defs>
-            <linearGradient id="supaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3ECF8E"/>
-              <stop offset="100%" stopColor="#14B8A6"/>
-            </linearGradient>
-          </defs>
-          
-          {/* Stem of the 'r' - also looks like a data pillar */}
-          <rect 
-            x="14" 
-            y="12" 
-            width="6" 
-            height="24" 
-            rx="3" 
-            fill="url(#supaGrad)"
-          />
-          
-          {/* The reimagining bridge/shoulder */}
-          <path 
-            d="M20 18 C 26 18, 34 18, 34 28" 
-            stroke="url(#supaGrad)" 
-            strokeWidth="6" 
-            strokeLinecap="round" 
-          />
-          
-          {/* The node/target database point */}
-          <circle 
-            cx="34" 
-            cy="34" 
-            r="4" 
-            fill="#3ECF8E"
-          />
-          
-          {/* Subtle pulse ring around the node */}
-          <circle 
-            cx="34" 
-            cy="34" 
-            r="7" 
-            stroke="#3ECF8E" 
-            strokeWidth="1" 
-            opacity="0.3"
-          />
-        </svg>
-      </Box>
+          <svg 
+            viewBox="0 0 48 48" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: '100%', height: '100%' }}
+          >
+            <defs>
+              <linearGradient id="supaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3ECF8E"/>
+                <stop offset="100%" stopColor="#14B8A6"/>
+              </linearGradient>
+            </defs>
+            
+            {/* Stem of the 'R' - also looks like a data pillar */}
+            <rect 
+              x="14" 
+              y="12" 
+              width="6" 
+              height="24" 
+              rx="3" 
+              fill="url(#supaGrad)"
+            />
+            
+            {/* The reimagining bridge/shoulder */}
+            <path 
+              d="M20 18 C 26 18, 34 18, 34 28" 
+              stroke="url(#supaGrad)" 
+              strokeWidth="6" 
+              strokeLinecap="round" 
+            />
+            
+            {/* The node/target database point */}
+            <circle 
+              cx="34" 
+              cy="34" 
+              r="4" 
+              fill="#3ECF8E"
+            />
+            
+            {/* Subtle pulse ring around the node */}
+            <circle 
+              cx="34" 
+              cy="34" 
+              r="7" 
+              stroke="#3ECF8E" 
+              strokeWidth="1" 
+              opacity="0.3"
+            />
+          </svg>
+        </Box>
+        
+        {showText && variant === 'full' && (
+          <HStack spacing={0}>
+            <Text 
+              fontSize={text} 
+              fontWeight="300" 
+              color="white"
+              letterSpacing="0.05em"
+              opacity={0.9}
+            >
+              SUPA
+            </Text>
+            <Box
+              mx={1.5}
+              px={2}
+              py={0.5}
+              bgGradient="linear(to-br, #3ECF8E, #14B8A6)"
+              borderRadius="full"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
+            >
+              <Text 
+                fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
+                fontWeight="900" 
+                color="white"
+                lineHeight="1"
+                fontFamily="JetBrains Mono, monospace"
+              >
+                R
+              </Text>
+            </Box>
+            <Text 
+              fontSize={text} 
+              fontWeight="300" 
+              color="white"
+              letterSpacing="0.05em"
+              opacity={0.9}
+            >
+              BASE
+            </Text>
+          </HStack>
+        )}
+      </HStack>
       
       {showText && variant === 'full' && (
-        <HStack spacing={0}>
-          <Text 
-            fontSize={text} 
-            fontWeight="300" 
-            color="white"
-            letterSpacing="0.05em"
-            opacity={0.9}
-          >
-            SUPA
-          </Text>
-          <Box
-            mx={1.5}
-            px={2}
-            py={0.5}
-            bgGradient="linear(to-br, #3ECF8E, #14B8A6)"
-            borderRadius="full"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
-          >
-            <Text 
-              fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
-              fontWeight="900" 
-              color="white"
-              lineHeight="1"
-              fontFamily="JetBrains Mono, monospace"
-            >
-              r
-            </Text>
-          </Box>
-          <Text 
-            fontSize={text} 
-            fontWeight="300" 
-            color="white"
-            letterSpacing="0.05em"
-            opacity={0.9}
-          >
-            BASE
-          </Text>
-        </HStack>
+        <Text 
+          fontSize="xs" 
+          fontWeight="400" 
+          color="surface.400"
+          letterSpacing="0.1em"
+          textTransform="uppercase"
+          ml={size === 'sm' ? `${icon + 8}px` : `${icon + 12}px`}
+        >
+          reimagining
+        </Text>
       )}
-    </HStack>
+    </VStack>
   );
 }
 
