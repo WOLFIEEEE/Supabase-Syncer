@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getUser } from '@/lib/supabase/server';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { pingDatabase } from '@/lib/services/keep-alive';
 
@@ -20,18 +20,18 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const user = await getUser();
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Authentication required' },
         { status: 401 }
       );
     }
     
     const { id } = await params;
     
-    const connection = await supabaseConnectionStore.getById(id, userId);
+    const connection = await supabaseConnectionStore.getById(id, user.id);
     
     if (!connection) {
       return NextResponse.json(
@@ -64,11 +64,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const user = await getUser();
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Authentication required' },
         { status: 401 }
       );
     }
@@ -84,7 +84,7 @@ export async function PUT(
       );
     }
     
-    const connection = await supabaseConnectionStore.updateKeepAlive(id, userId, keepAlive);
+    const connection = await supabaseConnectionStore.updateKeepAlive(id, user.id, keepAlive);
     
     if (!connection) {
       return NextResponse.json(
@@ -120,18 +120,18 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
+    const user = await getUser();
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Authentication required' },
         { status: 401 }
       );
     }
     
     const { id } = await params;
     
-    const connection = await supabaseConnectionStore.getById(id, userId);
+    const connection = await supabaseConnectionStore.getById(id, user.id);
     
     if (!connection) {
       return NextResponse.json(
@@ -169,4 +169,3 @@ export async function POST(
     );
   }
 }
-
