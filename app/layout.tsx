@@ -4,23 +4,23 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Pulse - Database Sync & Keep-Alive",
-    template: "%s | Pulse",
+    default: "Supapulse - Database Sync & Keep-Alive",
+    template: "%s | Supapulse",
   },
   description: "Keep your Supabase databases alive and in sync. Prevent free tier pausing with automated health checks.",
   keywords: ["supabase", "database", "sync", "keep-alive", "postgres", "health check", "monitoring"],
-  authors: [{ name: "Pulse" }],
-  creator: "Pulse",
+  authors: [{ name: "Supapulse" }],
+  creator: "Supapulse",
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Pulse",
-    title: "Pulse - Database Sync & Keep-Alive",
+    siteName: "Supapulse",
+    title: "Supapulse - Database Sync & Keep-Alive",
     description: "Keep your Supabase databases alive and in sync. Prevent free tier pausing with automated health checks.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pulse - Database Sync & Keep-Alive",
+    title: "Supapulse - Database Sync & Keep-Alive",
     description: "Keep your Supabase databases alive and in sync.",
   },
   icons: {

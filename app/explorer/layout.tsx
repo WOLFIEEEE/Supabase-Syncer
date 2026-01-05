@@ -274,7 +274,7 @@ export default function ExplorerLayout({
                 />
               </svg>
               <Text fontWeight="bold" color="white" fontSize="sm">
-                Pulse
+                Supapulse
               </Text>
             </HStack>
             

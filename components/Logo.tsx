@@ -15,7 +15,7 @@ const sizes = {
   xl: { icon: 48, text: '2xl' as const },
 };
 
-export function PulseLogo({ size = 'md', showText = true, variant = 'full' }: LogoProps) {
+export function SupapulseLogo({ size = 'md', showText = true, variant = 'full' }: LogoProps) {
   const { icon, text } = sizes[size];
   
   return (
@@ -46,7 +46,7 @@ export function PulseLogo({ size = 'md', showText = true, variant = 'full' }: Lo
           {/* Main circle */}
           <circle cx="24" cy="24" r="22" fill="url(#pulseGrad)"/>
           
-          {/* Pulse line */}
+          {/* Supapulse line */}
           <path 
             d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" 
             stroke="url(#lineGrad)" 
@@ -68,7 +68,7 @@ export function PulseLogo({ size = 'md', showText = true, variant = 'full' }: Lo
           color="white"
           letterSpacing="-0.02em"
         >
-          Pulse
+          Supapulse
         </Text>
       )}
     </HStack>
@@ -76,7 +76,7 @@ export function PulseLogo({ size = 'md', showText = true, variant = 'full' }: Lo
 }
 
 // Animated version for loading states
-export function PulseLogoAnimated({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function SupapulseLogoAnimated({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' | 'xl' }) {
   const { icon } = sizes[size];
   
   return (
@@ -131,5 +131,5 @@ export function PulseLogoAnimated({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' |
   );
 }
 
-export default PulseLogo;
+export default SupapulseLogo;
 
