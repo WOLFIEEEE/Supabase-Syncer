@@ -180,6 +180,14 @@ const ActivityIcon = () => (
   </svg>
 );
 
+const InfoIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="16" x2="12" y2="12"/>
+    <line x1="12" y1="8" x2="12.01" y2="8"/>
+  </svg>
+);
+
 interface Connection {
   id: string;
   name: string;
@@ -904,6 +912,116 @@ export default function ConnectionsPage() {
                         </HStack>
                       </Box>
                     )}
+                    
+                    {/* Expandable explanation section */}
+                    <Accordion allowToggle mt={4}>
+                      <AccordionItem border="none">
+                        <AccordionButton 
+                          px={0} 
+                          py={2} 
+                          _hover={{ bg: 'transparent' }}
+                          color="surface.400"
+                          fontSize="sm"
+                        >
+                          <HStack spacing={2} flex={1}>
+                            <InfoIcon />
+                            <Text>Learn how Keep-Alive works</Text>
+                          </HStack>
+                          <AccordionIcon />
+                        </AccordionButton>
+                        <AccordionPanel px={0} pb={4}>
+                          <VStack 
+                            align="stretch" 
+                            spacing={4} 
+                            bg="surface.800" 
+                            p={4} 
+                            borderRadius="md"
+                            fontSize="sm"
+                          >
+                            {/* What is it */}
+                            <Box>
+                              <Text color="teal.300" fontWeight="semibold" mb={1}>
+                                🤔 What is Keep-Alive?
+                              </Text>
+                              <Text color="surface.300" lineHeight="tall">
+                                Supabase automatically pauses free-tier databases after 1 week of inactivity 
+                                to save resources. Keep-Alive prevents this by sending periodic health checks 
+                                to your database, keeping it active and responsive.
+                              </Text>
+                            </Box>
+                            
+                            {/* What happens when enabled */}
+                            <Box>
+                              <Text color="teal.300" fontWeight="semibold" mb={1}>
+                                ✅ What happens when enabled?
+                              </Text>
+                              <VStack align="stretch" spacing={2} color="surface.300" pl={2}>
+                                <HStack align="start" spacing={2}>
+                                  <Text color="green.400">•</Text>
+                                  <Text>A lightweight query (<Code fontSize="xs" bg="surface.700" px={1}>SELECT 1</Code>) is sent to your database every 6 hours</Text>
+                                </HStack>
+                                <HStack align="start" spacing={2}>
+                                  <Text color="green.400">•</Text>
+                                  <Text>This counts as activity, preventing Supabase from pausing your database</Text>
+                                </HStack>
+                                <HStack align="start" spacing={2}>
+                                  <Text color="green.400">•</Text>
+                                  <Text>Ping results are logged so you can monitor database health</Text>
+                                </HStack>
+                                <HStack align="start" spacing={2}>
+                                  <Text color="green.400">•</Text>
+                                  <Text>You&apos;ll see the last ping time and can manually trigger pings anytime</Text>
+                                </HStack>
+                              </VStack>
+                            </Box>
+                            
+                            {/* How it works */}
+                            <Box>
+                              <Text color="teal.300" fontWeight="semibold" mb={1}>
+                                ⚙️ How does it work?
+                              </Text>
+                              <VStack align="stretch" spacing={2} color="surface.300" pl={2}>
+                                <HStack align="start" spacing={2}>
+                                  <Text color="blue.400">1.</Text>
+                                  <Text>A Vercel Cron job runs every 6 hours (0:00, 6:00, 12:00, 18:00 UTC)</Text>
+                                </HStack>
+                                <HStack align="start" spacing={2}>
+                                  <Text color="blue.400">2.</Text>
+                                  <Text>It finds all databases with Keep-Alive enabled</Text>
+                                </HStack>
+                                <HStack align="start" spacing={2}>
+                                  <Text color="blue.400">3.</Text>
+                                  <Text>Connects to each database and runs a simple health check query</Text>
+                                </HStack>
+                                <HStack align="start" spacing={2}>
+                                  <Text color="blue.400">4.</Text>
+                                  <Text>Records the result (success/failure, response time) in the logs</Text>
+                                </HStack>
+                              </VStack>
+                            </Box>
+                            
+                            {/* Important notes */}
+                            <Box 
+                              bg="yellow.900" 
+                              borderLeft="3px solid" 
+                              borderColor="yellow.500" 
+                              p={3} 
+                              borderRadius="md"
+                            >
+                              <Text color="yellow.200" fontWeight="semibold" mb={1}>
+                                ⚠️ Important Notes
+                              </Text>
+                              <VStack align="stretch" spacing={1} color="yellow.100" fontSize="xs">
+                                <Text>• This feature uses minimal resources - just a simple query every 6 hours</Text>
+                                <Text>• Your database credentials are encrypted and never exposed</Text>
+                                <Text>• If pings fail repeatedly, check your database status in Supabase dashboard</Text>
+                                <Text>• Paid Supabase plans don&apos;t pause databases, but Keep-Alive still works for health monitoring</Text>
+                              </VStack>
+                            </Box>
+                          </VStack>
+                        </AccordionPanel>
+                      </AccordionItem>
+                    </Accordion>
                   </CardBody>
                 </Card>
 
