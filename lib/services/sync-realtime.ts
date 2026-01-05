@@ -152,24 +152,302 @@ async function getTableTriggers(
 }
 
 /**
+ * Get all unique constraints for a table (for ON CONFLICT handling)
+ */
+async function getUniqueConstraints(
+  conn: DrizzleConnection,
+  tableName: string
+): Promise<{ name: string; columns: string[] }[]> {
+  const result = await conn.client.unsafe(`
+    SELECT 
+      tc.constraint_name,
+      array_agg(kcu.column_name ORDER BY kcu.ordinal_position) as columns
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.key_column_usage kcu 
+      ON tc.constraint_name = kcu.constraint_name
+      AND tc.table_schema = kcu.table_schema
+    WHERE tc.table_schema = 'public'
+      AND tc.table_name = $1
+      AND tc.constraint_type IN ('UNIQUE', 'PRIMARY KEY')
+    GROUP BY tc.constraint_name
+  `, [tableName]);
+
+  return result.map(r => ({
+    name: r.constraint_name as string,
+    columns: Array.isArray(r.columns) ? r.columns as string[] : 
+      (r.columns as string).replace(/[{}]/g, '').split(',').filter(Boolean),
+  }));
+}
+
+/**
+ * Get NOT NULL columns that don't have defaults (potential sync issues)
+ */
+async function getNotNullColumnsWithoutDefaults(
+  conn: DrizzleConnection,
+  tableName: string
+): Promise<Set<string>> {
+  const result = await conn.client.unsafe(`
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = $1
+      AND is_nullable = 'NO'
+      AND column_default IS NULL
+      AND is_generated = 'NEVER'
+      AND identity_generation IS NULL
+  `, [tableName]);
+
+  return new Set(result.map(r => r.column_name as string));
+}
+
+/**
+ * Get CHECK constraints for a table (to validate data before insert)
+ */
+async function getCheckConstraints(
+  conn: DrizzleConnection,
+  tableName: string
+): Promise<{ name: string; definition: string }[]> {
+  const result = await conn.client.unsafe(`
+    SELECT 
+      cc.constraint_name,
+      cc.check_clause
+    FROM information_schema.check_constraints cc
+    JOIN information_schema.table_constraints tc 
+      ON cc.constraint_name = tc.constraint_name
+      AND cc.constraint_schema = tc.constraint_schema
+    WHERE tc.table_schema = 'public'
+      AND tc.table_name = $1
+      AND tc.constraint_type = 'CHECK'
+      AND cc.constraint_name NOT LIKE '%_not_null'
+  `, [tableName]);
+
+  return result.map(r => ({
+    name: r.constraint_name as string,
+    definition: r.check_clause as string,
+  }));
+}
+
+/**
+ * Detect circular foreign key dependencies
+ */
+async function detectCircularDependencies(
+  conn: DrizzleConnection,
+  tableNames: string[]
+): Promise<string[][]> {
+  const fkResult = await conn.client.unsafe(`
+    SELECT DISTINCT
+      tc.table_name AS child_table,
+      ccu.table_name AS parent_table
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.constraint_column_usage ccu
+      ON tc.constraint_name = ccu.constraint_name
+    WHERE tc.constraint_type = 'FOREIGN KEY'
+      AND tc.table_schema = 'public'
+      AND tc.table_name = ANY($1)
+      AND ccu.table_name = ANY($1)
+  `, [tableNames]);
+
+  // Build adjacency list
+  const graph = new Map<string, Set<string>>();
+  for (const table of tableNames) {
+    graph.set(table, new Set());
+  }
+  for (const row of fkResult) {
+    const child = row.child_table as string;
+    const parent = row.parent_table as string;
+    if (child !== parent) {
+      graph.get(child)?.add(parent);
+    }
+  }
+
+  // Find cycles using DFS
+  const cycles: string[][] = [];
+  const visited = new Set<string>();
+  const recursionStack = new Set<string>();
+  const path: string[] = [];
+
+  function dfs(node: string): boolean {
+    visited.add(node);
+    recursionStack.add(node);
+    path.push(node);
+
+    for (const neighbor of graph.get(node) || []) {
+      if (!visited.has(neighbor)) {
+        if (dfs(neighbor)) return true;
+      } else if (recursionStack.has(neighbor)) {
+        // Found cycle
+        const cycleStart = path.indexOf(neighbor);
+        cycles.push(path.slice(cycleStart));
+        return true;
+      }
+    }
+
+    path.pop();
+    recursionStack.delete(node);
+    return false;
+  }
+
+  for (const table of tableNames) {
+    if (!visited.has(table)) {
+      dfs(table);
+    }
+  }
+
+  return cycles;
+}
+
+/**
+ * Defer foreign key constraints for a session (allows out-of-order inserts)
+ */
+async function deferForeignKeyConstraints(
+  conn: DrizzleConnection,
+  tableName: string
+): Promise<string[]> {
+  // Get deferrable FK constraints
+  const result = await conn.client.unsafe(`
+    SELECT constraint_name
+    FROM information_schema.table_constraints
+    WHERE table_schema = 'public'
+      AND table_name = $1
+      AND constraint_type = 'FOREIGN KEY'
+  `, [tableName]);
+
+  const constraintNames = result.map(r => r.constraint_name as string);
+  
+  // Note: This only works if constraints are defined as DEFERRABLE
+  // Most FK constraints are NOT deferrable by default
+  for (const name of constraintNames) {
+    try {
+      await conn.client.unsafe(`SET CONSTRAINTS "${name}" DEFERRED`);
+    } catch {
+      // Constraint not deferrable - this is expected for most FKs
+    }
+  }
+
+  return constraintNames;
+}
+
+/**
+ * Estimate row size in bytes (for large row detection)
+ */
+function estimateRowSize(row: Record<string, unknown>): number {
+  let size = 0;
+  for (const value of Object.values(row)) {
+    if (value === null || value === undefined) {
+      size += 4;
+    } else if (typeof value === 'string') {
+      size += value.length * 2; // UTF-16
+    } else if (typeof value === 'number') {
+      size += 8;
+    } else if (typeof value === 'boolean') {
+      size += 1;
+    } else if (typeof value === 'object') {
+      size += JSON.stringify(value).length * 2;
+    }
+  }
+  return size;
+}
+
+// Maximum row size (1MB) - rows larger than this will be handled specially
+const MAX_ROW_SIZE = 1024 * 1024;
+
+/**
+ * Table metadata for smarter sync
+ */
+interface TableSyncMetadata {
+  generatedColumns: Set<string>;
+  uniqueConstraints: { name: string; columns: string[] }[];
+  notNullColumns: Set<string>;
+  checkConstraints: { name: string; definition: string }[];
+  triggers: string[];
+  hasCircularDeps: boolean;
+}
+
+/**
+ * Validate a row against known constraints
+ * Returns validation result with any issues found
+ */
+function validateRow(
+  row: Record<string, unknown>,
+  notNullColumns: Set<string>,
+  generatedColumns: Set<string>
+): { valid: boolean; issues: string[] } {
+  const issues: string[] = [];
+
+  // Check NOT NULL columns
+  for (const col of notNullColumns) {
+    if (generatedColumns.has(col)) continue; // Skip generated columns
+    if (col === 'id') continue; // ID is always provided
+    
+    const value = row[col];
+    if (value === null || value === undefined) {
+      issues.push(`NULL value in NOT NULL column: ${col}`);
+    }
+  }
+
+  // Check row size
+  const rowSize = estimateRowSize(row);
+  if (rowSize > MAX_ROW_SIZE) {
+    issues.push(`Row too large: ${Math.round(rowSize / 1024)}KB (max 1MB)`);
+  }
+
+  return { valid: issues.length === 0, issues };
+}
+
+/**
  * Bulk insert rows using multi-value INSERT for better performance
  * Returns the number of successfully inserted rows
+ * 
+ * Handles:
+ * - Generated columns (excluded)
+ * - Unique constraint violations (ON CONFLICT DO UPDATE)
+ * - NOT NULL violations (skip with warning)
+ * - Large rows (process individually)
  */
 async function bulkInsertRows(
   tx: ReturnType<DrizzleConnection['client']['begin']> extends Promise<infer T> ? T : never,
   tableName: string,
   rows: Record<string, unknown>[],
   generatedColumns: Set<string>,
-  onLog: (level: 'info' | 'warn' | 'error', message: string) => void
+  onLog: (level: 'info' | 'warn' | 'error', message: string) => void,
+  metadata?: TableSyncMetadata
 ): Promise<number> {
   if (rows.length === 0) return 0;
   
   let inserted = 0;
+  let skippedValidation = 0;
   const bulkSize = SYNC_CONFIG.bulkInsertSize;
+  const notNullColumns = metadata?.notNullColumns || new Set<string>();
   
-  // Process in chunks for bulk insert
-  for (let i = 0; i < rows.length; i += bulkSize) {
-    const chunk = rows.slice(i, i + bulkSize);
+  // Separate large rows for individual processing
+  const normalRows: Record<string, unknown>[] = [];
+  const largeRows: Record<string, unknown>[] = [];
+  
+  for (const row of rows) {
+    const rowSize = estimateRowSize(row);
+    if (rowSize > MAX_ROW_SIZE) {
+      largeRows.push(row);
+    } else {
+      // Validate row
+      const validation = validateRow(row, notNullColumns, generatedColumns);
+      if (validation.valid) {
+        normalRows.push(row);
+      } else {
+        skippedValidation++;
+        if (skippedValidation <= 3) {
+          onLog('warn', `⚠️ Skipping row ${row.id}: ${validation.issues.join(', ')}`);
+        }
+      }
+    }
+  }
+  
+  if (skippedValidation > 3) {
+    onLog('warn', `⚠️ Skipped ${skippedValidation} rows due to validation failures`);
+  }
+  
+  // Process normal rows in bulk
+  for (let i = 0; i < normalRows.length; i += bulkSize) {
+    const chunk = normalRows.slice(i, i + bulkSize);
     
     try {
       // Get columns from first row, excluding generated columns
@@ -199,20 +477,35 @@ async function bulkInsertRows(
         valueSets.push(`(${placeholders.join(', ')})`);
       }
       
-      // Use ON CONFLICT DO NOTHING to handle any duplicate key errors gracefully
+      // Build ON CONFLICT clause - update all columns except id
+      const updateColumns = columns.filter(c => c !== 'id');
+      const updateClause = updateColumns.length > 0
+        ? `ON CONFLICT (id) DO UPDATE SET ${updateColumns.map(c => `"${c}" = EXCLUDED."${c}"`).join(', ')}`
+        : 'ON CONFLICT (id) DO NOTHING';
+      
       const sql = `
         INSERT INTO "${tableName}" (${columnList}) 
         VALUES ${valueSets.join(', ')}
-        ON CONFLICT (id) DO NOTHING
+        ${updateClause}
       `;
       
       const result = await (tx as { unsafe: (sql: string, params: unknown[]) => Promise<{ count: number }> }).unsafe(sql, allValues);
       inserted += result.count || chunk.length;
       
     } catch (error) {
-      // If bulk insert fails, fall back to individual inserts
+      // If bulk insert fails, fall back to individual inserts with better error handling
       const message = error instanceof Error ? error.message : 'Unknown error';
-      onLog('warn', `Bulk insert failed for ${tableName}, falling back to individual inserts: ${message}`);
+      
+      // Check if it's a constraint violation
+      const isConstraintViolation = message.toLowerCase().includes('constraint') ||
+        message.toLowerCase().includes('unique') ||
+        message.toLowerCase().includes('violates');
+      
+      if (isConstraintViolation) {
+        onLog('warn', `⚠️ Constraint violation in bulk insert for ${tableName}, processing individually...`);
+      } else {
+        onLog('warn', `Bulk insert failed for ${tableName}: ${message}`);
+      }
       
       for (const row of chunk) {
         try {
@@ -224,15 +517,63 @@ async function bulkInsertRows(
           const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
           const columnListSingle = columns.map(c => `"${c}"`).join(', ');
           
+          // Use ON CONFLICT DO UPDATE for individual inserts too
+          const updateCols = columns.filter(c => c !== 'id');
+          const updatePart = updateCols.length > 0
+            ? `ON CONFLICT (id) DO UPDATE SET ${updateCols.map(c => `"${c}" = EXCLUDED."${c}"`).join(', ')}`
+            : 'ON CONFLICT (id) DO NOTHING';
+          
           await (tx as { unsafe: (sql: string, params: unknown[]) => Promise<unknown> }).unsafe(
-            `INSERT INTO "${tableName}" (${columnListSingle}) VALUES (${placeholders}) ON CONFLICT (id) DO NOTHING`,
+            `INSERT INTO "${tableName}" (${columnListSingle}) VALUES (${placeholders}) ${updatePart}`,
             values
           );
           inserted++;
         } catch (rowError) {
           const rowMessage = rowError instanceof Error ? rowError.message : 'Unknown error';
-          onLog('error', `Failed to insert row ${row.id}: ${rowMessage}`);
+          
+          // Provide specific guidance based on error type
+          if (rowMessage.toLowerCase().includes('unique')) {
+            onLog('error', `❌ Unique constraint violation for row ${row.id} in ${tableName}`);
+          } else if (rowMessage.toLowerCase().includes('check')) {
+            onLog('error', `❌ CHECK constraint violation for row ${row.id}: ${rowMessage}`);
+          } else if (rowMessage.toLowerCase().includes('foreign key')) {
+            onLog('error', `❌ Foreign key violation for row ${row.id}: parent row may not exist`);
+          } else if (rowMessage.toLowerCase().includes('not null')) {
+            onLog('error', `❌ NOT NULL violation for row ${row.id}: ${rowMessage}`);
+          } else {
+            onLog('error', `❌ Failed to insert row ${row.id}: ${rowMessage}`);
+          }
         }
+      }
+    }
+  }
+  
+  // Process large rows individually with streaming
+  if (largeRows.length > 0) {
+    onLog('info', `📦 Processing ${largeRows.length} large row(s) individually...`);
+    for (const row of largeRows) {
+      try {
+        const columns = Object.keys(row).filter(c => 
+          row[c] !== undefined && 
+          !generatedColumns.has(c)
+        );
+        const values = columns.map(c => row[c]) as (string | number | boolean | null)[];
+        const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
+        const columnListSingle = columns.map(c => `"${c}"`).join(', ');
+        
+        const updateCols = columns.filter(c => c !== 'id');
+        const updatePart = updateCols.length > 0
+          ? `ON CONFLICT (id) DO UPDATE SET ${updateCols.map(c => `"${c}" = EXCLUDED."${c}"`).join(', ')}`
+          : 'ON CONFLICT (id) DO NOTHING';
+        
+        await (tx as { unsafe: (sql: string, params: unknown[]) => Promise<unknown> }).unsafe(
+          `INSERT INTO "${tableName}" (${columnListSingle}) VALUES (${placeholders}) ${updatePart}`,
+          values
+        );
+        inserted++;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        onLog('error', `Failed to insert large row ${row.id}: ${message}`);
       }
     }
   }
@@ -345,8 +686,26 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
     const enabledTables = tables.filter((t) => t.enabled);
     const tableNames = enabledTables.map(t => t.tableName);
     
-    // Sort tables by FK dependency order to avoid constraint violations
+    // Check for circular dependencies first
     onLog('info', 'Analyzing table dependencies...');
+    const circularDeps = await detectCircularDependencies(targetConn, tableNames);
+    
+    if (circularDeps.length > 0) {
+      onLog('warn', `⚠️ Circular FK dependencies detected: ${circularDeps.map(c => c.join(' ↔ ')).join(', ')}`);
+      onLog('info', '🔧 Will attempt to defer FK constraints for affected tables');
+      
+      // Try to defer FK constraints for circular tables
+      const circularTables = new Set(circularDeps.flat());
+      for (const tableName of circularTables) {
+        try {
+          await deferForeignKeyConstraints(targetConn, tableName);
+        } catch {
+          onLog('warn', `Could not defer FK constraints for ${tableName} - constraints may not be DEFERRABLE`);
+        }
+      }
+    }
+    
+    // Sort tables by FK dependency order to avoid constraint violations
     const orderedTableNames = await getTableSyncOrder(sourceConn, tableNames);
     
     // Check if order differs from original (indicates FK dependencies)
@@ -643,16 +1002,42 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
   let checkpointCounter = 0;
   let batchNumber = 0;
   
-  // Get generated columns to exclude (cached per session)
-  const generatedColumns = await getGeneratedColumns(targetConn, tableName);
-  if (generatedColumns.size > 0) {
-    onLog('info', `⚙️ Excluding generated columns: ${[...generatedColumns].join(', ')}`);
-  }
+  // Collect table metadata for smarter sync
+  onLog('info', `Analyzing table structure for ${tableName}...`);
   
-  // Check for triggers that might slow down sync
-  const triggers = await getTableTriggers(targetConn, tableName);
+  const [generatedColumns, triggers, uniqueConstraints, notNullColumns, checkConstraints] = await Promise.all([
+    getGeneratedColumns(targetConn, tableName),
+    getTableTriggers(targetConn, tableName),
+    getUniqueConstraints(targetConn, tableName),
+    getNotNullColumnsWithoutDefaults(targetConn, tableName),
+    getCheckConstraints(targetConn, tableName),
+  ]);
+  
+  // Build metadata object
+  const metadata: TableSyncMetadata = {
+    generatedColumns,
+    uniqueConstraints,
+    notNullColumns,
+    checkConstraints,
+    triggers,
+    hasCircularDeps: false, // Will be set by parent if needed
+  };
+  
+  // Log metadata summary
+  if (generatedColumns.size > 0) {
+    onLog('info', `⚙️ Generated columns (excluded): ${[...generatedColumns].join(', ')}`);
+  }
   if (triggers.length > 0) {
-    onLog('warn', `⚠️ Table has ${triggers.length} trigger(s): ${triggers.slice(0, 3).join(', ')}${triggers.length > 3 ? '...' : ''}`);
+    onLog('warn', `⚠️ Table has ${triggers.length} trigger(s) that may affect performance`);
+  }
+  if (uniqueConstraints.length > 1) { // > 1 because PK is always there
+    const nonPkConstraints = uniqueConstraints.filter(c => !c.columns.includes('id') || c.columns.length > 1);
+    if (nonPkConstraints.length > 0) {
+      onLog('info', `🔑 Additional unique constraints: ${nonPkConstraints.map(c => `(${c.columns.join(', ')})`).join(', ')}`);
+    }
+  }
+  if (checkConstraints.length > 0) {
+    onLog('info', `✓ CHECK constraints: ${checkConstraints.length} (data will be validated)`);
   }
   
   onLog('info', `Starting batch processing for ${tableName}...`);
@@ -749,7 +1134,8 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
           tableName,
           rowsToInsert,
           generatedColumns,
-          onLog
+          onLog,
+          metadata // Pass metadata for validation
         );
         result.inserted += insertedCount;
         result.skipped += rowsToInsert.length - insertedCount;
