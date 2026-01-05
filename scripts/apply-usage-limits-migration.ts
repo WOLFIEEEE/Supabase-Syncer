@@ -18,6 +18,9 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
+// Type assertion since we've already checked it's not undefined
+const dbUrl: string = databaseUrl;
+
 async function applyMigration() {
   console.log('📦 Reading migration file...');
   
@@ -25,7 +28,7 @@ async function applyMigration() {
   const migrationSQL = readFileSync(migrationPath, 'utf-8');
   
   console.log('🔌 Connecting to database...');
-  const sql = postgres(databaseUrl, {
+  const sql = postgres(dbUrl, {
     max: 1,
     onnotice: () => {}, // Suppress notices
   });

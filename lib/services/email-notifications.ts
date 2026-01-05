@@ -37,13 +37,13 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
       .eq('user_id', data.userId)
       .single();
     
-    if (limits && !limits.email_notifications_enabled) {
+    if (limits && !(limits as any).email_notifications_enabled) {
       console.log(`Email notifications disabled for user ${data.userId}`);
       return false;
     }
     
     // Log the email notification
-    const { error: logError } = await supabase
+    const { error: logError } = await (supabase as any)
       .from('email_notifications')
       .insert({
         user_id: data.userId,
@@ -74,7 +74,7 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
     // Log failure
     try {
       const supabase = await createClient();
-      await supabase
+      await (supabase as any)
         .from('email_notifications')
         .insert({
           user_id: data.userId,

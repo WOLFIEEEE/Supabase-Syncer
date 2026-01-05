@@ -147,6 +147,114 @@ export interface Database {
           updated_at?: string;
         };
       };
+      usage_limits: {
+        Row: {
+          id: string;
+          user_id: string;
+          max_connections: number;
+          max_sync_jobs_per_month: number;
+          max_data_transfer_mb_per_month: number;
+          current_connections: number;
+          current_sync_jobs_this_month: number;
+          current_data_transfer_mb_this_month: number;
+          usage_period_start: string;
+          email_notifications_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          max_connections?: number;
+          max_sync_jobs_per_month?: number;
+          max_data_transfer_mb_per_month?: number;
+          current_connections?: number;
+          current_sync_jobs_this_month?: number;
+          current_data_transfer_mb_this_month?: number;
+          usage_period_start?: string;
+          email_notifications_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          max_connections?: number;
+          max_sync_jobs_per_month?: number;
+          max_data_transfer_mb_per_month?: number;
+          current_connections?: number;
+          current_sync_jobs_this_month?: number;
+          current_data_transfer_mb_this_month?: number;
+          usage_period_start?: string;
+          email_notifications_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      usage_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          period_start: string;
+          period_end: string;
+          total_connections: number;
+          total_sync_jobs: number;
+          total_data_transfer_mb: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          period_start: string;
+          period_end: string;
+          total_connections?: number;
+          total_sync_jobs?: number;
+          total_data_transfer_mb?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          period_start?: string;
+          period_end?: string;
+          total_connections?: number;
+          total_sync_jobs?: number;
+          total_data_transfer_mb?: number;
+          created_at?: string;
+        };
+      };
+      email_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          subject: string;
+          body: string;
+          sent_at: string;
+          status: 'sent' | 'failed' | 'pending';
+          error_message: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          subject: string;
+          body: string;
+          sent_at?: string;
+          status?: 'sent' | 'failed' | 'pending';
+          error_message?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          subject?: string;
+          body?: string;
+          sent_at?: string;
+          status?: 'sent' | 'failed' | 'pending';
+          error_message?: string | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

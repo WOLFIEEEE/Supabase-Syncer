@@ -45,7 +45,7 @@ export async function getUserUsageLimits(userId: string): Promise<UsageLimits> {
   const supabase = await createClient();
   
   // Try to get existing limits
-  const { data: existing, error } = await supabase
+  const { data: existing, error } = await (supabase as any)
     .from('usage_limits')
     .select('*')
     .eq('user_id', userId)
@@ -67,7 +67,7 @@ export async function getUserUsageLimits(userId: string): Promise<UsageLimits> {
       // Reset monthly usage
       await resetMonthlyUsage(userId);
       // Fetch again after reset
-      const { data: reset } = await supabase
+      const { data: reset } = await (supabase as any)
         .from('usage_limits')
         .select('*')
         .eq('user_id', userId)
@@ -82,7 +82,7 @@ export async function getUserUsageLimits(userId: string): Promise<UsageLimits> {
   }
   
   // Create new limits with defaults
-  const { data: created, error: createError } = await supabase
+  const { data: created, error: createError } = await (supabase as any)
     .from('usage_limits')
     .insert({
       user_id: userId,
@@ -189,14 +189,14 @@ export async function checkDataTransferLimit(
 export async function incrementSyncJobCount(userId: string): Promise<void> {
   const supabase = await createClient();
   
-  const { error } = await supabase.rpc('increment_sync_job_count', {
+  const { error } = await (supabase as any).rpc('increment_sync_job_count', {
     p_user_id: userId,
   });
   
   if (error) {
     // Fallback: manual update
     const limits = await getUserUsageLimits(userId);
-    await supabase
+    await (supabase as any)
       .from('usage_limits')
       .update({
         current_sync_jobs_this_month: limits.currentSyncJobsThisMonth + 1,
@@ -215,7 +215,7 @@ export async function incrementDataTransfer(userId: string, dataSizeMb: number):
   const limits = await getUserUsageLimits(userId);
   const newTotal = limits.currentDataTransferMbThisMonth + dataSizeMb;
   
-  await supabase
+  await (supabase as any)
     .from('usage_limits')
     .update({
       current_data_transfer_mb_this_month: newTotal,
@@ -236,7 +236,7 @@ export async function incrementDataTransfer(userId: string, dataSizeMb: number):
 export async function updateConnectionCount(userId: string, count: number): Promise<void> {
   const supabase = await createClient();
   
-  await supabase
+  await (supabase as any)
     .from('usage_limits')
     .update({
       current_connections: count,
@@ -273,11 +273,11 @@ async function resetMonthlyUsage(userId: string): Promise<void> {
   
   // Archive current month
   const limits = await getUserUsageLimits(userId);
-  await supabase
+  await (supabase as any)
     .from('usage_history')
     .insert({
       user_id: userId,
-      period_start: limits.usagePeriodStart,
+      period_start: limits.usagePeriodStart.toISOString(),
       period_end: monthStart.toISOString(),
       total_connections: limits.currentConnections,
       total_sync_jobs: limits.currentSyncJobsThisMonth,
@@ -285,7 +285,7 @@ async function resetMonthlyUsage(userId: string): Promise<void> {
     });
   
   // Reset monthly counters
-  await supabase
+  await (supabase as any)
     .from('usage_limits')
     .update({
       current_sync_jobs_this_month: 0,
