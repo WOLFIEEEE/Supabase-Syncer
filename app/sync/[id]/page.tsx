@@ -156,11 +156,11 @@ interface SyncJob {
 }
 
 const statusConfig: Record<string, { color: string; bg: string; label: string }> = {
-  pending: { color: 'yellow.400', bg: 'yellow.900', label: 'Pending' },
-  running: { color: 'blue.400', bg: 'blue.900', label: 'Running' },
-  completed: { color: 'green.400', bg: 'green.900', label: 'Completed' },
-  failed: { color: 'red.400', bg: 'red.900', label: 'Failed' },
-  paused: { color: 'orange.400', bg: 'orange.900', label: 'Paused' },
+  pending: { color: 'yellow.300', bg: 'surface.700', label: 'Pending' },
+  running: { color: 'brand.400', bg: 'surface.700', label: 'Running' },
+  completed: { color: 'green.400', bg: 'surface.700', label: 'Completed' },
+  failed: { color: 'red.400', bg: 'surface.700', label: 'Failed' },
+  paused: { color: 'orange.400', bg: 'surface.700', label: 'Paused' },
 };
 
 export default function SyncDetailPage() {
@@ -313,9 +313,9 @@ export default function SyncDetailPage() {
 
   if (isLoading) {
     return (
-      <Box minH="100vh" bg="gray.950">
+      <Box minH="100vh" className="gradient-mesh">
         <Flex justify="center" align="center" h="100vh">
-          <Spinner size="lg" color="teal.400" />
+          <Spinner size="lg" color="brand.400" />
         </Flex>
       </Box>
     );
@@ -323,9 +323,9 @@ export default function SyncDetailPage() {
 
   if (!job) {
     return (
-      <Box minH="100vh" bg="gray.950" pt={20}>
-        <Container maxW="2xl">
-          <Text color="gray.500" textAlign="center">Sync job not found</Text>
+      <Box minH="100vh" className="gradient-mesh" pt={20}>
+        <Container maxW="5xl">
+          <Text color="surface.400" textAlign="center">Sync job not found</Text>
         </Container>
       </Box>
     );
@@ -341,10 +341,18 @@ export default function SyncDetailPage() {
   const status = statusConfig[job.status] || statusConfig.pending;
 
   return (
-    <Box minH="100vh" bg="gray.950">
-      {/* Minimal Header */}
-      <Box borderBottom="1px solid" borderColor="gray.800" bg="gray.900/50" backdropFilter="blur(10px)" position="sticky" top={0} zIndex={10}>
-        <Container maxW="3xl" py={3}>
+    <Box minH="100vh" className="gradient-mesh">
+      {/* Header */}
+      <Box 
+        as="header"
+        bg="surface.800" 
+        borderBottomWidth="1px" 
+        borderColor="surface.700"
+        position="sticky" 
+        top={0} 
+        zIndex={10}
+      >
+        <Container maxW="5xl" py={3}>
           <Flex justify="space-between" align="center">
             <HStack spacing={3}>
               <IconButton
@@ -352,12 +360,13 @@ export default function SyncDetailPage() {
                 icon={<ArrowLeftIcon />}
                 variant="ghost"
                 size="sm"
-                color="gray.400"
+                color="surface.400"
+                _hover={{ bg: 'surface.700' }}
                 onClick={() => router.push('/')}
               />
               <VStack align="start" spacing={0}>
                 <Text color="white" fontWeight="semibold" fontSize="sm">Sync Job</Text>
-                <Code fontSize="xs" bg="transparent" color="gray.500" p={0}>{job.id.slice(0, 8)}</Code>
+                <Code fontSize="xs" bg="transparent" color="surface.500" p={0}>{job.id.slice(0, 8)}</Code>
               </VStack>
             </HStack>
             
@@ -438,53 +447,57 @@ export default function SyncDetailPage() {
         </Container>
       </Box>
 
-      <Container maxW="3xl" py={6}>
+      <Container maxW="5xl" py={6}>
         <VStack spacing={5} align="stretch">
           
           {/* Connection Flow */}
           <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <HStack justify="center" spacing={4} py={4}>
-              <VStack spacing={1}>
-                <Badge 
-                  colorScheme={job.sourceConnection?.environment === 'production' ? 'red' : 'green'} 
-                  variant="subtle"
-                  px={3}
-                  py={1}
-                  borderRadius="md"
-                >
-                  {job.sourceConnection?.name || 'Source'}
-                </Badge>
-                <Text fontSize="xs" color="gray.600">{job.sourceConnection?.environment}</Text>
-              </VStack>
-              
-              <Box color="gray.600" px={2}>→</Box>
-              
-              <VStack spacing={1}>
-                <Badge 
-                  colorScheme={job.targetConnection?.environment === 'production' ? 'red' : 'green'} 
-                  variant="subtle"
-                  px={3}
-                  py={1}
-                  borderRadius="md"
-                >
-                  {job.targetConnection?.name || 'Target'}
-                </Badge>
-                <Text fontSize="xs" color="gray.600">{job.targetConnection?.environment}</Text>
-              </VStack>
-            </HStack>
+            <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="xl">
+              <CardBody py={4}>
+                <HStack justify="center" spacing={6}>
+                  <VStack spacing={1}>
+                    <Badge 
+                      colorScheme={job.sourceConnection?.environment === 'production' ? 'red' : 'green'} 
+                      variant="subtle"
+                      px={3}
+                      py={1}
+                      borderRadius="md"
+                    >
+                      {job.sourceConnection?.name || 'Source'}
+                    </Badge>
+                    <Text fontSize="xs" color="surface.400">{job.sourceConnection?.environment}</Text>
+                  </VStack>
+                  
+                  <Box color="surface.500" px={2} fontSize="xl">→</Box>
+                  
+                  <VStack spacing={1}>
+                    <Badge 
+                      colorScheme={job.targetConnection?.environment === 'production' ? 'red' : 'green'} 
+                      variant="subtle"
+                      px={3}
+                      py={1}
+                      borderRadius="md"
+                    >
+                      {job.targetConnection?.name || 'Target'}
+                    </Badge>
+                    <Text fontSize="xs" color="surface.400">{job.targetConnection?.environment}</Text>
+                  </VStack>
+                </HStack>
+              </CardBody>
+            </Card>
           </MotionBox>
 
           {/* Progress Section */}
           {(job.status === 'running' || job.status === 'completed' || progress) && (
             <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <Card bg="gray.900" border="1px solid" borderColor="gray.800" borderRadius="xl" overflow="hidden">
+              <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="xl" overflow="hidden">
                 <CardBody p={5}>
                   {/* Current Operation */}
                   {job.status === 'running' && progress?.currentTable && (
                     <HStack spacing={2} mb={4}>
-                      <Box color="teal.400" className="pulse"><LoaderIcon /></Box>
-                      <Text color="gray.400" fontSize="sm">
-                        Processing <Code bg="gray.800" color="teal.300" px={2} py={0.5} borderRadius="md" fontSize="xs">{progress.currentTable}</Code>
+                      <Box color="brand.400" className="pulse"><LoaderIcon /></Box>
+                      <Text color="surface.300" fontSize="sm">
+                        Processing <Code bg="surface.700" color="brand.300" px={2} py={0.5} borderRadius="md" fontSize="xs">{progress.currentTable}</Code>
                       </Text>
                     </HStack>
                   )}
@@ -492,50 +505,50 @@ export default function SyncDetailPage() {
                   {/* Progress Bar */}
                   <VStack align="stretch" spacing={2} mb={5}>
                     <Flex justify="space-between" align="center">
-                      <Text color="gray.500" fontSize="xs" fontWeight="medium">PROGRESS</Text>
+                      <Text color="surface.400" fontSize="xs" fontWeight="medium">PROGRESS</Text>
                       <Text color="white" fontSize="sm" fontWeight="semibold">{progressPercent}%</Text>
                     </Flex>
                     <Progress 
                       value={progressPercent} 
                       size="sm"
                       borderRadius="full"
-                      bg="gray.800"
-                      sx={{ '& > div': { bg: job.status === 'completed' ? 'green.400' : 'teal.400' } }}
+                      bg="surface.700"
+                      sx={{ '& > div': { bg: job.status === 'completed' ? 'green.400' : 'brand.400' } }}
                     />
-                    <Text color="gray.600" fontSize="xs">
+                    <Text color="surface.500" fontSize="xs">
                       {completedCount} of {totalCount} tables
                     </Text>
                   </VStack>
                   
                   {/* Stats Grid */}
-                  <SimpleGrid columns={4} spacing={4}>
+                  <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
                     <VStack align="start" spacing={0}>
-                      <Text color="gray.600" fontSize="xs" fontWeight="medium">INSERTED</Text>
+                      <Text color="surface.500" fontSize="xs" fontWeight="medium">INSERTED</Text>
                       <Text color="green.400" fontSize="xl" fontWeight="bold">{(progress?.insertedRows || 0).toLocaleString()}</Text>
                     </VStack>
                     <VStack align="start" spacing={0}>
-                      <Text color="gray.600" fontSize="xs" fontWeight="medium">UPDATED</Text>
+                      <Text color="surface.500" fontSize="xs" fontWeight="medium">UPDATED</Text>
                       <Text color="blue.400" fontSize="xl" fontWeight="bold">{(progress?.updatedRows || 0).toLocaleString()}</Text>
                     </VStack>
                     <VStack align="start" spacing={0}>
-                      <Text color="gray.600" fontSize="xs" fontWeight="medium">SKIPPED</Text>
+                      <Text color="surface.500" fontSize="xs" fontWeight="medium">SKIPPED</Text>
                       <Text color="yellow.400" fontSize="xl" fontWeight="bold">{(progress?.skippedRows || 0).toLocaleString()}</Text>
                     </VStack>
                     <VStack align="start" spacing={0}>
-                      <Text color="gray.600" fontSize="xs" fontWeight="medium">ERRORS</Text>
-                      <Text color={progress?.errors ? 'red.400' : 'gray.600'} fontSize="xl" fontWeight="bold">{progress?.errors || 0}</Text>
+                      <Text color="surface.500" fontSize="xs" fontWeight="medium">ERRORS</Text>
+                      <Text color={progress?.errors ? 'red.400' : 'surface.500'} fontSize="xl" fontWeight="bold">{progress?.errors || 0}</Text>
                     </VStack>
                   </SimpleGrid>
                   
                   {/* Time Stats */}
                   {job.status === 'running' && (
-                    <HStack spacing={6} mt={5} pt={4} borderTop="1px solid" borderColor="gray.800">
+                    <HStack spacing={6} mt={5} pt={4} borderTop="1px solid" borderColor="surface.700">
                       <HStack spacing={2}>
                         <ClockIcon />
-                        <Text color="gray.500" fontSize="xs">{formatDuration(elapsedTime)}</Text>
+                        <Text color="surface.400" fontSize="xs">{formatDuration(elapsedTime)}</Text>
                       </HStack>
-                      <Text color="gray.600" fontSize="xs">•</Text>
-                      <Text color="gray.500" fontSize="xs">{speed} rows/sec</Text>
+                      <Text color="surface.600" fontSize="xs">•</Text>
+                      <Text color="surface.400" fontSize="xs">{speed} rows/sec</Text>
                     </HStack>
                   )}
                 </CardBody>
@@ -545,10 +558,10 @@ export default function SyncDetailPage() {
 
           {/* Tables List */}
           <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card bg="gray.900" border="1px solid" borderColor="gray.800" borderRadius="xl">
+            <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="xl">
               <CardBody p={4}>
-                <Text color="gray.500" fontSize="xs" fontWeight="medium" mb={3}>TABLES ({enabledTables.length})</Text>
-                <VStack align="stretch" spacing={1}>
+                <Text color="surface.400" fontSize="xs" fontWeight="medium" mb={3}>TABLES ({enabledTables.length})</Text>
+                <VStack align="stretch" spacing={1} maxH="250px" overflowY="auto">
                   {enabledTables.map((table, idx) => {
                     const isComplete = progress?.currentTable 
                       ? enabledTables.findIndex(t => t.tableName === progress.currentTable) > idx
@@ -561,20 +574,20 @@ export default function SyncDetailPage() {
                         justify="space-between" 
                         py={2} 
                         px={3}
-                        bg={isCurrent ? 'teal.900/30' : 'transparent'}
+                        bg={isCurrent ? 'brand.900/30' : 'transparent'}
                         borderRadius="md"
                         borderLeft="2px solid"
-                        borderColor={isComplete ? 'green.500' : isCurrent ? 'teal.400' : 'transparent'}
+                        borderColor={isComplete ? 'green.500' : isCurrent ? 'brand.400' : 'transparent'}
                       >
                         <Text 
                           fontFamily="mono" 
                           fontSize="sm" 
-                          color={isComplete ? 'green.400' : isCurrent ? 'teal.300' : 'gray.500'}
+                          color={isComplete ? 'green.400' : isCurrent ? 'brand.300' : 'surface.400'}
                         >
                           {table.tableName}
                         </Text>
                         {isComplete && <Box color="green.500"><CheckCircleIcon /></Box>}
-                        {isCurrent && <Spinner size="xs" color="teal.400" />}
+                        {isCurrent && <Spinner size="xs" color="brand.400" />}
                       </HStack>
                     );
                   })}
@@ -585,29 +598,35 @@ export default function SyncDetailPage() {
 
           {/* Logs */}
           <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Card bg="gray.900" border="1px solid" borderColor="gray.800" borderRadius="xl">
+            <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="xl">
               <CardBody p={4}>
-                <Text color="gray.500" fontSize="xs" fontWeight="medium" mb={3}>ACTIVITY LOG</Text>
+                <Flex justify="space-between" align="center" mb={3}>
+                  <Text color="surface.400" fontSize="xs" fontWeight="medium">ACTIVITY LOG</Text>
+                  <Text color="surface.500" fontSize="xs">{job.logs.length} entries</Text>
+                </Flex>
                 {job.logs.length === 0 ? (
-                  <Text color="gray.600" fontSize="sm">No activity yet</Text>
+                  <Text color="surface.500" fontSize="sm">No activity yet</Text>
                 ) : (
-                  <VStack align="stretch" spacing={2} maxH="300px" overflowY="auto">
+                  <VStack align="stretch" spacing={2} maxH="350px" overflowY="auto">
                     {job.logs.map((log) => (
-                      <HStack key={log.id} spacing={3} align="start">
-                        <Text color="gray.600" fontSize="xs" fontFamily="mono" w="70px" flexShrink={0}>
+                      <HStack key={log.id} spacing={3} align="start" py={1}>
+                        <Text color="surface.500" fontSize="xs" fontFamily="mono" w="75px" flexShrink={0}>
                           {formatTime(log.createdAt)}
                         </Text>
-                        <Box 
-                          w="6px" 
-                          h="6px" 
-                          borderRadius="full" 
-                          mt={1.5}
-                          bg={log.level === 'error' ? 'red.500' : log.level === 'warn' ? 'yellow.500' : 'teal.500'}
-                        />
+                        <Badge 
+                          size="sm" 
+                          colorScheme={log.level === 'error' ? 'red' : log.level === 'warn' ? 'yellow' : 'brand'}
+                          variant="subtle"
+                          fontSize="2xs"
+                          px={1.5}
+                        >
+                          {log.level.toUpperCase()}
+                        </Badge>
                         <Text 
                           fontSize="sm" 
-                          color={log.level === 'error' ? 'red.400' : log.level === 'warn' ? 'yellow.400' : 'gray.400'}
+                          color={log.level === 'error' ? 'red.300' : log.level === 'warn' ? 'yellow.300' : 'surface.300'}
                           flex={1}
+                          fontFamily={log.message.includes('❌') || log.message.includes('Row') ? 'mono' : 'inherit'}
                         >
                           {log.message}
                         </Text>

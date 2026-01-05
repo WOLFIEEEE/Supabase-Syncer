@@ -14,13 +14,14 @@ import { getRowsToSync } from './diff-engine';
 import { withRetry, withTimeout, sleep } from './retry-handler';
 import type { SyncProgress, SyncCheckpoint, ConflictStrategy, Conflict } from '@/types';
 
-// Configuration
+// Configuration - smaller batches for better progress visibility
 const SYNC_CONFIG = {
   maxRetries: 3,
   retryDelay: 2000,
   jobTimeout: 2 * 60 * 60 * 1000, // 2 hours
-  batchTimeout: 5 * 60 * 1000,    // 5 minutes per batch
-  checkpointInterval: 100,         // Save checkpoint every 100 rows
+  batchTimeout: 2 * 60 * 1000,    // 2 minutes per batch
+  checkpointInterval: 50,          // Save checkpoint every 50 rows
+  defaultBatchSize: 100,           // Small batches for visible progress
 };
 
 // Track cancelled jobs
@@ -68,7 +69,7 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
     tables,
     direction,
     checkpoint,
-    batchSize = 1000,
+    batchSize = SYNC_CONFIG.defaultBatchSize, // Smaller batches for visible progress
     onProgress,
     onLog,
     onComplete,
@@ -234,7 +235,14 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
         
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        onLog('error', `Error syncing table ${tableName}: ${message}`);
+        const stack = error instanceof Error ? error.stack : undefined;
+        
+        onLog('error', `❌ Error syncing table "${tableName}": ${message}`, {
+          table: tableName,
+          error: message,
+          stack: stack?.split('\n').slice(0, 5).join('\n'),
+        });
+        
         progress.errors++;
         onProgress(progress);
         
@@ -245,6 +253,9 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
           lastUpdatedAt: new Date().toISOString(),
           processedTables,
         };
+        
+        // Continue to next table instead of stopping
+        onLog('warn', `Skipping table "${tableName}" due to error, continuing with next table...`);
       }
     }
     
@@ -493,8 +504,13 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
           
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
-          onLog('error', `Error processing row ${row.id}: ${message}`);
+          onLog('error', `❌ Row error [${tableName}.${row.id}]: ${message}`);
           result.skipped++;
+          
+          // Log first few errors in detail, then summarize
+          if (result.skipped <= 3) {
+            onLog('warn', `Row data: ${JSON.stringify(row).slice(0, 200)}...`);
+          }
         }
       }
     });
