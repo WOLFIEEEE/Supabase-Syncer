@@ -162,6 +162,24 @@ const XCircleIcon = () => (
   </svg>
 );
 
+const HeartIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+  </svg>
+);
+
+const HeartFilledIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+  </svg>
+);
+
+const ActivityIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </svg>
+);
+
 interface Connection {
   id: string;
   name: string;
@@ -214,6 +232,14 @@ export default function ConnectionsPage() {
   
   // Connection test state
   const [testingConnectionId, setTestingConnectionId] = useState<string | null>(null);
+  
+  // Keep-alive state
+  const [keepAliveStatus, setKeepAliveStatus] = useState<{
+    keepAlive: boolean;
+    lastPingedAt: string | null;
+  } | null>(null);
+  const [isTogglingKeepAlive, setIsTogglingKeepAlive] = useState(false);
+  const [isPinging, setIsPinging] = useState(false);
   
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { 
@@ -287,8 +313,120 @@ export default function ConnectionsPage() {
   const handleInspectConnection = (connection: Connection) => {
     setSelectedConnection(connection);
     setSelectedTable(null);
+    setKeepAliveStatus(null);
     onSchemaOpen();
     fetchSchema(connection.id);
+    fetchKeepAliveStatus(connection.id);
+  };
+
+  const fetchKeepAliveStatus = async (connectionId: string) => {
+    try {
+      const response = await fetch(`/api/connections/${connectionId}/keep-alive`);
+      const data = await response.json();
+      if (!data.error) {
+        setKeepAliveStatus(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch keep-alive status:', error);
+    }
+  };
+
+  const handleToggleKeepAlive = async () => {
+    if (!selectedConnection || !keepAliveStatus) return;
+    
+    setIsTogglingKeepAlive(true);
+    try {
+      const response = await fetch(`/api/connections/${selectedConnection.id}/keep-alive`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keepAlive: !keepAliveStatus.keepAlive }),
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setKeepAliveStatus({
+          ...keepAliveStatus,
+          keepAlive: data.keepAlive,
+        });
+        toast({
+          title: data.keepAlive ? 'Keep-Alive Enabled' : 'Keep-Alive Disabled',
+          description: data.message,
+          status: 'success',
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: 'Failed to update',
+          description: data.error,
+          status: 'error',
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Failed to update keep-alive setting',
+        status: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setIsTogglingKeepAlive(false);
+    }
+  };
+
+  const handleManualPing = async () => {
+    if (!selectedConnection) return;
+    
+    setIsPinging(true);
+    try {
+      const response = await fetch(`/api/connections/${selectedConnection.id}/keep-alive`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setKeepAliveStatus({
+          ...keepAliveStatus!,
+          lastPingedAt: new Date().toISOString(),
+        });
+        toast({
+          title: 'Ping Successful',
+          description: data.message,
+          status: 'success',
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: 'Ping Failed',
+          description: data.error || data.message,
+          status: 'error',
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Failed to ping database',
+        status: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setIsPinging(false);
+    }
+  };
+
+  const formatLastPinged = (lastPingedAt: string | null): string => {
+    if (!lastPingedAt) return 'Never';
+    
+    const date = new Date(lastPingedAt);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (60 * 1000));
+    const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
   };
 
   const handleTestConnection = async (connection: Connection) => {
@@ -680,6 +818,94 @@ export default function ConnectionsPage() {
                     </CardBody>
                   </Card>
                 </Grid>
+
+                {/* Keep-Alive Section */}
+                <Card bg="surface.900" borderColor="surface.700" borderWidth="1px">
+                  <CardBody p={4}>
+                    <Flex 
+                      justify="space-between" 
+                      align={{ base: 'flex-start', sm: 'center' }}
+                      direction={{ base: 'column', sm: 'row' }}
+                      gap={3}
+                    >
+                      <HStack spacing={3} flex={1}>
+                        <Box 
+                          p={2} 
+                          borderRadius="md" 
+                          bg={keepAliveStatus?.keepAlive ? 'green.900' : 'surface.800'}
+                          color={keepAliveStatus?.keepAlive ? 'green.300' : 'surface.400'}
+                        >
+                          {keepAliveStatus?.keepAlive ? <HeartFilledIcon /> : <HeartIcon />}
+                        </Box>
+                        <VStack align="start" spacing={0}>
+                          <Text color="white" fontWeight="semibold" fontSize="sm">
+                            Keep Database Active
+                          </Text>
+                          <Text color="surface.400" fontSize="xs">
+                            {keepAliveStatus?.keepAlive 
+                              ? 'Pings every 6 hours to prevent Supabase from pausing your database'
+                              : 'Enable to prevent Supabase free tier from pausing inactive databases'}
+                          </Text>
+                        </VStack>
+                      </HStack>
+                      
+                      <HStack spacing={2}>
+                        {keepAliveStatus?.keepAlive && (
+                          <VStack align="end" spacing={0} mr={2}>
+                            <Text color="surface.400" fontSize="xs">Last Pinged</Text>
+                            <Text color="surface.300" fontSize="xs" fontWeight="medium">
+                              {formatLastPinged(keepAliveStatus.lastPingedAt)}
+                            </Text>
+                          </VStack>
+                        )}
+                        
+                        <Tooltip label="Ping database now" hasArrow>
+                          <IconButton
+                            aria-label="Ping database"
+                            icon={isPinging ? <Spinner size="sm" /> : <ActivityIcon />}
+                            size="sm"
+                            variant="outline"
+                            colorScheme="teal"
+                            onClick={handleManualPing}
+                            isLoading={isPinging}
+                            isDisabled={!keepAliveStatus}
+                          />
+                        </Tooltip>
+                        
+                        <Button
+                          size="sm"
+                          colorScheme={keepAliveStatus?.keepAlive ? 'gray' : 'green'}
+                          variant={keepAliveStatus?.keepAlive ? 'outline' : 'solid'}
+                          onClick={handleToggleKeepAlive}
+                          isLoading={isTogglingKeepAlive}
+                          isDisabled={!keepAliveStatus}
+                          leftIcon={keepAliveStatus?.keepAlive ? <XCircleIcon /> : <HeartFilledIcon />}
+                        >
+                          {keepAliveStatus?.keepAlive ? 'Disable' : 'Enable'}
+                        </Button>
+                      </HStack>
+                    </Flex>
+                    
+                    {keepAliveStatus?.keepAlive && (
+                      <Box mt={3} pt={3} borderTopWidth="1px" borderColor="surface.700">
+                        <HStack spacing={2} flexWrap="wrap">
+                          <Badge colorScheme="green" variant="subtle">
+                            <HStack spacing={1}>
+                              <CheckCircleIcon />
+                              <Text>Auto-ping enabled</Text>
+                            </HStack>
+                          </Badge>
+                          <Badge colorScheme="blue" variant="subtle">
+                            Every 6 hours
+                          </Badge>
+                          <Badge colorScheme="purple" variant="subtle">
+                            Via Vercel Cron
+                          </Badge>
+                        </HStack>
+                      </Box>
+                    )}
+                  </CardBody>
+                </Card>
 
                 <Divider borderColor="surface.700" />
 

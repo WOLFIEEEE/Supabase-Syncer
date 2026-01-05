@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, pgEnum, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, pgEnum, jsonb, boolean } from 'drizzle-orm/pg-core';
 
 // Enums
 export const environmentEnum = pgEnum('environment', ['production', 'development']);
@@ -12,6 +12,9 @@ export const connections = pgTable('connections', {
   name: varchar('name', { length: 255 }).notNull(),
   encryptedUrl: text('encrypted_url').notNull(),
   environment: environmentEnum('environment').notNull(),
+  // Keep Alive feature - prevents Supabase from pausing inactive databases
+  keepAlive: boolean('keep_alive').default(false).notNull(),
+  lastPingedAt: timestamp('last_pinged_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

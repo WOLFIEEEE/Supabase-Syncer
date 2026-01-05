@@ -161,6 +161,81 @@ export const supabaseConnectionStore = {
       development: all.filter((c: { environment: string }) => c.environment === 'development').length,
     };
   },
+  
+  // ============================================
+  // Keep Alive Methods (for cron job - no user context)
+  // ============================================
+  
+  /**
+   * Get all connections with keep_alive enabled (for cron job)
+   * Note: Uses service role, no user filtering
+   */
+  async getAll(): Promise<(Connection & { keepAlive: boolean; lastPingedAt: Date | null })[]> {
+    const supabase = await createClient();
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from('connections')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching all connections:', error);
+      return [];
+    }
+    
+    return (data || []).map((c: Record<string, unknown>) => ({
+      ...c,
+      keepAlive: c.keep_alive === true,
+      lastPingedAt: c.last_pinged_at ? new Date(c.last_pinged_at as string) : null,
+      encryptedUrl: c.encrypted_url as string,
+    }));
+  },
+  
+  /**
+   * Update keep_alive setting for a connection
+   */
+  async updateKeepAlive(id: string, userId: string, keepAlive: boolean): Promise<Connection | null> {
+    const supabase = await createClient();
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: connection, error } = await (supabase as any)
+      .from('connections')
+      .update({
+        keep_alive: keepAlive,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating keep_alive:', error);
+      throw new Error(`Failed to update keep_alive: ${error.message}`);
+    }
+    
+    return connection;
+  },
+  
+  /**
+   * Update last_pinged_at timestamp (for cron job)
+   */
+  async updateLastPinged(id: string): Promise<void> {
+    const supabase = await createClient();
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from('connections')
+      .update({
+        last_pinged_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating last_pinged_at:', error);
+    }
+  },
 };
 
 // ============================================
