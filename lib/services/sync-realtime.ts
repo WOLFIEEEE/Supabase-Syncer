@@ -45,11 +45,15 @@ async function getTableSyncOrder(
 ): Promise<string[]> {
   if (tableNames.length === 0) return [];
   
-  // Build placeholders for IN clause (postgres.js doesn't handle arrays well with unsafe())
-  const placeholders = tableNames.map((_, i) => `$${i + 1}`).join(', ');
+  // Use a CTE to define the table list once, then reference it twice
+  // This avoids parameter duplication issues with postgres.js
+  const tableListSql = tableNames.map(t => `'${t.replace(/'/g, "''")}'`).join(', ');
   
   // Get all FK relationships for these tables
   const fkResult = await conn.client.unsafe(`
+    WITH target_tables AS (
+      SELECT unnest(ARRAY[${tableListSql}]) AS table_name
+    )
     SELECT DISTINCT
       tc.table_name AS child_table,
       ccu.table_name AS parent_table
@@ -59,9 +63,9 @@ async function getTableSyncOrder(
       AND tc.table_schema = ccu.table_schema
     WHERE tc.constraint_type = 'FOREIGN KEY'
       AND tc.table_schema = 'public'
-      AND tc.table_name IN (${placeholders})
-      AND ccu.table_name IN (${placeholders})
-  `, [...tableNames, ...tableNames]);
+      AND tc.table_name IN (SELECT table_name FROM target_tables)
+      AND ccu.table_name IN (SELECT table_name FROM target_tables)
+  `);
 
   // Build dependency graph
   const graph = new Map<string, string[]>();
@@ -241,10 +245,13 @@ async function detectCircularDependencies(
 ): Promise<string[][]> {
   if (tableNames.length === 0) return [];
   
-  // Build placeholders for IN clause
-  const placeholders = tableNames.map((_, i) => `$${i + 1}`).join(', ');
+  // Use a CTE to define the table list once
+  const tableListSql = tableNames.map(t => `'${t.replace(/'/g, "''")}'`).join(', ');
   
   const fkResult = await conn.client.unsafe(`
+    WITH target_tables AS (
+      SELECT unnest(ARRAY[${tableListSql}]) AS table_name
+    )
     SELECT DISTINCT
       tc.table_name AS child_table,
       ccu.table_name AS parent_table
@@ -253,9 +260,9 @@ async function detectCircularDependencies(
       ON tc.constraint_name = ccu.constraint_name
     WHERE tc.constraint_type = 'FOREIGN KEY'
       AND tc.table_schema = 'public'
-      AND tc.table_name IN (${placeholders})
-      AND ccu.table_name IN (${placeholders})
-  `, [...tableNames, ...tableNames]);
+      AND tc.table_name IN (SELECT table_name FROM target_tables)
+      AND ccu.table_name IN (SELECT table_name FROM target_tables)
+  `);
 
   // Build adjacency list
   const graph = new Map<string, Set<string>>();
