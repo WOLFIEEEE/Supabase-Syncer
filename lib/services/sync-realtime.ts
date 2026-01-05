@@ -43,6 +43,11 @@ async function getTableSyncOrder(
   conn: DrizzleConnection,
   tableNames: string[]
 ): Promise<string[]> {
+  if (tableNames.length === 0) return [];
+  
+  // Build placeholders for IN clause (postgres.js doesn't handle arrays well with unsafe())
+  const placeholders = tableNames.map((_, i) => `$${i + 1}`).join(', ');
+  
   // Get all FK relationships for these tables
   const fkResult = await conn.client.unsafe(`
     SELECT DISTINCT
@@ -54,9 +59,9 @@ async function getTableSyncOrder(
       AND tc.table_schema = ccu.table_schema
     WHERE tc.constraint_type = 'FOREIGN KEY'
       AND tc.table_schema = 'public'
-      AND tc.table_name = ANY($1)
-      AND ccu.table_name = ANY($1)
-  `, [tableNames]);
+      AND tc.table_name IN (${placeholders})
+      AND ccu.table_name IN (${placeholders})
+  `, [...tableNames, ...tableNames]);
 
   // Build dependency graph
   const graph = new Map<string, string[]>();
@@ -234,6 +239,11 @@ async function detectCircularDependencies(
   conn: DrizzleConnection,
   tableNames: string[]
 ): Promise<string[][]> {
+  if (tableNames.length === 0) return [];
+  
+  // Build placeholders for IN clause
+  const placeholders = tableNames.map((_, i) => `$${i + 1}`).join(', ');
+  
   const fkResult = await conn.client.unsafe(`
     SELECT DISTINCT
       tc.table_name AS child_table,
@@ -243,9 +253,9 @@ async function detectCircularDependencies(
       ON tc.constraint_name = ccu.constraint_name
     WHERE tc.constraint_type = 'FOREIGN KEY'
       AND tc.table_schema = 'public'
-      AND tc.table_name = ANY($1)
-      AND ccu.table_name = ANY($1)
-  `, [tableNames]);
+      AND tc.table_name IN (${placeholders})
+      AND ccu.table_name IN (${placeholders})
+  `, [...tableNames, ...tableNames]);
 
   // Build adjacency list
   const graph = new Map<string, Set<string>>();
