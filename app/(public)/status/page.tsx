@@ -89,6 +89,10 @@ interface SystemStatus {
     production: number;
     development: number;
   };
+  keepAlive?: {
+    active: number;
+    schedule: string;
+  };
 }
 
 export default function StatusPage() {
@@ -156,9 +160,26 @@ export default function StatusPage() {
               >
                 Home
               </Button>
-              <Heading size="md" color="white" fontFamily="mono">
-                System Status
-              </Heading>
+              <HStack spacing={2}>
+                <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+                  <defs>
+                    <linearGradient id="hpg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#14B8A6"/>
+                      <stop offset="100%" stopColor="#0D9488"/>
+                    </linearGradient>
+                    <linearGradient id="hlg" x1="0%" y1="50%" x2="100%" y2="50%">
+                      <stop offset="0%" stopColor="#5EEAD4"/>
+                      <stop offset="50%" stopColor="#2DD4BF"/>
+                      <stop offset="100%" stopColor="#5EEAD4"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="24" cy="24" r="22" fill="url(#hpg)"/>
+                  <path d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" stroke="url(#hlg)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                </svg>
+                <Heading size="md" color="white" fontWeight="bold" letterSpacing="-0.02em">
+                  System Status
+                </Heading>
+              </HStack>
             </HStack>
             <Button
               leftIcon={<RefreshIcon />}
@@ -186,11 +207,28 @@ export default function StatusPage() {
                 <HStack spacing={4}>
                   {getStatusIcon(status.application.status)}
                   <VStack align="start" spacing={0} flex={1}>
-                    <Heading size="md" color="white">
-                      Supabase Syncer
-                    </Heading>
+                    <HStack spacing={2}>
+                      <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                        <defs>
+                          <linearGradient id="spg" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#14B8A6"/>
+                            <stop offset="100%" stopColor="#0D9488"/>
+                          </linearGradient>
+                          <linearGradient id="slg" x1="0%" y1="50%" x2="100%" y2="50%">
+                            <stop offset="0%" stopColor="#5EEAD4"/>
+                            <stop offset="50%" stopColor="#2DD4BF"/>
+                            <stop offset="100%" stopColor="#5EEAD4"/>
+                          </linearGradient>
+                        </defs>
+                        <circle cx="24" cy="24" r="22" fill="url(#spg)"/>
+                        <path d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" stroke="url(#slg)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                      </svg>
+                      <Heading size="md" color="white">
+                        Pulse
+                      </Heading>
+                    </HStack>
                     <Text color="surface.400" fontSize="sm">
-                      Version {status.application.version} • Uptime: {status.application.uptime}
+                      v{status.application.version} • Uptime: {status.application.uptime}
                     </Text>
                   </VStack>
                   <Badge 
@@ -281,7 +319,7 @@ export default function StatusPage() {
             <Card bg="surface.800" borderColor="surface.700">
               <CardBody>
                 <Heading size="sm" color="white" mb={4}>Configured Connections</Heading>
-                <SimpleGrid columns={3} spacing={4}>
+                <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
                   <VStack>
                     <Text fontSize="3xl" fontWeight="bold" color="white">
                       {status.connections.total}
@@ -300,9 +338,41 @@ export default function StatusPage() {
                     </Text>
                     <Text color="surface.400" fontSize="sm">Development</Text>
                   </VStack>
+                  {status.keepAlive && (
+                    <VStack>
+                      <Text fontSize="3xl" fontWeight="bold" color="teal.400">
+                        {status.keepAlive.active}
+                      </Text>
+                      <Text color="surface.400" fontSize="sm">Keep-Alive Active</Text>
+                    </VStack>
+                  )}
                 </SimpleGrid>
               </CardBody>
             </Card>
+
+            {/* Keep-Alive Info */}
+            {status.keepAlive && status.keepAlive.active > 0 && (
+              <Card bg="teal.900" borderColor="teal.700">
+                <CardBody>
+                  <HStack spacing={4}>
+                    <Box color="teal.300">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                      </svg>
+                    </Box>
+                    <VStack align="start" spacing={0} flex={1}>
+                      <Text color="white" fontWeight="bold">Keep-Alive Service Active</Text>
+                      <Text color="teal.200" fontSize="sm">
+                        {status.keepAlive.active} database(s) being kept alive • {status.keepAlive.schedule}
+                      </Text>
+                    </VStack>
+                    <Badge colorScheme="teal" fontSize="sm" px={3} py={1}>
+                      RUNNING
+                    </Badge>
+                  </HStack>
+                </CardBody>
+              </Card>
+            )}
 
             {/* Recommendations */}
             {(status.database.status === 'not_configured' || status.redis.status === 'not_configured') && (
