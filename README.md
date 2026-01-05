@@ -203,13 +203,43 @@ In the application settings, configure the following:
 
 **This is critical for OAuth to work properly!**
 
-1. Go to **Domains** section in your application settings
-2. Click **+ Add Domain**
-3. Enter your domain (e.g., `suparbase.yourdomain.com` or `syncer.yourdomain.com`)
-4. **Enable HTTPS** (Let's Encrypt) - this is required
-5. Wait for SSL certificate to be issued
+#### Option A: Custom Domain (Recommended)
 
-**Note**: If you don't have a domain, Coolify can generate a subdomain, but you'll need to configure it properly in Supabase redirect URLs.
+1. **Configure DNS First:**
+   - In your DNS provider (Cloudflare, Namecheap, etc.), create an **A record**:
+     - **Name**: `@` or your subdomain (e.g., `suparbase` or `syncer`)
+     - **Value**: Your Coolify server's public IP address
+     - **TTL**: 3600 (or auto)
+   - Optional: Add a **CNAME** for `www` subdomain pointing to your main domain
+
+2. **Add Domain in Coolify:**
+   - In your application settings, scroll to the **"Domains"** section
+   - If you don't see it, make sure you're in the application's detail page (not the project list)
+   - Click **+ Add Domain** or **"Add Custom Domain"** button
+   - Enter your domain **without** `https://` (e.g., `suparbase.yourdomain.com` or `syncer.yourdomain.com`)
+   - Click **Save** or **Add**
+   - Coolify will automatically:
+     - Request SSL certificate from Let's Encrypt
+     - Configure Traefik reverse proxy
+     - Set up HTTPS redirect
+
+3. **Wait for SSL Certificate:**
+   - SSL certificate generation takes 1-5 minutes
+   - Check the application logs for SSL status
+   - Once ready, you'll see a green lock icon in the domains section
+
+**Troubleshooting Domain Issues:**
+- **"Domains" section not visible**: Make sure you're viewing the application detail page, not the project overview
+- **SSL certificate fails**: Ensure port 80 is open on your server (required for Let's Encrypt verification)
+- **Domain not resolving**: Wait 5-15 minutes for DNS propagation, verify your A record is correct
+- **Cloudflare users**: Temporarily disable proxy (orange cloud) during SSL setup, then re-enable
+
+#### Option B: Coolify Auto-Generated Domain
+
+If you don't have a custom domain:
+1. Coolify will automatically assign a subdomain like `your-app-name.your-coolify-instance.com`
+2. This domain is available immediately but may not be suitable for production
+3. You'll still need to configure this domain in Supabase redirect URLs
 
 ### Step 4: Set Environment Variables
 
@@ -305,11 +335,15 @@ Coolify automatically uses this for container health monitoring. The health chec
 - Ensure `NEXT_PUBLIC_APP_URL` matches your actual domain
 - Check Supabase redirect URLs are configured correctly
 
-**Domain not working:**
-- Verify domain DNS is pointing to your Coolify server
+**Domain not working / Can't find "Domains" section:**
+- **Make sure you're in the application detail page**: Click on your application name to open its detail view
+- The "Domains" section appears in the application settings, not in the project overview
+- If still not visible, try refreshing the page or check if you have the correct permissions
+- Verify domain DNS A record is pointing to your Coolify server's IP
 - Check SSL certificate is issued (should show green lock in browser)
-- Ensure domain is added in Coolify Domains section
-- Wait a few minutes for DNS propagation
+- Ensure domain is added in Coolify Domains section (look for "Domains" tab or section)
+- Wait 5-15 minutes for DNS propagation after creating A record
+- For Cloudflare users: Make sure DNS-only mode (gray cloud) is enabled, not proxied (orange cloud) during SSL setup
 
 ### Scaling on Coolify
 

@@ -53,13 +53,14 @@ export default function PublicNavbar() {
       bgColor="rgba(9, 9, 11, 0.9)"
     >
       <Container maxW="6xl" py={3}>
-        <Flex justify="space-between" align="center">
-          {/* Logo */}
+        <Flex justify="space-between" align="center" gap={4}>
+          {/* Logo - matching auth header style exactly */}
           <Box
             cursor="pointer"
             onClick={() => router.push('/landing')}
             _hover={{ opacity: 0.8 }}
             transition="opacity 0.2s"
+            flexShrink={0}
           >
             <SuparbaseLogo size="2xl" showText={true} variant="full" />
           </Box>
