@@ -253,29 +253,37 @@ export default function ExplorerLayout({
             <HStack spacing={2} mr={4}>
               <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
                 <defs>
-                  <linearGradient id="elg1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#14B8A6"/>
-                    <stop offset="100%" stopColor="#0D9488"/>
-                  </linearGradient>
-                  <linearGradient id="elg2" x1="0%" y1="50%" x2="100%" y2="50%">
-                    <stop offset="0%" stopColor="#5EEAD4"/>
-                    <stop offset="50%" stopColor="#2DD4BF"/>
-                    <stop offset="100%" stopColor="#5EEAD4"/>
+                  <linearGradient id="epg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#3ECF8E"/>
+                    <stop offset="100%" stopColor="#14B8A6"/>
                   </linearGradient>
                 </defs>
-                <circle cx="24" cy="24" r="22" fill="url(#elg1)"/>
-                <path 
-                  d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" 
-                  stroke="url(#elg2)" 
-                  strokeWidth="2.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  fill="none"
-                />
+                <rect x="14" y="12" width="6" height="24" rx="3" fill="url(#epg)" />
+                <path d="M20 18 C 26 18, 34 18, 34 28" stroke="url(#epg)" strokeWidth="6" strokeLinecap="round" />
+                <circle cx="34" cy="34" r="4" fill="#3ECF8E" />
               </svg>
-              <Text fontWeight="bold" color="white" fontSize="sm">
-                suparbase
-              </Text>
+              <HStack spacing={0}>
+                <Text fontSize="xs" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                  SUPA
+                </Text>
+                <Box 
+                  mx={1} 
+                  px={1.5} 
+                  py={0.5} 
+                  bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
+                  borderRadius="full" 
+                  display="flex" 
+                  alignItems="center"
+                  boxShadow="0 0 10px rgba(62, 207, 142, 0.2)"
+                >
+                  <Text fontSize="xs" fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
+                    r
+                  </Text>
+                </Box>
+                <Text fontSize="xs" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                  BASE
+                </Text>
+              </HStack>
             </HStack>
             
             <Tooltip label="Back to Dashboard" hasArrow>

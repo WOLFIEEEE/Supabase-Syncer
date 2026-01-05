@@ -242,17 +242,26 @@ export default function DashboardPage() {
                   <path d="M20 18 C 26 18, 34 18, 34 28" stroke="url(#hpg)" strokeWidth="6" strokeLinecap="round" />
                   <circle cx="34" cy="34" r="4" fill="#3ECF8E" />
                 </svg>
-                <HStack spacing={0.5}>
-                  <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="medium" color="surface.300" letterSpacing="-0.01em">
-                    supa
+                <HStack spacing={0}>
+                  <Text fontSize={{ base: 'xs', md: 'sm' }} fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                    SUPA
                   </Text>
-                  <Box px={1.5} py={0.5} bg="teal.500" borderRadius="md" display="flex" alignItems="center">
-                    <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="extrabold" color="white" letterSpacing="-0.02em">
+                  <Box 
+                    mx={1.5} 
+                    px={2} 
+                    py={0.5} 
+                    bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
+                    borderRadius="full" 
+                    display="flex" 
+                    alignItems="center"
+                    boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
+                  >
+                    <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
                       r
                     </Text>
                   </Box>
-                  <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="medium" color="surface.300" letterSpacing="-0.01em">
-                    base
+                  <Text fontSize={{ base: 'xs', md: 'sm' }} fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                    BASE
                   </Text>
                 </HStack>
               </Box>

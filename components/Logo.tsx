@@ -77,40 +77,45 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
       </Box>
       
       {showText && variant === 'full' && (
-        <HStack spacing={0.5}>
+        <HStack spacing={0}>
           <Text 
             fontSize={text} 
-            fontWeight="medium" 
-            color="surface.300"
-            letterSpacing="-0.01em"
+            fontWeight="300" 
+            color="white"
+            letterSpacing="0.05em"
+            opacity={0.9}
           >
-            supa
+            SUPA
           </Text>
           <Box
-            px={1.5}
+            mx={1.5}
+            px={2}
             py={0.5}
-            bg="teal.500"
-            borderRadius="md"
+            bgGradient="linear(to-br, #3ECF8E, #14B8A6)"
+            borderRadius="full"
             display="flex"
             alignItems="center"
             justifyContent="center"
+            boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
           >
             <Text 
               fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
-              fontWeight="extrabold" 
+              fontWeight="900" 
               color="white"
-              letterSpacing="-0.02em"
+              lineHeight="1"
+              fontFamily="JetBrains Mono, monospace"
             >
               r
             </Text>
           </Box>
           <Text 
             fontSize={text} 
-            fontWeight="medium" 
-            color="surface.300"
-            letterSpacing="-0.01em"
+            fontWeight="300" 
+            color="white"
+            letterSpacing="0.05em"
+            opacity={0.9}
           >
-            base
+            BASE
           </Text>
         </HStack>
       )}

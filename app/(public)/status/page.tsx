@@ -219,12 +219,27 @@ export default function StatusPage() {
                         <path d="M20 18 C 26 18, 34 18, 34 28" stroke="url(#spg)" strokeWidth="6" strokeLinecap="round" />
                         <circle cx="34" cy="34" r="4" fill="#3ECF8E" />
                       </svg>
-                      <HStack spacing={0.5}>
-                        <Text fontSize="lg" fontWeight="medium" color="surface.300">supa</Text>
-                        <Box px={1.5} py={0.5} bg="teal.500" borderRadius="md" display="flex" alignItems="center">
-                          <Text fontSize="xl" fontWeight="extrabold" color="white">r</Text>
+                      <HStack spacing={0}>
+                        <Text fontSize="lg" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                          SUPA
+                        </Text>
+                        <Box 
+                          mx={1.5} 
+                          px={2} 
+                          py={0.5} 
+                          bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
+                          borderRadius="full" 
+                          display="flex" 
+                          alignItems="center"
+                          boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
+                        >
+                          <Text fontSize="xl" fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
+                            r
+                          </Text>
                         </Box>
-                        <Text fontSize="lg" fontWeight="medium" color="surface.300">base</Text>
+                        <Text fontSize="lg" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
+                          BASE
+                        </Text>
                       </HStack>
                     </HStack>
                     <Text color="surface.400" fontSize="sm">
