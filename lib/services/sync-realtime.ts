@@ -270,13 +270,25 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
     
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    onLog('error', `Sync failed: ${message}`);
+    const stack = error instanceof Error ? error.stack : undefined;
+    onLog('error', `❌ Sync failed: ${message}`, { stack: stack?.split('\n').slice(0, 5).join('\n') });
     jobStartTimes.delete(jobId);
     onComplete(false, currentCheckpoint);
     throw error;
   } finally {
-    if (sourceConn) await sourceConn.close();
-    if (targetConn) await targetConn.close();
+    // Clean up connections safely
+    try {
+      if (sourceConn) await sourceConn.close();
+    } catch (e) {
+      console.error('Error closing source connection:', e);
+    }
+    try {
+      if (targetConn) await targetConn.close();
+    } catch (e) {
+      console.error('Error closing target connection:', e);
+    }
+    // Clean up job tracking
+    cancelledJobs.delete(jobId);
   }
 }
 
@@ -416,6 +428,13 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
     await targetConn.client.begin(async (tx) => {
       for (const row of batch.rows) {
         try {
+          // Validate row has required fields
+          if (!row.id) {
+            onLog('warn', `Skipping row without id in ${tableName}`);
+            result.skipped++;
+            continue;
+          }
+          
           // Check if row exists in target
           const existingResult = await tx.unsafe(
             `SELECT id, updated_at FROM "${tableName}" WHERE id = $1`,
@@ -426,8 +445,8 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
           
           if (!existing) {
             // Insert new row
-            const columns = Object.keys(row);
-            const values = Object.values(row) as (string | number | boolean | null)[];
+            const columns = Object.keys(row).filter(c => row[c] !== undefined);
+            const values = columns.map(c => row[c]) as (string | number | boolean | null)[];
             const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
             const columnList = columns.map((c) => `"${c}"`).join(', ');
             
@@ -439,8 +458,22 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
             result.inserted++;
           } else {
             // Handle update with conflict resolution
-            const sourceUpdatedAt = new Date(row.updated_at as string);
-            const targetUpdatedAt = new Date(existing.updated_at as string);
+            // Safely parse dates, defaulting to epoch if invalid
+            const sourceUpdatedAt = row.updated_at 
+              ? new Date(row.updated_at as string) 
+              : new Date(0);
+            const targetUpdatedAt = existing.updated_at 
+              ? new Date(existing.updated_at as string) 
+              : new Date(0);
+            
+            // Handle invalid dates
+            if (isNaN(sourceUpdatedAt.getTime())) {
+              onLog('warn', `Invalid source updated_at for ${tableName}.${row.id}, using current time`);
+              sourceUpdatedAt.setTime(Date.now());
+            }
+            if (isNaN(targetUpdatedAt.getTime())) {
+              targetUpdatedAt.setTime(0);
+            }
             
             // Check for conflict in two-way sync
             if (direction === 'two_way' && targetUpdatedAt > sourceUpdatedAt) {
@@ -472,9 +505,13 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
               }
             }
             
-            // Update existing row if source is newer
-            if (sourceUpdatedAt > targetUpdatedAt) {
-              const columns = Object.keys(row).filter((c) => c !== 'id');
+            // Update existing row if source is newer (or if target has no updated_at)
+            if (sourceUpdatedAt > targetUpdatedAt || !existing.updated_at) {
+              const columns = Object.keys(row).filter((c) => c !== 'id' && row[c] !== undefined);
+              if (columns.length === 0) {
+                result.skipped++;
+                continue;
+              }
               const values = columns.map((c) => row[c]) as (string | number | boolean | null)[];
               const setClause = columns.map((c, i) => `"${c}" = $${i + 1}`).join(', ');
               
