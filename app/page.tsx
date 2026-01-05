@@ -227,12 +227,12 @@ export default function DashboardPage() {
             <HStack spacing={{ base: 2, md: 3 }}>
               {/* suparbase Logo */}
               <Box display="flex" alignItems="center" gap={2}>
-                <Box width="32px" height="32px" position="relative" flexShrink={0}>
+                <Box width="64px" height="64px" position="relative" flexShrink={0}>
                   <Image
                     src="/logo.png"
                     alt="suparbase logo"
-                    width={32}
-                    height={32}
+                    width={64}
+                    height={64}
                     style={{
                       width: '100%',
                       height: '100%',
