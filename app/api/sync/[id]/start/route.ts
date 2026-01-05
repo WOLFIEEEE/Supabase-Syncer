@@ -125,7 +125,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           },
           onComplete: async (success, newCheckpoint) => {
             const finalStatus = success ? 'completed' : 'failed';
-            const startTime = job.startedAt ? new Date(job.startedAt).getTime() : Date.now();
+            // job object uses snake_case from database (started_at, not startedAt)
+            const jobStartedAt = (job as any).started_at;
+            const startTime = jobStartedAt ? new Date(jobStartedAt).getTime() : Date.now();
             const duration = Date.now() - startTime;
             
             try {
