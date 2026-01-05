@@ -5,6 +5,41 @@ import { syncJobs, syncLogs } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { SyncProgress, SyncCheckpoint, TableConfig, ConflictStrategy, Conflict } from '@/types';
 
+// ============================================================================
+// SAFE TYPE COERCION HELPERS
+// ============================================================================
+
+/**
+ * Safely coerce a value to string
+ */
+function safeString(value: unknown, fallback: string = ''): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'bigint') return value.toString();
+  if (value instanceof Date) return value.toISOString();
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Safely parse a date
+ */
+function safeDate(value: unknown, fallback: Date = new Date(0)): Date {
+  if (value === null || value === undefined) return fallback;
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? fallback : value;
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? fallback : date;
+  }
+  return fallback;
+}
+
 export interface SyncOptions {
   jobId: string;
   sourceUrl: string;
@@ -293,11 +328,17 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
     // Process batch within a transaction
     await targetConn.client.begin(async (tx) => {
       for (const row of batch.rows) {
+        const rowId = safeString(row.id);
+        if (!rowId) {
+          result.skipped++;
+          continue;
+        }
+        
         try {
           // Check if row exists in target
           const existingResult = await tx.unsafe(
             `SELECT id, updated_at FROM "${tableName}" WHERE id = $1`,
-            [row.id as string]
+            [rowId]
           );
           
           const existing = existingResult[0];
@@ -317,17 +358,17 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
             result.inserted++;
           } else {
             // Handle update with conflict resolution
-            const sourceUpdatedAt = new Date(row.updated_at as string);
-            const targetUpdatedAt = new Date(existing.updated_at as string);
+            const sourceUpdatedAt = safeDate(row.updated_at);
+            const targetUpdatedAt = safeDate(existing.updated_at);
             
             // Check for conflict in two-way sync
             if (direction === 'two_way' && targetUpdatedAt > sourceUpdatedAt) {
               // Conflict detected
               if (conflictStrategy === 'manual') {
                 result.conflicts.push({
-                  id: `${tableName}-${row.id}`,
+                  id: `${tableName}-${rowId}`,
                   tableName,
-                  rowId: row.id as string,
+                  rowId,
                   sourceData: row,
                   targetData: existing as Record<string, unknown>,
                   sourceUpdatedAt,
@@ -359,7 +400,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
               
               await tx.unsafe(
                 `UPDATE "${tableName}" SET ${setClause} WHERE id = $${columns.length + 1}`,
-                [...values, row.id as string]
+                [...values, rowId]
               );
               
               result.updated++;
@@ -372,7 +413,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
           
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
-          await onLog?.('error', `Error processing row ${row.id}: ${message}`);
+          await onLog?.('error', `Error processing row ${rowId}: ${message}`);
           result.skipped++;
         }
       }
@@ -390,7 +431,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
     result.lastRowId = currentAfterId || undefined;
     if (batch.rows.length > 0) {
       const lastRow = batch.rows[batch.rows.length - 1];
-      result.lastUpdatedAt = lastRow.updated_at as string;
+      result.lastUpdatedAt = safeString(lastRow.updated_at, new Date().toISOString());
     }
   }
   

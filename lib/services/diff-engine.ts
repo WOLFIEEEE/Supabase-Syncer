@@ -2,6 +2,55 @@ import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
 import { areTypesCompatible } from './schema-inspector';
 import type { TableDiff, SchemaDiff, ColumnDiff } from '@/types';
 
+// ============================================================================
+// SAFE TYPE COERCION HELPERS
+// ============================================================================
+
+/**
+ * Safely coerce a value to string
+ */
+function safeString(value: unknown, fallback: string = ''): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'bigint') return value.toString();
+  if (value instanceof Date) return value.toISOString();
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Safely parse an integer
+ */
+function safeParseInt(value: unknown, fallback: number = 0): number {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'number') return Math.floor(value);
+  if (typeof value === 'string') {
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? fallback : parsed;
+  }
+  if (typeof value === 'bigint') return Number(value);
+  return fallback;
+}
+
+/**
+ * Safely parse a date
+ */
+function safeDate(value: unknown, fallback: Date = new Date(0)): Date {
+  if (value === null || value === undefined) return fallback;
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? fallback : value;
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? fallback : date;
+  }
+  return fallback;
+}
+
 export interface DiffOptions {
   sourceUrl: string;
   targetUrl: string;
@@ -189,12 +238,13 @@ async function getTableColumns(
     `;
     
     return result.map((row) => ({
-      name: row.column_name as string,
-      type: row.data_type as string,
-      udtName: row.udt_name as string,
-      isNullable: row.is_nullable as boolean,
-    }));
-  } catch {
+      name: safeString(row.column_name),
+      type: safeString(row.data_type),
+      udtName: safeString(row.udt_name),
+      isNullable: row.is_nullable === true || row.is_nullable === 'YES',
+    })).filter(col => col.name); // Filter out entries without valid names
+  } catch (error) {
+    console.error(`Error getting columns for table: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return [];
   }
 }
@@ -337,8 +387,9 @@ async function getRowCount(conn: DrizzleConnection, tableName: string): Promise<
     const result = await conn.client.unsafe(
       `SELECT COUNT(*) as count FROM "${tableName}"`
     );
-    return parseInt(result[0]?.count as string || '0', 10);
-  } catch {
+    return safeParseInt(result[0]?.count);
+  } catch (error) {
+    console.error(`Error getting row count for ${tableName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return 0;
   }
 }
@@ -383,9 +434,8 @@ export async function getRowsToSync(
   
   const hasMore = rows.length > batchSize;
   const resultRows = hasMore ? rows.slice(0, batchSize) : rows;
-  const lastId = resultRows.length > 0 
-    ? (resultRows[resultRows.length - 1].id as string) 
-    : null;
+  const lastRow = resultRows.length > 0 ? resultRows[resultRows.length - 1] : null;
+  const lastId = lastRow ? safeString(lastRow.id) || null : null;
   
   return {
     rows: resultRows as Record<string, unknown>[],

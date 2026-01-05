@@ -79,11 +79,11 @@ async function getTableSyncOrder(
 
   // Build edges (parent -> child means parent must be synced first)
   for (const row of fkResult) {
-    const parent = row.parent_table as string;
-    const child = row.child_table as string;
+    const parent = safeString(row.parent_table);
+    const child = safeString(row.child_table);
     
-    // Skip self-references
-    if (parent === child) continue;
+    // Skip self-references or invalid entries
+    if (!parent || !child || parent === child) continue;
     
     const deps = graph.get(parent) || [];
     if (!deps.includes(child)) {
@@ -139,7 +139,7 @@ async function getGeneratedColumns(
       )
   `, [tableName]);
 
-  return new Set(result.map(r => r.column_name as string));
+  return new Set(result.map(r => safeString(r.column_name)).filter(Boolean));
 }
 
 /**
@@ -157,7 +157,7 @@ async function getTableTriggers(
       AND trigger_name NOT LIKE 'RI_%'
   `, [tableName]);
 
-  return result.map(r => r.trigger_name as string);
+  return result.map(r => safeString(r.trigger_name)).filter(Boolean);
 }
 
 /**
@@ -182,10 +182,11 @@ async function getUniqueConstraints(
   `, [tableName]);
 
   return result.map(r => ({
-    name: r.constraint_name as string,
-    columns: Array.isArray(r.columns) ? r.columns as string[] : 
-      (r.columns as string).replace(/[{}]/g, '').split(',').filter(Boolean),
-  }));
+    name: safeString(r.constraint_name),
+    columns: Array.isArray(r.columns) 
+      ? r.columns.map((c: unknown) => safeString(c)).filter(Boolean)
+      : safeString(r.columns).replace(/[{}]/g, '').split(',').filter(Boolean),
+  })).filter(c => c.name);
 }
 
 /**
@@ -206,7 +207,7 @@ async function getNotNullColumnsWithoutDefaults(
       AND identity_generation IS NULL
   `, [tableName]);
 
-  return new Set(result.map(r => r.column_name as string));
+  return new Set(result.map(r => safeString(r.column_name)).filter(Boolean));
 }
 
 /**
@@ -231,9 +232,9 @@ async function getCheckConstraints(
   `, [tableName]);
 
   return result.map(r => ({
-    name: r.constraint_name as string,
-    definition: r.check_clause as string,
-  }));
+    name: safeString(r.constraint_name),
+    definition: safeString(r.check_clause),
+  })).filter(c => c.name);
 }
 
 /**
@@ -270,9 +271,9 @@ async function detectCircularDependencies(
     graph.set(table, new Set());
   }
   for (const row of fkResult) {
-    const child = row.child_table as string;
-    const parent = row.parent_table as string;
-    if (child !== parent) {
+    const child = safeString(row.child_table);
+    const parent = safeString(row.parent_table);
+    if (child && parent && child !== parent) {
       graph.get(child)?.add(parent);
     }
   }
@@ -329,7 +330,7 @@ async function deferForeignKeyConstraints(
       AND constraint_type = 'FOREIGN KEY'
   `, [tableName]);
 
-  const constraintNames = result.map(r => r.constraint_name as string);
+  const constraintNames = result.map(r => safeString(r.constraint_name)).filter(Boolean);
   
   // Note: This only works if constraints are defined as DEFERRABLE
   // Most FK constraints are NOT deferrable by default
@@ -389,6 +390,82 @@ function isValidIdentifier(identifier: string): boolean {
   if (identifier.includes('\0')) return false;
   if (identifier.length === 0 || identifier.length > 63) return false;
   return true;
+}
+
+// ============================================================================
+// SAFE TYPE COERCION HELPERS
+// These prevent runtime errors from unsafe type assertions
+// ============================================================================
+
+/**
+ * Safely coerce a value to string, with fallback
+ */
+function safeString(value: unknown, fallback: string = ''): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'bigint') return value.toString();
+  if (value instanceof Date) return value.toISOString();
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Safely coerce a value to number, with fallback
+ */
+function safeNumber(value: unknown, fallback: number = 0): number {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : fallback;
+  }
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  if (typeof value === 'bigint') {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  }
+  return fallback;
+}
+
+/**
+ * Safely coerce a value to Date, with fallback
+ */
+function safeDate(value: unknown, fallback: Date = new Date(0)): Date {
+  if (value === null || value === undefined) return fallback;
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? fallback : value;
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? fallback : date;
+  }
+  return fallback;
+}
+
+/**
+ * Safely get a string property from an object
+ */
+function getStringProp(obj: Record<string, unknown>, key: string, fallback: string = ''): string {
+  return safeString(obj[key], fallback);
+}
+
+/**
+ * Safely parse an integer from various types
+ */
+function safeParseInt(value: unknown, fallback: number = 0): number {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'number') return Math.floor(value);
+  if (typeof value === 'string') {
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? fallback : parsed;
+  }
+  if (typeof value === 'bigint') return Number(value);
+  return fallback;
 }
 
 /**
@@ -800,6 +877,112 @@ function isSyncCancelled(jobId: string): boolean {
   return cancelledJobs.has(jobId);
 }
 
+// ============================================================================
+// ERROR CLASSIFICATION AND RETRY LOGIC
+// ============================================================================
+
+/**
+ * Check if an error is transient and should be retried
+ */
+function isTransientError(error: Error): boolean {
+  const transientPatterns = [
+    'connection refused',
+    'connection reset',
+    'connection terminated',
+    'timeout',
+    'timed out',
+    'econnreset',
+    'econnrefused',
+    'epipe',
+    'socket hang up',
+    'network',
+    'temporarily unavailable',
+    'too many connections',
+    'server closed the connection',
+    'deadlock detected',
+    'could not serialize access',
+  ];
+  
+  const message = error.message.toLowerCase();
+  return transientPatterns.some(pattern => message.includes(pattern));
+}
+
+/**
+ * Check if an error is permanent and should not be retried
+ */
+function isPermanentError(error: Error): boolean {
+  const permanentPatterns = [
+    'violates unique constraint',
+    'violates foreign key',
+    'violates check constraint',
+    'violates not-null constraint',
+    'permission denied',
+    'does not exist',
+    'authentication failed',
+    'invalid input syntax',
+    'out of range',
+    'duplicate key',
+    'already exists',
+  ];
+  
+  const message = error.message.toLowerCase();
+  return permanentPatterns.some(pattern => message.includes(pattern));
+}
+
+/**
+ * Execute an async operation with retry logic
+ */
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  options: {
+    maxRetries?: number;
+    baseDelay?: number;
+    maxDelay?: number;
+    onRetry?: (error: Error, attempt: number, delay: number) => void;
+  } = {}
+): Promise<T> {
+  const { 
+    maxRetries = 3, 
+    baseDelay = 1000, 
+    maxDelay = 30000,
+    onRetry,
+  } = options;
+  
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // Don't retry permanent errors
+      if (isPermanentError(lastError)) {
+        throw lastError;
+      }
+      
+      // Only retry transient errors
+      if (!isTransientError(lastError) && attempt > 1) {
+        throw lastError;
+      }
+      
+      if (attempt < maxRetries) {
+        // Exponential backoff with jitter
+        const delay = Math.min(
+          baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000,
+          maxDelay
+        );
+        
+        onRetry?.(lastError, attempt, delay);
+        
+        await sleep(delay);
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
 function isJobTimedOut(jobId: string): boolean {
   const startTime = jobStartTimes.get(jobId);
   if (!startTime) return false;
@@ -978,7 +1161,7 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
         const rowCountResult = await sourceConn.client.unsafe(
           `SELECT COUNT(*) as count FROM "${tableName}"`
         );
-        const tableRowCount = parseInt(rowCountResult[0]?.count as string || '0', 10);
+        const tableRowCount = safeParseInt(rowCountResult[0]?.count);
         onLog('info', `Table ${tableName} has ${tableRowCount.toLocaleString()} rows to process`);
         
         // Sync this table with retry
@@ -1300,7 +1483,9 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
     const rowsToSkip: { row: Record<string, unknown>; reason: string }[] = [];
     
     // First pass: categorize rows
-    const existingIds = batch.rows.filter(r => r.id).map(r => r.id as string);
+    const existingIds = batch.rows
+      .filter(r => r.id !== null && r.id !== undefined)
+      .map(r => safeString(r.id));
     let existingRowsMap = new Map<string, Record<string, unknown>>();
     
     if (existingIds.length > 0) {
@@ -1310,18 +1495,20 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
         `SELECT id, updated_at FROM "${tableName}" WHERE id IN (${placeholders})`,
         existingIds
       );
-      existingRowsMap = new Map(existingResult.map(r => [r.id as string, r as Record<string, unknown>]));
-    }
+      existingRowsMap = new Map(
+        existingResult.map(r => [safeString(r.id), r as Record<string, unknown>])
+      );
     
     for (const row of batch.rows) {
-      if (!row.id) {
+      const rowId = safeString(row.id);
+      if (!rowId) {
         result.skipped++;
         result.skippedReasons.noId++;
         rowsToSkip.push({ row, reason: 'missing_id' });
         continue;
       }
       
-      const existing = existingRowsMap.get(row.id as string);
+      const existing = existingRowsMap.get(rowId);
       
       if (!existing) {
         rowsToInsert.push(row);
@@ -1349,31 +1536,20 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       
       // UPDATES - still row by row due to conflict resolution logic
       for (const { row, existing } of rowsToUpdate) {
+        const rowId = safeString(row.id);
         try {
           // Handle update with conflict resolution
-          // Safely parse dates, defaulting to epoch if invalid
-          const sourceUpdatedAt = row.updated_at 
-            ? new Date(row.updated_at as string) 
-            : new Date(0);
-          const targetUpdatedAt = existing.updated_at 
-            ? new Date(existing.updated_at as string) 
-            : new Date(0);
-          
-          // Handle invalid dates
-          if (isNaN(sourceUpdatedAt.getTime())) {
-            sourceUpdatedAt.setTime(Date.now());
-          }
-          if (isNaN(targetUpdatedAt.getTime())) {
-            targetUpdatedAt.setTime(0);
-          }
+          // Safely parse dates using helper function
+          const sourceUpdatedAt = safeDate(row.updated_at, new Date(0));
+          const targetUpdatedAt = safeDate(existing.updated_at, new Date(0));
           
           // Check for conflict in two-way sync
           if (direction === 'two_way' && targetUpdatedAt > sourceUpdatedAt) {
             if (conflictStrategy === 'manual') {
               result.conflicts.push({
-                id: `${tableName}-${row.id}`,
+                id: `${tableName}-${rowId}`,
                 tableName,
-                rowId: row.id as string,
+                rowId,
                 sourceData: row,
                 targetData: existing as Record<string, unknown>,
                 sourceUpdatedAt,
@@ -1418,7 +1594,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
             
             await tx.unsafe(
               `UPDATE "${tableName}" SET ${setClause} WHERE id = $${columns.length + 1}`,
-              [...values, row.id as string]
+              [...values, rowId]
             );
             
             result.updated++;
@@ -1436,8 +1612,8 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
             checkpointCounter = 0;
             onCheckpoint?.({
               lastTable: tableName,
-              lastRowId: row.id as string,
-              lastUpdatedAt: row.updated_at as string,
+              lastRowId: rowId,
+              lastUpdatedAt: safeString(row.updated_at, new Date().toISOString()),
             });
           }
           
@@ -1489,7 +1665,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
     result.lastRowId = currentAfterId || undefined;
     if (batch.rows.length > 0) {
       const lastRow = batch.rows[batch.rows.length - 1];
-      result.lastUpdatedAt = lastRow.updated_at as string;
+      result.lastUpdatedAt = safeString(lastRow.updated_at, new Date().toISOString());
     }
     
     // Small delay between batches to prevent overwhelming the database

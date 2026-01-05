@@ -330,16 +330,16 @@ function groupByTable(rows: Record<string, unknown>[], tableKey: string): Map<st
  */
 function buildColumns(rows: Record<string, unknown>[]): DetailedColumn[] {
   return rows.map((row) => ({
-    name: row.column_name as string,
-    dataType: row.data_type as string,
-    udtName: row.udt_name as string,
-    isNullable: row.is_nullable as boolean,
-    defaultValue: row.column_default as string | null,
+    name: safeString(row.column_name),
+    dataType: safeString(row.data_type),
+    udtName: safeString(row.udt_name),
+    isNullable: safeBoolean(row.is_nullable) || row.is_nullable === 'YES',
+    defaultValue: row.column_default != null ? safeString(row.column_default) : null,
     isPrimaryKey: false,
-    maxLength: row.character_maximum_length as number | null,
-    numericPrecision: row.numeric_precision as number | null,
-    ordinalPosition: row.ordinal_position as number,
-  }));
+    maxLength: safeNumberOrNull(row.character_maximum_length),
+    numericPrecision: safeNumberOrNull(row.numeric_precision),
+    ordinalPosition: safeNumber(row.ordinal_position, 0),
+  })).filter(col => col.name); // Filter out invalid entries
 }
 
 /**
@@ -347,9 +347,11 @@ function buildColumns(rows: Record<string, unknown>[]): DetailedColumn[] {
  */
 function buildPrimaryKey(rows: Record<string, unknown>[]): { columns: string[]; constraintName: string } | null {
   if (rows.length === 0) return null;
+  const constraintName = safeString(rows[0].constraint_name);
+  if (!constraintName) return null;
   return {
-    constraintName: rows[0].constraint_name as string,
-    columns: rows.map((row) => row.column_name as string),
+    constraintName,
+    columns: rows.map((row) => safeString(row.column_name)).filter(Boolean),
   };
 }
 
@@ -358,13 +360,13 @@ function buildPrimaryKey(rows: Record<string, unknown>[]): { columns: string[]; 
  */
 function buildForeignKeys(rows: Record<string, unknown>[]): ForeignKey[] {
   return rows.map((row) => ({
-    constraintName: row.constraint_name as string,
-    columnName: row.column_name as string,
-    referencedTable: row.referenced_table as string,
-    referencedColumn: row.referenced_column as string,
+    constraintName: safeString(row.constraint_name),
+    columnName: safeString(row.column_name),
+    referencedTable: safeString(row.referenced_table),
+    referencedColumn: safeString(row.referenced_column),
     onDelete: row.delete_rule as string,
-    onUpdate: row.update_rule as string,
-  }));
+    onUpdate: safeString(row.update_rule),
+  })).filter(fk => fk.constraintName); // Filter out invalid entries
 }
 
 /**
@@ -372,11 +374,11 @@ function buildForeignKeys(rows: Record<string, unknown>[]): ForeignKey[] {
  */
 function buildConstraints(rows: Record<string, unknown>[]): TableConstraint[] {
   return rows.map((row) => ({
-    name: row.constraint_name as string,
-    type: row.constraint_type as TableConstraint['type'],
+    name: safeString(row.constraint_name),
+    type: safeString(row.constraint_type) as TableConstraint['type'],
     columns: parsePostgresArray(row.columns) || [],
-    definition: (row.definition as string) || '',
-  }));
+    definition: safeString(row.definition),
+  })).filter(c => c.name); // Filter out invalid entries
 }
 
 /**
@@ -384,12 +386,12 @@ function buildConstraints(rows: Record<string, unknown>[]): TableConstraint[] {
  */
 function buildIndexes(rows: Record<string, unknown>[]): TableIndex[] {
   return rows.map((row) => ({
-    name: row.index_name as string,
+    name: safeString(row.index_name),
     columns: parsePostgresArray(row.columns) || [],
-    isUnique: row.is_unique as boolean,
-    isPrimary: row.is_primary as boolean,
-    indexType: row.index_type as string,
-  }));
+    isUnique: safeBoolean(row.is_unique),
+    isPrimary: safeBoolean(row.is_primary),
+    indexType: safeString(row.index_type),
+  })).filter(idx => idx.name); // Filter out invalid entries
 }
 
 /**
@@ -410,10 +412,10 @@ async function getEnumTypes(connection: DrizzleConnection): Promise<EnumType[]> 
   `;
   
   return result.map((row) => ({
-    name: row.enum_name as string,
-    schema: row.schema_name as string,
+    name: safeString(row.enum_name),
+    schema: safeString(row.schema_name),
     values: parsePostgresArray(row.enum_values),
-  }));
+  })).filter(e => e.name); // Filter out invalid entries
 }
 
 /**
@@ -466,6 +468,59 @@ function parsePostgresArray(value: unknown): string[] {
   }
   
   return [];
+}
+
+// ============================================================================
+// SAFE TYPE COERCION HELPERS
+// ============================================================================
+
+/**
+ * Safely coerce a value to string
+ */
+function safeString(value: unknown, fallback: string = ''): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'bigint') return value.toString();
+  return fallback;
+}
+
+/**
+ * Safely coerce a value to boolean
+ */
+function safeBoolean(value: unknown, fallback: boolean = false): boolean {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    return value.toLowerCase() === 'true' || value === '1' || value.toLowerCase() === 'yes';
+  }
+  if (typeof value === 'number') return value !== 0;
+  return fallback;
+}
+
+/**
+ * Safely coerce a value to number or null
+ */
+function safeNumberOrNull(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  if (typeof value === 'bigint') {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+  return null;
+}
+
+/**
+ * Safely coerce a value to number
+ */
+function safeNumber(value: unknown, fallback: number = 0): number {
+  const result = safeNumberOrNull(value);
+  return result !== null ? result : fallback;
 }
 
 /**
@@ -536,16 +591,16 @@ async function getDetailedColumns(
   `;
   
   return result.map((row) => ({
-    name: row.column_name as string,
-    dataType: row.data_type as string,
-    udtName: row.udt_name as string,
-    isNullable: row.is_nullable as boolean,
-    defaultValue: row.column_default as string | null,
+    name: safeString(row.column_name),
+    dataType: safeString(row.data_type),
+    udtName: safeString(row.udt_name),
+    isNullable: safeBoolean(row.is_nullable),
+    defaultValue: row.column_default != null ? safeString(row.column_default) : null,
     isPrimaryKey: false, // Will be set later
-    maxLength: row.character_maximum_length as number | null,
-    numericPrecision: row.numeric_precision as number | null,
-    ordinalPosition: row.ordinal_position as number,
-  }));
+    maxLength: safeNumberOrNull(row.character_maximum_length),
+    numericPrecision: safeNumberOrNull(row.numeric_precision),
+    ordinalPosition: safeNumber(row.ordinal_position, 0),
+  })).filter(col => col.name); // Filter out invalid entries
 }
 
 /**
@@ -573,9 +628,12 @@ async function getPrimaryKey(
     return null;
   }
   
+  const constraintName = safeString(result[0].constraint_name);
+  if (!constraintName) return null;
+  
   return {
-    constraintName: result[0].constraint_name as string,
-    columns: result.map((row) => row.column_name as string),
+    constraintName,
+    columns: result.map((row) => safeString(row.column_name)).filter(Boolean),
   };
 }
 
@@ -610,13 +668,13 @@ async function getForeignKeys(
   `;
   
   return result.map((row) => ({
-    constraintName: row.constraint_name as string,
-    columnName: row.column_name as string,
-    referencedTable: row.referenced_table as string,
-    referencedColumn: row.referenced_column as string,
-    onDelete: row.delete_rule as string,
-    onUpdate: row.update_rule as string,
-  }));
+    constraintName: safeString(row.constraint_name),
+    columnName: safeString(row.column_name),
+    referencedTable: safeString(row.referenced_table),
+    referencedColumn: safeString(row.referenced_column),
+    onDelete: safeString(row.delete_rule),
+    onUpdate: safeString(row.update_rule),
+  })).filter(fk => fk.constraintName); // Filter out invalid entries
 }
 
 /**
@@ -644,11 +702,11 @@ async function getConstraints(
   `;
   
   return result.map((row) => ({
-    name: row.constraint_name as string,
-    type: row.constraint_type as TableConstraint['type'],
+    name: safeString(row.constraint_name),
+    type: safeString(row.constraint_type) as TableConstraint['type'],
     columns: parsePostgresArray(row.columns),
-    definition: (row.definition as string) || '',
-  }));
+    definition: safeString(row.definition),
+  })).filter(c => c.name); // Filter out invalid entries
 }
 
 /**
@@ -677,12 +735,12 @@ async function getIndexes(
   `;
   
   return result.map((row) => ({
-    name: row.index_name as string,
+    name: safeString(row.index_name),
     columns: parsePostgresArray(row.columns),
-    isUnique: row.is_unique as boolean,
-    isPrimary: row.is_primary as boolean,
-    indexType: row.index_type as string,
-  }));
+    isUnique: safeBoolean(row.is_unique),
+    isPrimary: safeBoolean(row.is_primary),
+    indexType: safeString(row.index_type),
+  })).filter(idx => idx.name); // Filter out invalid entries
 }
 
 /**

@@ -1,6 +1,27 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { Sql } from 'postgres';
 
+// ============================================================================
+// SAFE TYPE COERCION HELPERS
+// ============================================================================
+
+function safeString(value: unknown, fallback: string = ''): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return fallback;
+}
+
+function safeBoolean(value: unknown, fallback: boolean = false): boolean {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    return value.toLowerCase() === 'true' || value === '1' || value.toLowerCase() === 'yes';
+  }
+  if (typeof value === 'number') return value !== 0;
+  return fallback;
+}
+
 export interface DrizzleConnection {
   db: ReturnType<typeof drizzle>;
   client: Sql;
@@ -195,11 +216,11 @@ export async function getTableSchema(databaseUrl: string, tableName: string): Pr
     );
     
     return result.map((row) => ({
-      columnName: row.column_name as string,
-      dataType: row.data_type as string,
-      isNullable: row.is_nullable as boolean,
-      columnDefault: row.column_default as string | null,
-    }));
+      columnName: safeString(row.column_name),
+      dataType: safeString(row.data_type),
+      isNullable: safeBoolean(row.is_nullable),
+      columnDefault: row.column_default != null ? safeString(row.column_default) : null,
+    })).filter(col => col.columnName); // Filter out invalid entries
   } finally {
     if (connection) {
       await connection.close();
