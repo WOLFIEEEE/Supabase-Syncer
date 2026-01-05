@@ -273,33 +273,34 @@ export default function DashboardPage() {
                               <stop offset="100%" stopColor="#0D9488" />
                             </linearGradient>
                           </defs>
-                          <rect x="10" y="8" width="4" height="32" rx="2" fill="url(#electricGradHp)" />
-                          <rect x="10" y="8" width="20" height="4" rx="2" fill="url(#electricGradHp)" />
-                          <rect x="10" y="20" width="14" height="4" rx="2" fill="url(#electricGradHp)" />
+                          <rect x="8" y="6" width="5" height="36" rx="2.5" fill="url(#electricGradHp)" />
+                          <rect x="8" y="6" width="22" height="5" rx="2.5" fill="url(#electricGradHp)" />
+                          <rect x="8" y="20" width="16" height="5" rx="2.5" fill="url(#electricGradHp)" />
+                          <rect x="22" y="20" width="5" height="14" rx="2.5" fill="url(#electricGradHp)" />
                           <path
-                            d="M 14 24 L 28 40"
+                            d="M 13 25 L 30 42"
                             stroke="url(#electricGradHp)"
-                            strokeWidth="4"
+                            strokeWidth="5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             className="electric-path"
                           />
                           <path
-                            d="M 16 28 L 18 26 L 20 30 L 22 28 L 24 32 L 26 30"
+                            d="M 16 30 L 18 28 L 20 32 L 22 30 L 24 34 L 26 32"
                             stroke="#5EEAD4"
-                            strokeWidth="2"
+                            strokeWidth="2.5"
                             strokeLinecap="round"
                             fill="none"
-                            opacity="0.8"
+                            opacity="0.9"
                             className="electric-spark"
                           />
                           <path
-                            d="M 14 24 L 28 40"
+                            d="M 13 25 L 30 42"
                             stroke="#5EEAD4"
-                            strokeWidth="6"
+                            strokeWidth="7"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            opacity="0.3"
+                            opacity="0.25"
                             className="electric-glow"
                           />
                         </svg>
