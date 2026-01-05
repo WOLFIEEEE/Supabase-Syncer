@@ -369,6 +369,28 @@ function estimateRowSize(row: Record<string, unknown>): number {
 const MAX_ROW_SIZE = 1024 * 1024;
 
 /**
+ * Serialize a value for PostgreSQL insertion
+ * Handles JSONB columns (objects/arrays) by converting to JSON strings
+ */
+function serializeValue(value: unknown): string | number | boolean | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (typeof value === 'object') {
+    // JSONB columns - serialize to JSON string
+    return JSON.stringify(value);
+  }
+  // Fallback: convert to string
+  return String(value);
+}
+
+/**
  * Table metadata for smarter sync
  */
 interface TableSyncMetadata {
@@ -489,7 +511,8 @@ async function bulkInsertRows(
         const placeholders: string[] = [];
         for (const col of columns) {
           placeholders.push(`$${paramIndex++}`);
-          allValues.push(row[col] as string | number | boolean | null);
+          // Serialize objects (JSONB columns) to JSON strings
+          allValues.push(serializeValue(row[col]));
         }
         valueSets.push(`(${placeholders.join(', ')})`);
       }
@@ -530,7 +553,8 @@ async function bulkInsertRows(
             row[c] !== undefined && 
             !generatedColumns.has(c)
           );
-          const values = columns.map(c => row[c]) as (string | number | boolean | null)[];
+          // Serialize objects (JSONB columns) to JSON strings
+          const values = columns.map(c => serializeValue(row[c]));
           const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
           const columnListSingle = columns.map(c => `"${c}"`).join(', ');
           
@@ -574,7 +598,8 @@ async function bulkInsertRows(
           row[c] !== undefined && 
           !generatedColumns.has(c)
         );
-        const values = columns.map(c => row[c]) as (string | number | boolean | null)[];
+        // Serialize objects (JSONB columns) to JSON strings
+        const values = columns.map(c => serializeValue(row[c]));
         const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
         const columnListSingle = columns.map(c => `"${c}"`).join(', ');
         
@@ -1224,7 +1249,8 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
               result.skippedReasons.noChanges++;
               continue;
             }
-            const values = columns.map((c) => row[c]) as (string | number | boolean | null)[];
+            // Serialize objects (JSONB columns) to JSON strings
+            const values = columns.map((c) => serializeValue(row[c]));
             const setClause = columns.map((c, i) => `"${c}" = $${i + 1}`).join(', ');
             
             await tx.unsafe(
