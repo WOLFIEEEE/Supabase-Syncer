@@ -1,6 +1,6 @@
-# Supabase Database Syncer
+# suparbase
 
-A powerful, self-hosted tool for synchronizing database schemas and data between Supabase environments (development, staging, production).
+A powerful, self-hosted tool for synchronizing database schemas and data between Supabase environments (development, staging, production). Keep your databases alive and in sync with suparbase.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
@@ -160,8 +160,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 # Required: Encryption key (generate with: openssl rand -hex 16)
 ENCRYPTION_KEY=your_32_character_hex_key
 
-# Recommended: Your Coolify domain
-NEXT_PUBLIC_APP_URL=https://your-domain.com
+# Recommended: Your domain (defaults to https://suparbase.com in production)
+NEXT_PUBLIC_APP_URL=https://suparbase.com
 
 # Optional: External Redis for background jobs
 REDIS_URL=redis://your-redis-host:6379
@@ -191,8 +191,8 @@ NODE_ENV=production
 After deployment, add your Coolify URL to Supabase:
 
 1. Go to Supabase Dashboard → **Authentication** → **URL Configuration**
-2. Add your domain to **Site URL**: `https://your-domain.com`
-3. Add to **Redirect URLs**: `https://your-domain.com/**`
+2. Add your domain to **Site URL**: `https://suparbase.com`
+3. Add to **Redirect URLs**: `https://suparbase.com/**`
 
 ### Coolify Health Checks
 

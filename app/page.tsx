@@ -224,7 +224,7 @@ export default function DashboardPage() {
         <Container maxW="7xl" py={{ base: 3, md: 4 }} px={{ base: 4, md: 6 }}>
           <Flex justify="space-between" align="center">
             <HStack spacing={{ base: 2, md: 3 }}>
-              {/* Supapulse Logo */}
+              {/* suparbase Logo */}
               <Box display="flex" alignItems="center" gap={2}>
                 <svg 
                   width="32" 
@@ -255,7 +255,7 @@ export default function DashboardPage() {
                   <circle cx="24" cy="12" r="2" fill="#5EEAD4" opacity="0.6"/>
                 </svg>
                 <Heading size={{ base: 'sm', md: 'md' }} fontWeight="bold" color="white" letterSpacing="-0.02em">
-                  Supapulse
+                  suparbase
                 </Heading>
               </Box>
             </HStack>

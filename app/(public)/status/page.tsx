@@ -224,7 +224,7 @@ export default function StatusPage() {
                         <path d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" stroke="url(#slg)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                       </svg>
                       <Heading size="md" color="white">
-                        Supapulse
+                        suparbase
                       </Heading>
                     </HStack>
                     <Text color="surface.400" fontSize="sm">
