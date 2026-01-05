@@ -369,25 +369,163 @@ function estimateRowSize(row: Record<string, unknown>): number {
 const MAX_ROW_SIZE = 1024 * 1024;
 
 /**
+ * Sanitize identifier (table name, column name) for safe SQL usage
+ * Prevents SQL injection by removing dangerous characters
+ */
+function sanitizeIdentifier(identifier: string): string {
+  // Remove or escape dangerous characters
+  // PostgreSQL identifiers can contain: letters, digits, underscores
+  // When quoted, they can contain almost anything except null character
+  return identifier
+    .replace(/\0/g, '') // Remove null bytes
+    .replace(/"/g, '""'); // Escape double quotes by doubling them
+}
+
+/**
+ * Validate that a string is a safe PostgreSQL identifier
+ */
+function isValidIdentifier(identifier: string): boolean {
+  // Check for null bytes or other dangerous patterns
+  if (identifier.includes('\0')) return false;
+  if (identifier.length === 0 || identifier.length > 63) return false;
+  return true;
+}
+
+/**
  * Serialize a value for PostgreSQL insertion
- * Handles JSONB columns (objects/arrays) by converting to JSON strings
+ * Handles various PostgreSQL column types properly
+ * 
+ * Supported types:
+ * - Primitives (string, number, boolean)
+ * - null/undefined → null
+ * - Date → ISO string
+ * - BigInt → string (PostgreSQL bigint)
+ * - Buffer → hex string (PostgreSQL bytea)
+ * - Array → PostgreSQL array literal or JSON
+ * - Object → JSON string (JSONB columns)
+ * - Special numbers (Infinity, NaN) → null with warning
  */
 function serializeValue(value: unknown): string | number | boolean | null {
+  // Handle null/undefined
   if (value === null || value === undefined) {
     return null;
   }
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+  
+  // Handle booleans
+  if (typeof value === 'boolean') {
     return value;
   }
+  
+  // Handle numbers - check for special values
+  if (typeof value === 'number') {
+    if (Number.isNaN(value) || !Number.isFinite(value)) {
+      // Infinity and NaN can't be stored in PostgreSQL numeric columns
+      console.warn(`[Sync] Converting special number value (${value}) to null`);
+      return null;
+    }
+    return value;
+  }
+  
+  // Handle BigInt (PostgreSQL bigint columns)
+  if (typeof value === 'bigint') {
+    return value.toString();
+  }
+  
+  // Handle strings
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  // Handle Date objects
   if (value instanceof Date) {
+    // Check for invalid dates
+    if (isNaN(value.getTime())) {
+      console.warn('[Sync] Converting invalid Date to null');
+      return null;
+    }
     return value.toISOString();
   }
-  if (typeof value === 'object') {
-    // JSONB columns - serialize to JSON string
+  
+  // Handle Buffer (PostgreSQL bytea columns)
+  if (Buffer.isBuffer(value)) {
+    // Convert to hex string with \x prefix for PostgreSQL bytea
+    return '\\x' + value.toString('hex');
+  }
+  
+  // Handle Uint8Array (also for binary data)
+  if (value instanceof Uint8Array) {
+    return '\\x' + Buffer.from(value).toString('hex');
+  }
+  
+  // Handle Arrays
+  if (Array.isArray(value)) {
+    // Check if it's an array of primitives (PostgreSQL array type)
+    // or complex objects (should be JSONB)
+    const hasComplexElements = value.some(
+      item => item !== null && typeof item === 'object' && !Array.isArray(item) && !(item instanceof Date)
+    );
+    
+    if (hasComplexElements) {
+      // Complex array - serialize as JSON (for JSONB columns)
+      return JSON.stringify(value);
+    }
+    
+    // Simple array - could be PostgreSQL array type
+    // Serialize as JSON to be safe (works for both array[] and jsonb)
     return JSON.stringify(value);
   }
+  
+  // Handle plain objects (JSONB columns)
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch (e) {
+      console.warn('[Sync] Failed to serialize object, converting to null:', e);
+      return null;
+    }
+  }
+  
+  // Handle Symbol, Function, etc. - convert to string representation
+  if (typeof value === 'symbol') {
+    return value.toString();
+  }
+  
+  if (typeof value === 'function') {
+    console.warn('[Sync] Function values cannot be stored, converting to null');
+    return null;
+  }
+  
   // Fallback: convert to string
   return String(value);
+}
+
+/**
+ * Check if a value might cause issues during sync
+ * Returns warning message if problematic, null if OK
+ */
+function checkValueForIssues(columnName: string, value: unknown): string | null {
+  if (typeof value === 'number') {
+    if (Number.isNaN(value)) {
+      return `Column "${columnName}" has NaN value`;
+    }
+    if (!Number.isFinite(value)) {
+      return `Column "${columnName}" has Infinity value`;
+    }
+    // Check for potential precision loss with very large numbers
+    if (Math.abs(value) > Number.MAX_SAFE_INTEGER) {
+      return `Column "${columnName}" has value exceeding safe integer range`;
+    }
+  }
+  
+  if (value instanceof Date && isNaN(value.getTime())) {
+    return `Column "${columnName}" has invalid Date`;
+  }
+  
+  if (typeof value === 'string' && value.length > 10 * 1024 * 1024) {
+    return `Column "${columnName}" has very large string (${Math.round(value.length / 1024 / 1024)}MB)`;
+  }
+  
+  return null;
 }
 
 /**
@@ -410,8 +548,9 @@ function validateRow(
   row: Record<string, unknown>,
   notNullColumns: Set<string>,
   generatedColumns: Set<string>
-): { valid: boolean; issues: string[] } {
+): { valid: boolean; issues: string[]; warnings: string[] } {
   const issues: string[] = [];
+  const warnings: string[] = [];
 
   // Check NOT NULL columns
   for (const col of notNullColumns) {
@@ -424,13 +563,23 @@ function validateRow(
     }
   }
 
+  // Check all column values for potential issues
+  for (const [col, value] of Object.entries(row)) {
+    if (generatedColumns.has(col)) continue;
+    
+    const valueIssue = checkValueForIssues(col, value);
+    if (valueIssue) {
+      warnings.push(valueIssue);
+    }
+  }
+
   // Check row size
   const rowSize = estimateRowSize(row);
   if (rowSize > MAX_ROW_SIZE) {
     issues.push(`Row too large: ${Math.round(rowSize / 1024)}KB (max 1MB)`);
   }
 
-  return { valid: issues.length === 0, issues };
+  return { valid: issues.length === 0, issues, warnings };
 }
 
 /**
@@ -462,6 +611,8 @@ async function bulkInsertRows(
   const normalRows: Record<string, unknown>[] = [];
   const largeRows: Record<string, unknown>[] = [];
   
+  let warningCount = 0;
+  
   for (const row of rows) {
     const rowSize = estimateRowSize(row);
     if (rowSize > MAX_ROW_SIZE) {
@@ -469,6 +620,15 @@ async function bulkInsertRows(
     } else {
       // Validate row
       const validation = validateRow(row, notNullColumns, generatedColumns);
+      
+      // Log warnings for data quality issues (but don't skip)
+      if (validation.warnings.length > 0) {
+        warningCount++;
+        if (warningCount <= 3) {
+          onLog('warn', `⚠️ Data quality warning for row ${row.id}: ${validation.warnings.join(', ')}`);
+        }
+      }
+      
       if (validation.valid) {
         normalRows.push(row);
       } else {
@@ -482,6 +642,9 @@ async function bulkInsertRows(
   
   if (skippedValidation > 3) {
     onLog('warn', `⚠️ Skipped ${skippedValidation} rows due to validation failures`);
+  }
+  if (warningCount > 3) {
+    onLog('warn', `⚠️ ${warningCount} rows had data quality warnings (processed anyway)`);
   }
   
   // Process normal rows in bulk

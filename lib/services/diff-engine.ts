@@ -289,11 +289,16 @@ async function calculateTableDiff(
       );
       
       const targetTimestampMap = new Map(
-        targetTimestamps.map((r) => [r.id, new Date(r.updated_at as string)])
+        targetTimestamps.map((r) => {
+          const timestamp = r.updated_at ? new Date(r.updated_at as string) : new Date(0);
+          return [r.id, isNaN(timestamp.getTime()) ? new Date(0) : timestamp];
+        })
       );
       
       for (const row of sourceTimestamps) {
-        const sourceTime = new Date(row.updated_at as string);
+        // Safely parse date, default to epoch if invalid
+        const rawSourceTime = row.updated_at ? new Date(row.updated_at as string) : new Date(0);
+        const sourceTime = isNaN(rawSourceTime.getTime()) ? new Date(0) : rawSourceTime;
         const targetTime = targetTimestampMap.get(row.id);
         
         if (targetTime && sourceTime > targetTime) {
