@@ -399,6 +399,16 @@ export default function DashboardPage() {
             </Button>
             <Button
               leftIcon={<DatabaseIcon />}
+              colorScheme="cyan"
+              variant="solid"
+              onClick={() => router.push('/explorer')}
+              size={{ base: 'md', md: 'md' }}
+              w={{ base: '100%', sm: 'auto' }}
+            >
+              Data Explorer
+            </Button>
+            <Button
+              leftIcon={<DatabaseIcon />}
               variant="outline"
               onClick={() => router.push('/connections')}
               size={{ base: 'md', md: 'md' }}
