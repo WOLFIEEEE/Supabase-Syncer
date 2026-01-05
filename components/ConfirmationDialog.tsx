@@ -70,6 +70,7 @@ interface ConfirmationDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   isLoading?: boolean;
+  loadingStatus?: string;
   
   // Confirmation type
   type: 'production' | 'high_risk' | 'standard';
@@ -103,6 +104,7 @@ export default function ConfirmationDialog({
   onClose,
   onConfirm,
   isLoading = false,
+  loadingStatus = 'Starting...',
   type,
   targetName,
   targetEnvironment,
@@ -325,9 +327,9 @@ export default function ConfirmationDialog({
             <Button
               colorScheme={isProduction ? 'red' : 'orange'}
               onClick={handleConfirm}
-              isDisabled={!canConfirm || criticalIssues.length > 0}
+              isDisabled={!canConfirm || criticalIssues.length > 0 || isLoading}
               isLoading={isLoading}
-              loadingText="Starting..."
+              loadingText={loadingStatus}
             >
               {criticalIssues.length > 0 
                 ? 'Cannot Proceed (Fix Critical Issues)'

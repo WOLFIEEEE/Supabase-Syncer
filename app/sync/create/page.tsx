@@ -297,8 +297,11 @@ export default function CreateSyncPage() {
     }
   };
 
+  const [creatingStatus, setCreatingStatus] = useState<string>('');
+  
   const createAndStartSync = async () => {
     setIsCreating(true);
+    setCreatingStatus('Creating sync job...');
     
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     
@@ -329,22 +332,39 @@ export default function CreateSyncPage() {
         throw new Error(createData.error);
       }
 
-      // Start the sync job
+      setCreatingStatus('Starting sync...');
+
+      // Start the sync job (returns SSE stream, don't wait for it to complete)
       const startResponse = await fetch(`/api/sync/${createData.data.id}/start`, {
         method: 'POST',
       });
 
-      const startData = await startResponse.json();
-
-      if (startData.success) {
+      // Check if it's a streaming response or error
+      const contentType = startResponse.headers.get('content-type') || '';
+      
+      if (contentType.includes('text/event-stream')) {
+        // SSE stream - sync has started, redirect to status page
         toast({
           title: 'Sync job started',
+          description: 'Redirecting to sync status page...',
           status: 'success',
-          duration: 3000,
+          duration: 2000,
         });
         router.push(`/sync/${createData.data.id}`);
       } else {
-        throw new Error(startData.error);
+        // JSON response - check for errors
+        const startData = await startResponse.json();
+        
+        if (startData.success || startResponse.ok) {
+          toast({
+            title: 'Sync job started',
+            status: 'success',
+            duration: 3000,
+          });
+          router.push(`/sync/${createData.data.id}`);
+        } else {
+          throw new Error(startData.error || 'Failed to start sync');
+        }
       }
     } catch (error) {
       toast({
@@ -353,8 +373,9 @@ export default function CreateSyncPage() {
         status: 'error',
         duration: 5000,
       });
-    } finally {
       setIsCreating(false);
+      setCreatingStatus('');
+    } finally {
       onConfirmClose();
     }
   };
@@ -1207,6 +1228,7 @@ export default function CreateSyncPage() {
         onClose={onConfirmClose}
         onConfirm={createAndStartSync}
         isLoading={isCreating}
+        loadingStatus={creatingStatus || 'Starting...'}
         type={targetConnection?.environment === 'production' ? 'production' : 
               (validationResult?.validation?.summary?.high || 0) > 0 ? 'high_risk' : 'standard'}
         targetName={targetConnection?.name || ''}
