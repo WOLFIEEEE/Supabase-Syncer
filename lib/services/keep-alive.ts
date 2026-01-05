@@ -21,6 +21,7 @@ export const KEEP_ALIVE_CONFIG = {
   pingTimeout: 15000,
   
   // Minimum interval between pings for the same connection (6 hours)
+  // Note: Cron runs daily, but this prevents manual pings from being too frequent
   minPingInterval: 6 * 60 * 60 * 1000,
 };
 

@@ -97,7 +97,7 @@ export async function PUT(
       success: true,
       keepAlive: connection.keep_alive === true,
       message: keepAlive 
-        ? 'Keep-alive enabled. Your database will be pinged every 6 hours.'
+        ? 'Keep-alive enabled. Your database will be pinged daily at midnight UTC.'
         : 'Keep-alive disabled.',
     });
     

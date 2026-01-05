@@ -851,7 +851,7 @@ export default function ConnectionsPage() {
                           </Text>
                           <Text color="surface.400" fontSize="xs">
                             {keepAliveStatus?.keepAlive 
-                              ? 'Pings every 6 hours to prevent Supabase from pausing your database'
+                              ? 'Pings daily to prevent Supabase from pausing your database'
                               : 'Enable to prevent Supabase free tier from pausing inactive databases'}
                           </Text>
                         </VStack>
@@ -904,7 +904,7 @@ export default function ConnectionsPage() {
                             </HStack>
                           </Badge>
                           <Badge colorScheme="blue" variant="subtle">
-                            Every 6 hours
+                            Daily at midnight UTC
                           </Badge>
                           <Badge colorScheme="purple" variant="subtle">
                             Via Vercel Cron
@@ -958,7 +958,7 @@ export default function ConnectionsPage() {
                               <VStack align="stretch" spacing={2} color="surface.300" pl={2}>
                                 <HStack align="start" spacing={2}>
                                   <Text color="green.400">•</Text>
-                                  <Text>A lightweight query (<Code fontSize="xs" bg="surface.700" px={1}>SELECT 1</Code>) is sent to your database every 6 hours</Text>
+                                  <Text>A lightweight query (<Code fontSize="xs" bg="surface.700" px={1}>SELECT 1</Code>) is sent to your database once daily at midnight UTC</Text>
                                 </HStack>
                                 <HStack align="start" spacing={2}>
                                   <Text color="green.400">•</Text>
@@ -983,7 +983,7 @@ export default function ConnectionsPage() {
                               <VStack align="stretch" spacing={2} color="surface.300" pl={2}>
                                 <HStack align="start" spacing={2}>
                                   <Text color="blue.400">1.</Text>
-                                  <Text>A Vercel Cron job runs every 6 hours (0:00, 6:00, 12:00, 18:00 UTC)</Text>
+                                  <Text>A Vercel Cron job runs once daily at midnight UTC (0:00 UTC)</Text>
                                 </HStack>
                                 <HStack align="start" spacing={2}>
                                   <Text color="blue.400">2.</Text>
@@ -1012,7 +1012,7 @@ export default function ConnectionsPage() {
                                 ⚠️ Important Notes
                               </Text>
                               <VStack align="stretch" spacing={1} color="yellow.100" fontSize="xs">
-                                <Text>• This feature uses minimal resources - just a simple query every 6 hours</Text>
+                                <Text>• This feature uses minimal resources - just a simple query once daily</Text>
                                 <Text>• Your database credentials are encrypted and never exposed</Text>
                                 <Text>• If pings fail repeatedly, check your database status in Supabase dashboard</Text>
                                 <Text>• Paid Supabase plans don&apos;t pause databases, but Keep-Alive still works for health monitoring</Text>

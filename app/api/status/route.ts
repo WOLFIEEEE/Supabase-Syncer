@@ -144,7 +144,7 @@ export async function GET() {
         },
         keepAlive: {
           active: keepAliveActive,
-          schedule: 'Every 6 hours',
+          schedule: 'Daily at midnight UTC',
         },
       },
     });
@@ -186,7 +186,7 @@ export async function GET() {
         },
         keepAlive: {
           active: 0,
-          schedule: 'Every 6 hours',
+          schedule: 'Daily at midnight UTC',
         },
       },
     });

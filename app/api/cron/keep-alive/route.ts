@@ -2,7 +2,9 @@
  * Keep Alive Cron Job Endpoint
  * 
  * This endpoint is called by Vercel Cron to ping databases with keep_alive enabled.
- * Runs every 6 hours to keep Supabase free tier databases active.
+ * Runs once daily at midnight UTC to keep Supabase free tier databases active.
+ * Note: Vercel Hobby plan limits to 1 cron job per day, so we run daily instead of every 6 hours.
+ * This is sufficient since Supabase free tier pauses after 1 week of inactivity.
  * 
  * Security: Protected by CRON_SECRET header verification
  */
@@ -19,7 +21,7 @@ export const maxDuration = 60; // 60 seconds max for cron job
  * GET /api/cron/keep-alive
  * 
  * Pings all databases with keep_alive enabled
- * Called by Vercel Cron every 6 hours
+ * Called by Vercel Cron once daily at midnight UTC
  */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
