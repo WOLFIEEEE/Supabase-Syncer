@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Note: output: "standalone" is only for Docker deployment
-  // Vercel uses its own build system, so we don't set it here
-  // If deploying to Docker, uncomment: output: "standalone",
+  // Enable standalone output for Docker/Coolify deployment
+  // This creates a minimal production build that includes only necessary files
+  output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   
   // Suppress experimental warnings
   experimental: {

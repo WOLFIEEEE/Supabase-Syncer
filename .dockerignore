@@ -34,7 +34,7 @@ coverage
 .git
 .gitignore
 
-# Documentation
+# Documentation (keep README for reference)
 *.md
 !README.md
 LICENSE
