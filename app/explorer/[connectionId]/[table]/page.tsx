@@ -220,7 +220,7 @@ export default function TableDataPage() {
   
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
-  const cancelRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement | null>(null);
   
   const router = useRouter();
   const params = useParams();
@@ -1031,7 +1031,7 @@ export default function TableDataPage() {
       {/* Delete Confirmation Dialog */}
       <AlertDialog
         isOpen={isDeleteOpen}
-        leastDestructiveRef={cancelRef}
+        leastDestructiveRef={cancelRef as React.RefObject<HTMLButtonElement>}
         onClose={onDeleteClose}
       >
         <AlertDialogOverlay backdropFilter="blur(4px)">

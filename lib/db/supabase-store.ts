@@ -167,10 +167,10 @@ export const supabaseConnectionStore = {
   // ============================================
   
   /**
-   * Get all connections with keep_alive enabled (for cron job)
-   * Note: Uses service role, no user filtering
+   * Get all connections for service-level operations (cron job)
+   * Note: No user filtering - use with caution
    */
-  async getAll(): Promise<(Connection & { keepAlive: boolean; lastPingedAt: Date | null })[]> {
+  async getAllForService(): Promise<(Connection & { keepAlive: boolean; lastPingedAt: Date | null })[]> {
     const supabase = await createClient();
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -188,8 +188,37 @@ export const supabaseConnectionStore = {
       ...c,
       keepAlive: c.keep_alive === true,
       lastPingedAt: c.last_pinged_at ? new Date(c.last_pinged_at as string) : null,
-      encryptedUrl: c.encrypted_url as string,
     }));
+  },
+  
+  /**
+   * Get a connection by ID for service-level operations (cron job)
+   * Note: No user filtering - use with caution
+   */
+  async getByIdForService(id: string): Promise<(Connection & { keepAlive: boolean; lastPingedAt: Date | null }) | null> {
+    const supabase = await createClient();
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from('connections')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      console.error('Error fetching connection:', error);
+      return null;
+    }
+    
+    const c = data as Record<string, unknown>;
+    return {
+      ...data,
+      keepAlive: c.keep_alive === true,
+      lastPingedAt: c.last_pinged_at ? new Date(c.last_pinged_at as string) : null,
+    };
   },
   
   /**

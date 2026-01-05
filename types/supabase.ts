@@ -26,6 +26,8 @@ export interface Database {
           name: string;
           encrypted_url: string;
           environment: 'production' | 'development';
+          keep_alive: boolean;
+          last_pinged_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -35,6 +37,8 @@ export interface Database {
           name: string;
           encrypted_url: string;
           environment: 'production' | 'development';
+          keep_alive?: boolean;
+          last_pinged_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -44,6 +48,8 @@ export interface Database {
           name?: string;
           encrypted_url?: string;
           environment?: 'production' | 'development';
+          keep_alive?: boolean;
+          last_pinged_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

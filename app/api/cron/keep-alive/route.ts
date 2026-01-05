@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
   
   try {
     // Get all connections with keep_alive enabled
-    const connections = await supabaseConnectionStore.getAll();
+    const connections = await supabaseConnectionStore.getAllForService();
     const keepAliveConnections = connections.filter(c => c.keepAlive);
     
     console.log(`[Keep Alive Cron] Found ${keepAliveConnections.length} connections with keep_alive enabled`);
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
       const result = await pingDatabase(
         connection.id,
         connection.name,
-        connection.encryptedUrl
+        connection.encrypted_url
       );
       
       stats.results.push(result);
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Get the connection
-    const connection = await supabaseConnectionStore.getById(connectionId);
+    const connection = await supabaseConnectionStore.getByIdForService(connectionId);
     
     if (!connection) {
       return NextResponse.json(
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     const result = await pingDatabase(
       connection.id,
       connection.name,
-      connection.encryptedUrl
+      connection.encrypted_url
     );
     
     if (result.success) {

@@ -929,60 +929,6 @@ function isPermanentError(error: Error): boolean {
   return permanentPatterns.some(pattern => message.includes(pattern));
 }
 
-/**
- * Execute an async operation with retry logic
- */
-async function withRetry<T>(
-  operation: () => Promise<T>,
-  options: {
-    maxRetries?: number;
-    baseDelay?: number;
-    maxDelay?: number;
-    onRetry?: (error: Error, attempt: number, delay: number) => void;
-  } = {}
-): Promise<T> {
-  const { 
-    maxRetries = 3, 
-    baseDelay = 1000, 
-    maxDelay = 30000,
-    onRetry,
-  } = options;
-  
-  let lastError: Error | null = null;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      
-      // Don't retry permanent errors
-      if (isPermanentError(lastError)) {
-        throw lastError;
-      }
-      
-      // Only retry transient errors
-      if (!isTransientError(lastError) && attempt > 1) {
-        throw lastError;
-      }
-      
-      if (attempt < maxRetries) {
-        // Exponential backoff with jitter
-        const delay = Math.min(
-          baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000,
-          maxDelay
-        );
-        
-        onRetry?.(lastError, attempt, delay);
-        
-        await sleep(delay);
-      }
-    }
-  }
-  
-  throw lastError;
-}
-
 function isJobTimedOut(jobId: string): boolean {
   const startTime = jobStartTimes.get(jobId);
   if (!startTime) return false;
@@ -1498,6 +1444,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       existingRowsMap = new Map(
         existingResult.map(r => [safeString(r.id), r as Record<string, unknown>])
       );
+    }
     
     for (const row of batch.rows) {
       const rowId = safeString(row.id);

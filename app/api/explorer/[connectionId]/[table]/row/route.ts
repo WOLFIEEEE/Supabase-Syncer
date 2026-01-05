@@ -212,7 +212,7 @@ export async function POST(
     
     const columnNames = validColumns.map(sanitizeIdentifier).join(', ');
     const placeholders = validColumns.map((_, i) => `$${i + 1}`).join(', ');
-    const values = validColumns.map((col) => serializeValue(data[col]));
+    const values = validColumns.map((col) => serializeValue(data[col])) as (string | number | boolean | null)[];
     
     const query = `INSERT INTO ${tableName} (${columnNames}) VALUES (${placeholders}) RETURNING *`;
     const result = await connection.client.unsafe(query, values);
@@ -332,8 +332,8 @@ export async function PUT(
     const setClause = validColumns
       .map((col, i) => `${sanitizeIdentifier(col)} = $${i + 1}`)
       .join(', ');
-    const values = validColumns.map((col) => serializeValue(updateData[col]));
-    values.push(id); // For WHERE clause
+    const values: (string | number | boolean | null)[] = validColumns.map((col) => serializeValue(updateData[col]) as string | number | boolean | null);
+    values.push(id as string); // For WHERE clause
     
     const query = `UPDATE ${tableName} SET ${setClause} WHERE ${pkColumn} = $${values.length} RETURNING *`;
     const result = await connection.client.unsafe(query, values);
