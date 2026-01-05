@@ -227,11 +227,31 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
         progress.completedTables++;
         onProgress(progress);
         
-        onLog('info', `Completed table: ${tableName}`, {
-          inserted: result.inserted,
-          updated: result.updated,
-          skipped: result.skipped,
-        });
+        // Log detailed table completion summary
+        const skipBreakdown: string[] = [];
+        if (result.skippedReasons.alreadySynced > 0) skipBreakdown.push(`${result.skippedReasons.alreadySynced} already synced`);
+        if (result.skippedReasons.error > 0) skipBreakdown.push(`${result.skippedReasons.error} errors`);
+        if (result.skippedReasons.conflict > 0) skipBreakdown.push(`${result.skippedReasons.conflict} conflicts`);
+        if (result.skippedReasons.noChanges > 0) skipBreakdown.push(`${result.skippedReasons.noChanges} no changes`);
+        if (result.skippedReasons.noId > 0) skipBreakdown.push(`${result.skippedReasons.noId} missing id`);
+        
+        onLog('info', `✅ Completed: ${tableName} — ${result.inserted} inserted, ${result.updated} updated, ${result.skipped} skipped`);
+        
+        // Log skip breakdown if there were skips
+        if (result.skipped > 0 && skipBreakdown.length > 0) {
+          onLog('info', `   Skip breakdown: ${skipBreakdown.join(', ')}`);
+        }
+        
+        // Log errors summary if there were errors
+        if (result.errors.length > 0) {
+          onLog('warn', `   ⚠️ ${result.errors.length} row error(s) in ${tableName}`);
+          result.errors.slice(0, 5).forEach(err => {
+            onLog('warn', `      - ${err}`);
+          });
+          if (result.errors.length > 5) {
+            onLog('warn', `      ... and ${result.errors.length - 5} more errors`);
+          }
+        }
         
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
@@ -310,6 +330,14 @@ interface TableSyncResult {
   inserted: number;
   updated: number;
   skipped: number;
+  skippedReasons: {
+    alreadySynced: number;    // Target is newer or same
+    noChanges: number;        // No columns to update
+    conflict: number;         // Two-way conflict
+    error: number;            // Processing error
+    noId: number;             // Row missing id
+  };
+  errors: string[];           // Detailed error messages
   conflicts: Conflict[];
   cancelled: boolean;
   lastRowId?: string;
@@ -365,6 +393,14 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
     inserted: 0,
     updated: 0,
     skipped: 0,
+    skippedReasons: {
+      alreadySynced: 0,
+      noChanges: 0,
+      conflict: 0,
+      error: 0,
+      noId: 0,
+    },
+    errors: [],
     conflicts: [],
     cancelled: false,
   };
@@ -430,8 +466,11 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
         try {
           // Validate row has required fields
           if (!row.id) {
-            onLog('warn', `Skipping row without id in ${tableName}`);
             result.skipped++;
+            result.skippedReasons.noId++;
+            if (result.skippedReasons.noId <= 3) {
+              onLog('warn', `⚠️ Skip: Row without 'id' field in ${tableName}`);
+            }
             continue;
           }
           
@@ -468,7 +507,6 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
             
             // Handle invalid dates
             if (isNaN(sourceUpdatedAt.getTime())) {
-              onLog('warn', `Invalid source updated_at for ${tableName}.${row.id}, using current time`);
               sourceUpdatedAt.setTime(Date.now());
             }
             if (isNaN(targetUpdatedAt.getTime())) {
@@ -489,6 +527,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
                   resolution: 'pending',
                 });
                 result.skipped++;
+                result.skippedReasons.conflict++;
                 continue;
               }
               
@@ -501,6 +540,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
               
               if (!shouldUpdate) {
                 result.skipped++;
+                result.skippedReasons.conflict++;
                 continue;
               }
             }
@@ -510,6 +550,7 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
               const columns = Object.keys(row).filter((c) => c !== 'id' && row[c] !== undefined);
               if (columns.length === 0) {
                 result.skipped++;
+                result.skippedReasons.noChanges++;
                 continue;
               }
               const values = columns.map((c) => row[c]) as (string | number | boolean | null)[];
@@ -522,7 +563,9 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
               
               result.updated++;
             } else {
+              // Target is already up-to-date or newer
               result.skipped++;
+              result.skippedReasons.alreadySynced++;
             }
           }
           
@@ -541,12 +584,21 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
           
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
-          onLog('error', `❌ Row error [${tableName}.${row.id}]: ${message}`);
           result.skipped++;
+          result.skippedReasons.error++;
           
-          // Log first few errors in detail, then summarize
-          if (result.skipped <= 3) {
-            onLog('warn', `Row data: ${JSON.stringify(row).slice(0, 200)}...`);
+          // Store error details (limit to first 10)
+          if (result.errors.length < 10) {
+            result.errors.push(`${tableName}.${row.id}: ${message}`);
+          }
+          
+          // Log errors in detail
+          onLog('error', `❌ Error [${tableName}.${row.id}]: ${message}`);
+          
+          // Log row data for first few errors only
+          if (result.skippedReasons.error <= 3) {
+            const rowPreview = JSON.stringify(row).slice(0, 300);
+            onLog('warn', `   Row data: ${rowPreview}${rowPreview.length >= 300 ? '...' : ''}`);
           }
         }
       }
@@ -560,8 +612,16 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       skipped: result.skipped,
     });
     
-    // Log batch completion
-    onLog('info', `Batch #${batchNumber} complete: ${processedRows} total rows (${result.inserted} ins, ${result.updated} upd, ${result.skipped} skip)`);
+    // Log batch completion with skip breakdown
+    const skipDetails: string[] = [];
+    if (result.skippedReasons.alreadySynced > 0) skipDetails.push(`${result.skippedReasons.alreadySynced} up-to-date`);
+    if (result.skippedReasons.error > 0) skipDetails.push(`${result.skippedReasons.error} errors`);
+    if (result.skippedReasons.conflict > 0) skipDetails.push(`${result.skippedReasons.conflict} conflicts`);
+    if (result.skippedReasons.noChanges > 0) skipDetails.push(`${result.skippedReasons.noChanges} no-changes`);
+    if (result.skippedReasons.noId > 0) skipDetails.push(`${result.skippedReasons.noId} no-id`);
+    
+    const skipInfo = skipDetails.length > 0 ? ` [${skipDetails.join(', ')}]` : '';
+    onLog('info', `Batch #${batchNumber}: ${result.inserted} ins, ${result.updated} upd, ${result.skipped} skip${skipInfo}`);
     
     // Store last processed row for checkpoint
     result.lastRowId = currentAfterId || undefined;
