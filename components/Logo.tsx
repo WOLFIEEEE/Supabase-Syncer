@@ -1,6 +1,7 @@
 'use client';
 
 import { HStack, Text, Box, VStack } from '@chakra-ui/react';
+import Image from 'next/image';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -25,82 +26,20 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
           width={`${icon}px`} 
           height={`${icon}px`}
           position="relative"
+          flexShrink={0}
         >
-        <svg 
-          viewBox="0 0 48 48" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ width: '100%', height: '100%' }}
-        >
-          <defs>
-            <linearGradient id="supaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3ECF8E"/>
-              <stop offset="100%" stopColor="#14B8A6"/>
-            </linearGradient>
-            <linearGradient id="supaGradLight" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#5EEAD4"/>
-              <stop offset="100%" stopColor="#3ECF8E"/>
-            </linearGradient>
-          </defs>
-          
-          {/* Modern stylized 'R' - clean and bold */}
-          {/* Vertical stem */}
-          <rect 
-            x="12" 
-            y="10" 
-            width="5" 
-            height="28" 
-            rx="2.5" 
-            fill="url(#supaGrad)"
+          <Image
+            src="/logo.png"
+            alt="suparbase logo"
+            width={icon}
+            height={icon}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+            priority
           />
-          
-          {/* Top horizontal bar */}
-          <rect 
-            x="12" 
-            y="10" 
-            width="18" 
-            height="5" 
-            rx="2.5" 
-            fill="url(#supaGrad)"
-          />
-          
-          {/* Middle horizontal bar */}
-          <rect 
-            x="12" 
-            y="20" 
-            width="12" 
-            height="5" 
-            rx="2.5" 
-            fill="url(#supaGrad)"
-          />
-          
-          {/* Diagonal leg - reimagining curve */}
-          <path 
-            d="M 17 25 L 30 38" 
-            stroke="url(#supaGrad)" 
-            strokeWidth="5" 
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          
-          {/* Sync arrow on the diagonal - represents reimagining */}
-          <path 
-            d="M 26 32 L 30 38 L 28 36" 
-            stroke="url(#supaGradLight)" 
-            strokeWidth="3" 
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-          
-          {/* Small accent dot at the end */}
-          <circle 
-            cx="30" 
-            cy="38" 
-            r="3" 
-            fill="#5EEAD4"
-          />
-        </svg>
         </Box>
         
         {showText && variant === 'full' && (
@@ -176,107 +115,26 @@ export function SuparbaseLogoAnimated({ size = 'md' }: { size?: 'sm' | 'md' | 'l
       className="pulse-logo-animated"
     >
       <style jsx global>{`
-        .pulse-logo-animated .anim-path {
-          stroke-dasharray: 20;
-          stroke-dashoffset: 20;
-          animation: supa-draw 2s ease-in-out infinite;
-        }
-        .pulse-logo-animated .anim-arrow {
-          animation: supa-arrow 2s ease-in-out infinite;
-        }
-        .pulse-logo-animated .anim-node {
+        .pulse-logo-animated {
           animation: supa-pulse 2s ease-in-out infinite;
         }
-        @keyframes supa-draw {
-          0%, 100% { stroke-dashoffset: 20; opacity: 0.6; }
-          50% { stroke-dashoffset: 0; opacity: 1; }
-        }
-        @keyframes supa-arrow {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 1; }
-        }
         @keyframes supa-pulse {
-          0%, 100% { opacity: 0.5; transform: scale(0.9); }
-          50% { opacity: 1; transform: scale(1.1); }
+          0%, 100% { opacity: 0.8; transform: scale(0.95); }
+          50% { opacity: 1; transform: scale(1.05); }
         }
       `}</style>
-      <svg 
-        viewBox="0 0 48 48" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ width: '100%', height: '100%' }}
-      >
-        <defs>
-          <linearGradient id="supaGradAnim" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3ECF8E"/>
-            <stop offset="100%" stopColor="#14B8A6"/>
-          </linearGradient>
-          <linearGradient id="supaGradLightAnim" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#5EEAD4"/>
-            <stop offset="100%" stopColor="#3ECF8E"/>
-          </linearGradient>
-        </defs>
-        
-        {/* Animated vertical stem */}
-        <rect 
-          x="12" 
-          y="10" 
-          width="5" 
-          height="28" 
-          rx="2.5" 
-          fill="url(#supaGradAnim)"
-        />
-        
-        {/* Animated top bar */}
-        <rect 
-          x="12" 
-          y="10" 
-          width="18" 
-          height="5" 
-          rx="2.5" 
-          fill="url(#supaGradAnim)"
-        />
-        
-        {/* Animated middle bar */}
-        <rect 
-          x="12" 
-          y="20" 
-          width="12" 
-          height="5" 
-          rx="2.5" 
-          fill="url(#supaGradAnim)"
-        />
-        
-        {/* Animated diagonal leg */}
-        <path 
-          d="M 17 25 L 30 38" 
-          stroke="url(#supaGradAnim)" 
-          strokeWidth="5" 
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="anim-path"
-        />
-        
-        {/* Animated sync arrow */}
-        <path 
-          d="M 26 32 L 30 38 L 28 36" 
-          stroke="url(#supaGradLightAnim)" 
-          strokeWidth="3" 
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-          className="anim-arrow"
-        />
-        
-        {/* Animated accent dot */}
-        <circle 
-          cx="30" 
-          cy="38" 
-          r="3" 
-          fill="#5EEAD4"
-          className="anim-node"
-        />
-      </svg>
+      <Image
+        src="/logo.png"
+        alt="suparbase logo"
+        width={icon}
+        height={icon}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+        }}
+        priority
+      />
     </Box>
   );
 }

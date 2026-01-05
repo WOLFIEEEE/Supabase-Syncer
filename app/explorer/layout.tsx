@@ -2,6 +2,7 @@
 
 import { Box, Flex, HStack, VStack, Text, Badge, IconButton, Tooltip, useToast, Kbd, Button, useDisclosure } from '@chakra-ui/react';
 import { useRouter, usePathname, useParams } from 'next/navigation';
+import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import CommandBar from '@/components/explorer/CommandBar';
@@ -252,24 +253,20 @@ export default function ExplorerLayout({
             {/* Logo */}
             <VStack spacing={0.5} align="start" mr={4}>
               <HStack spacing={2}>
-                <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
-                  <defs>
-                    <linearGradient id="epg" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#3ECF8E"/>
-                      <stop offset="100%" stopColor="#14B8A6"/>
-                    </linearGradient>
-                    <linearGradient id="epgLight" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#5EEAD4"/>
-                      <stop offset="100%" stopColor="#3ECF8E"/>
-                    </linearGradient>
-                  </defs>
-                  <rect x="12" y="10" width="5" height="28" rx="2.5" fill="url(#epg)" />
-                  <rect x="12" y="10" width="18" height="5" rx="2.5" fill="url(#epg)" />
-                  <rect x="12" y="20" width="12" height="5" rx="2.5" fill="url(#epg)" />
-                  <path d="M 17 25 L 30 38" stroke="url(#epg)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M 26 32 L 30 38 L 28 36" stroke="url(#epgLight)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  <circle cx="30" cy="38" r="3" fill="#5EEAD4" />
-                </svg>
+                <Box width="24px" height="24px" position="relative" flexShrink={0}>
+                  <Image
+                    src="/logo.png"
+                    alt="suparbase logo"
+                    width={24}
+                    height={24}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                    }}
+                    priority
+                  />
+                </Box>
                 <HStack spacing={0}>
                   <Text fontSize="xs" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
                     SUPA
