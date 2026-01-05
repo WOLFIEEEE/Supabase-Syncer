@@ -234,29 +234,41 @@ export default function DashboardPage() {
                 >
                   <defs>
                     <linearGradient id="hpg" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#14B8A6"/>
-                      <stop offset="100%" stopColor="#0D9488"/>
-                    </linearGradient>
-                    <linearGradient id="hlg" x1="0%" y1="50%" x2="100%" y2="50%">
-                      <stop offset="0%" stopColor="#5EEAD4"/>
-                      <stop offset="50%" stopColor="#2DD4BF"/>
-                      <stop offset="100%" stopColor="#5EEAD4"/>
+                      <stop offset="0%" stopColor="#3ECF8E"/>
+                      <stop offset="100%" stopColor="#14B8A6"/>
                     </linearGradient>
                   </defs>
                   <circle cx="24" cy="24" r="22" fill="url(#hpg)"/>
-                  <path 
-                    d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" 
-                    stroke="url(#hlg)" 
-                    strokeWidth="2.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                  <circle cx="24" cy="12" r="2" fill="#5EEAD4" opacity="0.6"/>
+                  <text 
+                    x="24" 
+                    y="24" 
+                    fontSize="28" 
+                    fontWeight="bold" 
+                    fill="white" 
+                    textAnchor="middle" 
+                    dominantBaseline="central"
+                    fontFamily="Inter, system-ui, -apple-system, sans-serif"
+                  >
+                    r
+                  </text>
+                  <path d="M 36 14 A 14 14 0 0 1 38 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
+                  <path d="M 38 24 L 35 22 M 38 24 L 36 27" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
+                  <path d="M 12 34 A 14 14 0 0 1 10 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
+                  <path d="M 10 24 L 13 26 M 10 24 L 12 21" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
                 </svg>
-                <Heading size={{ base: 'sm', md: 'md' }} fontWeight="bold" color="white" letterSpacing="-0.02em">
-                  suparbase
-                </Heading>
+                <HStack spacing={0.5}>
+                  <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="medium" color="surface.300" letterSpacing="-0.01em">
+                    supa
+                  </Text>
+                  <Box px={1.5} py={0.5} bg="teal.500" borderRadius="md" display="flex" alignItems="center">
+                    <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="extrabold" color="white" letterSpacing="-0.02em">
+                      r
+                    </Text>
+                  </Box>
+                  <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="medium" color="surface.300" letterSpacing="-0.01em">
+                    base
+                  </Text>
+                </HStack>
               </Box>
             </HStack>
             <HStack spacing={{ base: 1, md: 2 }}>

@@ -208,24 +208,27 @@ export default function StatusPage() {
                   {getStatusIcon(status.application.status)}
                   <VStack align="start" spacing={0} flex={1}>
                     <HStack spacing={2}>
-                      <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                      <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
                         <defs>
                           <linearGradient id="spg" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#14B8A6"/>
-                            <stop offset="100%" stopColor="#0D9488"/>
-                          </linearGradient>
-                          <linearGradient id="slg" x1="0%" y1="50%" x2="100%" y2="50%">
-                            <stop offset="0%" stopColor="#5EEAD4"/>
-                            <stop offset="50%" stopColor="#2DD4BF"/>
-                            <stop offset="100%" stopColor="#5EEAD4"/>
+                            <stop offset="0%" stopColor="#3ECF8E"/>
+                            <stop offset="100%" stopColor="#14B8A6"/>
                           </linearGradient>
                         </defs>
                         <circle cx="24" cy="24" r="22" fill="url(#spg)"/>
-                        <path d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" stroke="url(#slg)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                        <text x="24" y="24" fontSize="28" fontWeight="bold" fill="white" textAnchor="middle" dominantBaseline="central" fontFamily="Inter, system-ui, -apple-system, sans-serif">r</text>
+                        <path d="M 36 14 A 14 14 0 0 1 38 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
+                        <path d="M 38 24 L 35 22 M 38 24 L 36 27" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
+                        <path d="M 12 34 A 14 14 0 0 1 10 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
+                        <path d="M 10 24 L 13 26 M 10 24 L 12 21" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
                       </svg>
-                      <Heading size="md" color="white">
-                        suparbase
-                      </Heading>
+                      <HStack spacing={0.5}>
+                        <Text fontSize="lg" fontWeight="medium" color="surface.300">supa</Text>
+                        <Box px={1.5} py={0.5} bg="teal.500" borderRadius="md" display="flex" alignItems="center">
+                          <Text fontSize="xl" fontWeight="extrabold" color="white">r</Text>
+                        </Box>
+                        <Text fontSize="lg" fontWeight="medium" color="surface.300">base</Text>
+                      </HStack>
                     </HStack>
                     <Text color="surface.400" fontSize="sm">
                       v{status.application.version} • Uptime: {status.application.uptime}

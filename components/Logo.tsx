@@ -32,44 +32,103 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
           style={{ width: '100%', height: '100%' }}
         >
           <defs>
-            <linearGradient id="pulseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#14B8A6"/>
-              <stop offset="100%" stopColor="#0D9488"/>
-            </linearGradient>
-            <linearGradient id="lineGrad" x1="0%" y1="50%" x2="100%" y2="50%">
-              <stop offset="0%" stopColor="#5EEAD4"/>
-              <stop offset="50%" stopColor="#2DD4BF"/>
-              <stop offset="100%" stopColor="#5EEAD4"/>
+            <linearGradient id="supaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3ECF8E"/>
+              <stop offset="100%" stopColor="#14B8A6"/>
             </linearGradient>
           </defs>
           
-          {/* Main circle */}
-          <circle cx="24" cy="24" r="22" fill="url(#pulseGrad)"/>
+          {/* Background circle with Supabase green */}
+          <circle cx="24" cy="24" r="22" fill="url(#supaGrad)"/>
           
-          {/* suparbase line */}
+          {/* Letter "r" in center - reimagining */}
+          <text 
+            x="24" 
+            y="24" 
+            fontSize="28" 
+            fontWeight="bold" 
+            fill="white" 
+            textAnchor="middle" 
+            dominantBaseline="central"
+            fontFamily="Inter, system-ui, -apple-system, sans-serif"
+          >
+            r
+          </text>
+          
+          {/* Circular refresh arrows around the "r" */}
           <path 
-            d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" 
-            stroke="url(#lineGrad)" 
+            d="M 36 14 A 14 14 0 0 1 38 24" 
+            stroke="white" 
             strokeWidth="2.5" 
             strokeLinecap="round" 
-            strokeLinejoin="round"
             fill="none"
+            opacity="0.6"
+          />
+          <path 
+            d="M 38 24 L 35 22 M 38 24 L 36 27" 
+            stroke="white" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            fill="none"
+            opacity="0.6"
           />
           
-          {/* Peak glow */}
-          <circle cx="24" cy="12" r="2" fill="#5EEAD4" opacity="0.6"/>
+          <path 
+            d="M 12 34 A 14 14 0 0 1 10 24" 
+            stroke="white" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            fill="none"
+            opacity="0.6"
+          />
+          <path 
+            d="M 10 24 L 13 26 M 10 24 L 12 21" 
+            stroke="white" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            fill="none"
+            opacity="0.6"
+          />
         </svg>
       </Box>
       
       {showText && variant === 'full' && (
-        <Text 
-          fontSize={text} 
-          fontWeight="bold" 
-          color="white"
-          letterSpacing="-0.02em"
-        >
-          suparbase
-        </Text>
+        <HStack spacing={0.5}>
+          <Text 
+            fontSize={text} 
+            fontWeight="medium" 
+            color="surface.300"
+            letterSpacing="-0.01em"
+          >
+            supa
+          </Text>
+          <Box
+            px={1.5}
+            py={0.5}
+            bg="teal.500"
+            borderRadius="md"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Text 
+              fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
+              fontWeight="extrabold" 
+              color="white"
+              letterSpacing="-0.02em"
+            >
+              r
+            </Text>
+          </Box>
+          <Text 
+            fontSize={text} 
+            fontWeight="medium" 
+            color="surface.300"
+            letterSpacing="-0.01em"
+          >
+            base
+          </Text>
+        </HStack>
       )}
     </HStack>
   );
@@ -105,26 +164,60 @@ export function SuparbaseLogoAnimated({ size = 'md' }: { size?: 'sm' | 'md' | 'l
         style={{ width: '100%', height: '100%' }}
       >
         <defs>
-          <linearGradient id="pulseGradAnim" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#14B8A6"/>
-            <stop offset="100%" stopColor="#0D9488"/>
-          </linearGradient>
-          <linearGradient id="lineGradAnim" x1="0%" y1="50%" x2="100%" y2="50%">
-            <stop offset="0%" stopColor="#5EEAD4"/>
-            <stop offset="50%" stopColor="#2DD4BF"/>
-            <stop offset="100%" stopColor="#5EEAD4"/>
+          <linearGradient id="supaGradAnim" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3ECF8E"/>
+            <stop offset="100%" stopColor="#14B8A6"/>
           </linearGradient>
         </defs>
         
-        <circle cx="24" cy="24" r="22" fill="url(#pulseGradAnim)"/>
+        <circle cx="24" cy="24" r="22" fill="url(#supaGradAnim)"/>
         
+        <text 
+          x="24" 
+          y="24" 
+          fontSize="28" 
+          fontWeight="bold" 
+          fill="white" 
+          textAnchor="middle" 
+          dominantBaseline="central"
+          fontFamily="Inter, system-ui, -apple-system, sans-serif"
+        >
+          r
+        </text>
+        
+        {/* Animated refresh arrows */}
         <path 
-          d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" 
-          stroke="url(#lineGradAnim)" 
+          d="M 36 14 A 14 14 0 0 1 38 24" 
+          stroke="white" 
           strokeWidth="2.5" 
           strokeLinecap="round" 
-          strokeLinejoin="round"
           fill="none"
+          opacity="0.6"
+        />
+        <path 
+          d="M 38 24 L 35 22 M 38 24 L 36 27" 
+          stroke="white" 
+          strokeWidth="2.5" 
+          strokeLinecap="round" 
+          fill="none"
+          opacity="0.6"
+        />
+        
+        <path 
+          d="M 12 34 A 14 14 0 0 1 10 24" 
+          stroke="white" 
+          strokeWidth="2.5" 
+          strokeLinecap="round" 
+          fill="none"
+          opacity="0.6"
+        />
+        <path 
+          d="M 10 24 L 13 26 M 10 24 L 12 21" 
+          stroke="white" 
+          strokeWidth="2.5" 
+          strokeLinecap="round" 
+          fill="none"
+          opacity="0.6"
         />
       </svg>
     </Box>
