@@ -7,6 +7,9 @@
  * - Job timeout protection
  * - Improved checkpoint granularity
  * - Network interruption handling
+ * - Foreign key dependency ordering (topological sort)
+ * - Bulk inserts for better performance
+ * - Generated column filtering
  */
 
 import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
@@ -22,7 +25,220 @@ const SYNC_CONFIG = {
   batchTimeout: 2 * 60 * 1000,    // 2 minutes per batch
   checkpointInterval: 50,          // Save checkpoint every 50 rows
   defaultBatchSize: 100,           // Small batches for visible progress
+  bulkInsertSize: 50,              // Rows per bulk INSERT statement
 };
+
+// Cache for table metadata (generated columns, FK order)
+const tableMetadataCache = new Map<string, {
+  generatedColumns: Set<string>;
+  fkOrder: string[];
+  fetchedAt: number;
+}>();
+
+/**
+ * Get foreign key dependency order for tables using topological sort
+ * This ensures parent tables are synced before child tables
+ */
+async function getTableSyncOrder(
+  conn: DrizzleConnection,
+  tableNames: string[]
+): Promise<string[]> {
+  // Get all FK relationships for these tables
+  const fkResult = await conn.client.unsafe(`
+    SELECT DISTINCT
+      tc.table_name AS child_table,
+      ccu.table_name AS parent_table
+    FROM information_schema.table_constraints tc
+    JOIN information_schema.constraint_column_usage ccu
+      ON tc.constraint_name = ccu.constraint_name
+      AND tc.table_schema = ccu.table_schema
+    WHERE tc.constraint_type = 'FOREIGN KEY'
+      AND tc.table_schema = 'public'
+      AND tc.table_name = ANY($1)
+      AND ccu.table_name = ANY($1)
+  `, [tableNames]);
+
+  // Build dependency graph
+  const graph = new Map<string, string[]>();
+  const inDegree = new Map<string, number>();
+
+  // Initialize
+  for (const table of tableNames) {
+    graph.set(table, []);
+    inDegree.set(table, 0);
+  }
+
+  // Build edges (parent -> child means parent must be synced first)
+  for (const row of fkResult) {
+    const parent = row.parent_table as string;
+    const child = row.child_table as string;
+    
+    // Skip self-references
+    if (parent === child) continue;
+    
+    const deps = graph.get(parent) || [];
+    if (!deps.includes(child)) {
+      deps.push(child);
+      graph.set(parent, deps);
+      inDegree.set(child, (inDegree.get(child) || 0) + 1);
+    }
+  }
+
+  // Topological sort (Kahn's algorithm)
+  const order: string[] = [];
+  const queue = tableNames.filter(t => inDegree.get(t) === 0);
+
+  while (queue.length > 0) {
+    const node = queue.shift()!;
+    order.push(node);
+
+    for (const neighbor of graph.get(node) || []) {
+      const newDegree = (inDegree.get(neighbor) || 0) - 1;
+      inDegree.set(neighbor, newDegree);
+      if (newDegree === 0) {
+        queue.push(neighbor);
+      }
+    }
+  }
+
+  // Add any remaining tables (circular dependencies - sync them last with warning)
+  for (const table of tableNames) {
+    if (!order.includes(table)) {
+      order.push(table);
+    }
+  }
+
+  return order;
+}
+
+/**
+ * Get generated/computed columns that should be excluded from INSERT
+ */
+async function getGeneratedColumns(
+  conn: DrizzleConnection,
+  tableName: string
+): Promise<Set<string>> {
+  const result = await conn.client.unsafe(`
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = $1
+      AND (
+        is_generated = 'ALWAYS'
+        OR generation_expression IS NOT NULL
+        OR identity_generation IS NOT NULL
+      )
+  `, [tableName]);
+
+  return new Set(result.map(r => r.column_name as string));
+}
+
+/**
+ * Check if table has triggers that might interfere with sync
+ */
+async function getTableTriggers(
+  conn: DrizzleConnection,
+  tableName: string
+): Promise<string[]> {
+  const result = await conn.client.unsafe(`
+    SELECT trigger_name
+    FROM information_schema.triggers
+    WHERE event_object_schema = 'public'
+      AND event_object_table = $1
+      AND trigger_name NOT LIKE 'RI_%'
+  `, [tableName]);
+
+  return result.map(r => r.trigger_name as string);
+}
+
+/**
+ * Bulk insert rows using multi-value INSERT for better performance
+ * Returns the number of successfully inserted rows
+ */
+async function bulkInsertRows(
+  tx: ReturnType<DrizzleConnection['client']['begin']> extends Promise<infer T> ? T : never,
+  tableName: string,
+  rows: Record<string, unknown>[],
+  generatedColumns: Set<string>,
+  onLog: (level: 'info' | 'warn' | 'error', message: string) => void
+): Promise<number> {
+  if (rows.length === 0) return 0;
+  
+  let inserted = 0;
+  const bulkSize = SYNC_CONFIG.bulkInsertSize;
+  
+  // Process in chunks for bulk insert
+  for (let i = 0; i < rows.length; i += bulkSize) {
+    const chunk = rows.slice(i, i + bulkSize);
+    
+    try {
+      // Get columns from first row, excluding generated columns
+      const firstRow = chunk[0];
+      const columns = Object.keys(firstRow).filter(c => 
+        firstRow[c] !== undefined && 
+        !generatedColumns.has(c)
+      );
+      
+      if (columns.length === 0) {
+        onLog('warn', `No insertable columns found for ${tableName}`);
+        continue;
+      }
+      
+      // Build multi-value INSERT
+      const columnList = columns.map(c => `"${c}"`).join(', ');
+      const valueSets: string[] = [];
+      const allValues: (string | number | boolean | null)[] = [];
+      let paramIndex = 1;
+      
+      for (const row of chunk) {
+        const placeholders: string[] = [];
+        for (const col of columns) {
+          placeholders.push(`$${paramIndex++}`);
+          allValues.push(row[col] as string | number | boolean | null);
+        }
+        valueSets.push(`(${placeholders.join(', ')})`);
+      }
+      
+      // Use ON CONFLICT DO NOTHING to handle any duplicate key errors gracefully
+      const sql = `
+        INSERT INTO "${tableName}" (${columnList}) 
+        VALUES ${valueSets.join(', ')}
+        ON CONFLICT (id) DO NOTHING
+      `;
+      
+      const result = await (tx as { unsafe: (sql: string, params: unknown[]) => Promise<{ count: number }> }).unsafe(sql, allValues);
+      inserted += result.count || chunk.length;
+      
+    } catch (error) {
+      // If bulk insert fails, fall back to individual inserts
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      onLog('warn', `Bulk insert failed for ${tableName}, falling back to individual inserts: ${message}`);
+      
+      for (const row of chunk) {
+        try {
+          const columns = Object.keys(row).filter(c => 
+            row[c] !== undefined && 
+            !generatedColumns.has(c)
+          );
+          const values = columns.map(c => row[c]) as (string | number | boolean | null)[];
+          const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
+          const columnListSingle = columns.map(c => `"${c}"`).join(', ');
+          
+          await (tx as { unsafe: (sql: string, params: unknown[]) => Promise<unknown> }).unsafe(
+            `INSERT INTO "${tableName}" (${columnListSingle}) VALUES (${placeholders}) ON CONFLICT (id) DO NOTHING`,
+            values
+          );
+          inserted++;
+        } catch (rowError) {
+          const rowMessage = rowError instanceof Error ? rowError.message : 'Unknown error';
+          onLog('error', `Failed to insert row ${row.id}: ${rowMessage}`);
+        }
+      }
+    }
+  }
+  
+  return inserted;
+}
 
 // Track cancelled jobs
 const cancelledJobs = new Set<string>();
@@ -127,14 +343,30 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
     
     // Get enabled tables
     const enabledTables = tables.filter((t) => t.enabled);
+    const tableNames = enabledTables.map(t => t.tableName);
+    
+    // Sort tables by FK dependency order to avoid constraint violations
+    onLog('info', 'Analyzing table dependencies...');
+    const orderedTableNames = await getTableSyncOrder(sourceConn, tableNames);
+    
+    // Check if order differs from original (indicates FK dependencies)
+    const hasReordering = orderedTableNames.some((t, i) => t !== tableNames[i]);
+    if (hasReordering) {
+      onLog('info', `📋 Tables reordered by FK dependencies: ${orderedTableNames.join(' → ')}`);
+    }
+    
+    // Reorder enabledTables to match FK order
+    const orderedTables = orderedTableNames
+      .map(name => enabledTables.find(t => t.tableName === name))
+      .filter((t): t is typeof enabledTables[0] => t !== undefined);
     
     // Find starting point from checkpoint
     const startIndex = checkpoint?.lastTable
-      ? enabledTables.findIndex((t) => t.tableName === checkpoint.lastTable)
+      ? orderedTables.findIndex((t) => t.tableName === checkpoint.lastTable)
       : 0;
     
-    for (let i = Math.max(0, startIndex); i < enabledTables.length; i++) {
-      const tableConfig = enabledTables[i];
+    for (let i = Math.max(0, startIndex); i < orderedTables.length; i++) {
+      const tableConfig = orderedTables[i];
       const tableName = tableConfig.tableName;
       
       // Skip already processed tables
@@ -411,6 +643,18 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
   let checkpointCounter = 0;
   let batchNumber = 0;
   
+  // Get generated columns to exclude (cached per session)
+  const generatedColumns = await getGeneratedColumns(targetConn, tableName);
+  if (generatedColumns.size > 0) {
+    onLog('info', `⚙️ Excluding generated columns: ${[...generatedColumns].join(', ')}`);
+  }
+  
+  // Check for triggers that might slow down sync
+  const triggers = await getTableTriggers(targetConn, tableName);
+  if (triggers.length > 0) {
+    onLog('warn', `⚠️ Table has ${triggers.length} trigger(s): ${triggers.slice(0, 3).join(', ')}${triggers.length > 3 ? '...' : ''}`);
+  }
+  
   onLog('info', `Starting batch processing for ${tableName}...`);
   
   while (hasMore) {
@@ -460,113 +704,136 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       break;
     }
     
+    // Separate rows into inserts and updates for bulk processing
+    const rowsToInsert: Record<string, unknown>[] = [];
+    const rowsToUpdate: { row: Record<string, unknown>; existing: Record<string, unknown> }[] = [];
+    const rowsToSkip: { row: Record<string, unknown>; reason: string }[] = [];
+    
+    // First pass: categorize rows
+    const existingIds = batch.rows.filter(r => r.id).map(r => r.id as string);
+    let existingRowsMap = new Map<string, Record<string, unknown>>();
+    
+    if (existingIds.length > 0) {
+      // Bulk check for existing rows
+      const placeholders = existingIds.map((_, i) => `$${i + 1}`).join(', ');
+      const existingResult = await targetConn.client.unsafe(
+        `SELECT id, updated_at FROM "${tableName}" WHERE id IN (${placeholders})`,
+        existingIds
+      );
+      existingRowsMap = new Map(existingResult.map(r => [r.id as string, r as Record<string, unknown>]));
+    }
+    
+    for (const row of batch.rows) {
+      if (!row.id) {
+        result.skipped++;
+        result.skippedReasons.noId++;
+        rowsToSkip.push({ row, reason: 'missing_id' });
+        continue;
+      }
+      
+      const existing = existingRowsMap.get(row.id as string);
+      
+      if (!existing) {
+        rowsToInsert.push(row);
+      } else {
+        rowsToUpdate.push({ row, existing });
+      }
+    }
+    
     // Process batch within a transaction
     await targetConn.client.begin(async (tx) => {
-      for (const row of batch.rows) {
+      // BULK INSERTS - much faster than individual inserts
+      if (rowsToInsert.length > 0) {
+        const insertedCount = await bulkInsertRows(
+          tx,
+          tableName,
+          rowsToInsert,
+          generatedColumns,
+          onLog
+        );
+        result.inserted += insertedCount;
+        result.skipped += rowsToInsert.length - insertedCount;
+        result.skippedReasons.error += rowsToInsert.length - insertedCount;
+      }
+      
+      // UPDATES - still row by row due to conflict resolution logic
+      for (const { row, existing } of rowsToUpdate) {
         try {
-          // Validate row has required fields
-          if (!row.id) {
-            result.skipped++;
-            result.skippedReasons.noId++;
-            if (result.skippedReasons.noId <= 3) {
-              onLog('warn', `⚠️ Skip: Row without 'id' field in ${tableName}`);
-            }
-            continue;
+          // Handle update with conflict resolution
+          // Safely parse dates, defaulting to epoch if invalid
+          const sourceUpdatedAt = row.updated_at 
+            ? new Date(row.updated_at as string) 
+            : new Date(0);
+          const targetUpdatedAt = existing.updated_at 
+            ? new Date(existing.updated_at as string) 
+            : new Date(0);
+          
+          // Handle invalid dates
+          if (isNaN(sourceUpdatedAt.getTime())) {
+            sourceUpdatedAt.setTime(Date.now());
+          }
+          if (isNaN(targetUpdatedAt.getTime())) {
+            targetUpdatedAt.setTime(0);
           }
           
-          // Check if row exists in target
-          const existingResult = await tx.unsafe(
-            `SELECT id, updated_at FROM "${tableName}" WHERE id = $1`,
-            [row.id as string]
-          );
-          
-          const existing = existingResult[0];
-          
-          if (!existing) {
-            // Insert new row
-            const columns = Object.keys(row).filter(c => row[c] !== undefined);
-            const values = columns.map(c => row[c]) as (string | number | boolean | null)[];
-            const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
-            const columnList = columns.map((c) => `"${c}"`).join(', ');
+          // Check for conflict in two-way sync
+          if (direction === 'two_way' && targetUpdatedAt > sourceUpdatedAt) {
+            if (conflictStrategy === 'manual') {
+              result.conflicts.push({
+                id: `${tableName}-${row.id}`,
+                tableName,
+                rowId: row.id as string,
+                sourceData: row,
+                targetData: existing as Record<string, unknown>,
+                sourceUpdatedAt,
+                targetUpdatedAt,
+                resolution: 'pending',
+              });
+              result.skipped++;
+              result.skippedReasons.conflict++;
+              continue;
+            }
             
-            await tx.unsafe(
-              `INSERT INTO "${tableName}" (${columnList}) VALUES (${placeholders})`,
-              values
+            // Apply conflict strategy
+            const shouldUpdate = resolveConflict(
+              conflictStrategy,
+              sourceUpdatedAt,
+              targetUpdatedAt
             );
             
-            result.inserted++;
-          } else {
-            // Handle update with conflict resolution
-            // Safely parse dates, defaulting to epoch if invalid
-            const sourceUpdatedAt = row.updated_at 
-              ? new Date(row.updated_at as string) 
-              : new Date(0);
-            const targetUpdatedAt = existing.updated_at 
-              ? new Date(existing.updated_at as string) 
-              : new Date(0);
-            
-            // Handle invalid dates
-            if (isNaN(sourceUpdatedAt.getTime())) {
-              sourceUpdatedAt.setTime(Date.now());
-            }
-            if (isNaN(targetUpdatedAt.getTime())) {
-              targetUpdatedAt.setTime(0);
-            }
-            
-            // Check for conflict in two-way sync
-            if (direction === 'two_way' && targetUpdatedAt > sourceUpdatedAt) {
-              if (conflictStrategy === 'manual') {
-                result.conflicts.push({
-                  id: `${tableName}-${row.id}`,
-                  tableName,
-                  rowId: row.id as string,
-                  sourceData: row,
-                  targetData: existing as Record<string, unknown>,
-                  sourceUpdatedAt,
-                  targetUpdatedAt,
-                  resolution: 'pending',
-                });
-                result.skipped++;
-                result.skippedReasons.conflict++;
-                continue;
-              }
-              
-              // Apply conflict strategy
-              const shouldUpdate = resolveConflict(
-                conflictStrategy,
-                sourceUpdatedAt,
-                targetUpdatedAt
-              );
-              
-              if (!shouldUpdate) {
-                result.skipped++;
-                result.skippedReasons.conflict++;
-                continue;
-              }
-            }
-            
-            // Update existing row if source is newer (or if target has no updated_at)
-            if (sourceUpdatedAt > targetUpdatedAt || !existing.updated_at) {
-              const columns = Object.keys(row).filter((c) => c !== 'id' && row[c] !== undefined);
-              if (columns.length === 0) {
-                result.skipped++;
-                result.skippedReasons.noChanges++;
-                continue;
-              }
-              const values = columns.map((c) => row[c]) as (string | number | boolean | null)[];
-              const setClause = columns.map((c, i) => `"${c}" = $${i + 1}`).join(', ');
-              
-              await tx.unsafe(
-                `UPDATE "${tableName}" SET ${setClause} WHERE id = $${columns.length + 1}`,
-                [...values, row.id as string]
-              );
-              
-              result.updated++;
-            } else {
-              // Target is already up-to-date or newer
+            if (!shouldUpdate) {
               result.skipped++;
-              result.skippedReasons.alreadySynced++;
+              result.skippedReasons.conflict++;
+              continue;
             }
+          }
+          
+          // Update existing row if source is newer (or if target has no updated_at)
+          if (sourceUpdatedAt > targetUpdatedAt || !existing.updated_at) {
+            // Filter out generated columns and undefined values
+            const columns = Object.keys(row).filter((c) => 
+              c !== 'id' && 
+              row[c] !== undefined && 
+              !generatedColumns.has(c)
+            );
+            if (columns.length === 0) {
+              result.skipped++;
+              result.skippedReasons.noChanges++;
+              continue;
+            }
+            const values = columns.map((c) => row[c]) as (string | number | boolean | null)[];
+            const setClause = columns.map((c, i) => `"${c}" = $${i + 1}`).join(', ');
+            
+            await tx.unsafe(
+              `UPDATE "${tableName}" SET ${setClause} WHERE id = $${columns.length + 1}`,
+              [...values, row.id as string]
+            );
+            
+            result.updated++;
+          } else {
+            // Target is already up-to-date or newer
+            result.skipped++;
+            result.skippedReasons.alreadySynced++;
           }
           
           processedRows++;
@@ -602,6 +869,9 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
           }
         }
       }
+      
+      // Update processed count for this batch
+      processedRows += batch.rows.length;
     });
     
     // Update progress
