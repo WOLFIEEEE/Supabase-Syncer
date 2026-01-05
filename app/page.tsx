@@ -238,23 +238,9 @@ export default function DashboardPage() {
                       <stop offset="100%" stopColor="#14B8A6"/>
                     </linearGradient>
                   </defs>
-                  <circle cx="24" cy="24" r="22" fill="url(#hpg)"/>
-                  <text 
-                    x="24" 
-                    y="24" 
-                    fontSize="28" 
-                    fontWeight="bold" 
-                    fill="white" 
-                    textAnchor="middle" 
-                    dominantBaseline="central"
-                    fontFamily="Inter, system-ui, -apple-system, sans-serif"
-                  >
-                    r
-                  </text>
-                  <path d="M 36 14 A 14 14 0 0 1 38 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
-                  <path d="M 38 24 L 35 22 M 38 24 L 36 27" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
-                  <path d="M 12 34 A 14 14 0 0 1 10 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
-                  <path d="M 10 24 L 13 26 M 10 24 L 12 21" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.6"/>
+                  <rect x="14" y="12" width="6" height="24" rx="3" fill="url(#hpg)" />
+                  <path d="M20 18 C 26 18, 34 18, 34 28" stroke="url(#hpg)" strokeWidth="6" strokeLinecap="round" />
+                  <circle cx="34" cy="34" r="4" fill="#3ECF8E" />
                 </svg>
                 <HStack spacing={0.5}>
                   <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="medium" color="surface.300" letterSpacing="-0.01em">

@@ -38,56 +38,40 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
             </linearGradient>
           </defs>
           
-          {/* Background circle with Supabase green */}
-          <circle cx="24" cy="24" r="22" fill="url(#supaGrad)"/>
-          
-          {/* Letter "r" in center - reimagining */}
-          <text 
-            x="24" 
-            y="24" 
-            fontSize="28" 
-            fontWeight="bold" 
-            fill="white" 
-            textAnchor="middle" 
-            dominantBaseline="central"
-            fontFamily="Inter, system-ui, -apple-system, sans-serif"
-          >
-            r
-          </text>
-          
-          {/* Circular refresh arrows around the "r" */}
-          <path 
-            d="M 36 14 A 14 14 0 0 1 38 24" 
-            stroke="white" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
-            fill="none"
-            opacity="0.6"
-          />
-          <path 
-            d="M 38 24 L 35 22 M 38 24 L 36 27" 
-            stroke="white" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
-            fill="none"
-            opacity="0.6"
+          {/* Stem of the 'r' - also looks like a data pillar */}
+          <rect 
+            x="14" 
+            y="12" 
+            width="6" 
+            height="24" 
+            rx="3" 
+            fill="url(#supaGrad)"
           />
           
+          {/* The reimagining bridge/shoulder */}
           <path 
-            d="M 12 34 A 14 14 0 0 1 10 24" 
-            stroke="white" 
-            strokeWidth="2.5" 
+            d="M20 18 C 26 18, 34 18, 34 28" 
+            stroke="url(#supaGrad)" 
+            strokeWidth="6" 
             strokeLinecap="round" 
-            fill="none"
-            opacity="0.6"
           />
-          <path 
-            d="M 10 24 L 13 26 M 10 24 L 12 21" 
-            stroke="white" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
-            fill="none"
-            opacity="0.6"
+          
+          {/* The node/target database point */}
+          <circle 
+            cx="34" 
+            cy="34" 
+            r="4" 
+            fill="#3ECF8E"
+          />
+          
+          {/* Subtle pulse ring around the node */}
+          <circle 
+            cx="34" 
+            cy="34" 
+            r="7" 
+            stroke="#3ECF8E" 
+            strokeWidth="1" 
+            opacity="0.3"
           />
         </svg>
       </Box>
@@ -146,15 +130,21 @@ export function SuparbaseLogoAnimated({ size = 'md' }: { size?: 'sm' | 'md' | 'l
       className="pulse-logo-animated"
     >
       <style jsx global>{`
-        .pulse-logo-animated svg path {
-          stroke-dasharray: 200;
-          stroke-dashoffset: 200;
-          animation: pulse-draw 1.5s ease-in-out infinite;
+        .pulse-logo-animated .anim-path {
+          stroke-dasharray: 50;
+          stroke-dashoffset: 50;
+          animation: supa-draw 2s ease-in-out infinite;
         }
-        @keyframes pulse-draw {
-          0% { stroke-dashoffset: 200; }
+        .pulse-logo-animated .anim-node {
+          animation: supa-pulse 2s ease-in-out infinite;
+        }
+        @keyframes supa-draw {
+          0%, 100% { stroke-dashoffset: 50; }
           50% { stroke-dashoffset: 0; }
-          100% { stroke-dashoffset: -200; }
+        }
+        @keyframes supa-pulse {
+          0%, 100% { opacity: 0.3; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1.2); }
         }
       `}</style>
       <svg 
@@ -170,54 +160,32 @@ export function SuparbaseLogoAnimated({ size = 'md' }: { size?: 'sm' | 'md' | 'l
           </linearGradient>
         </defs>
         
-        <circle cx="24" cy="24" r="22" fill="url(#supaGradAnim)"/>
-        
-        <text 
-          x="24" 
-          y="24" 
-          fontSize="28" 
-          fontWeight="bold" 
-          fill="white" 
-          textAnchor="middle" 
-          dominantBaseline="central"
-          fontFamily="Inter, system-ui, -apple-system, sans-serif"
-        >
-          r
-        </text>
-        
-        {/* Animated refresh arrows */}
-        <path 
-          d="M 36 14 A 14 14 0 0 1 38 24" 
-          stroke="white" 
-          strokeWidth="2.5" 
-          strokeLinecap="round" 
-          fill="none"
-          opacity="0.6"
-        />
-        <path 
-          d="M 38 24 L 35 22 M 38 24 L 36 27" 
-          stroke="white" 
-          strokeWidth="2.5" 
-          strokeLinecap="round" 
-          fill="none"
-          opacity="0.6"
+        {/* Animated Stem */}
+        <rect 
+          x="14" 
+          y="12" 
+          width="6" 
+          height="24" 
+          rx="3" 
+          fill="url(#supaGradAnim)"
         />
         
+        {/* Animated Bridge */}
         <path 
-          d="M 12 34 A 14 14 0 0 1 10 24" 
-          stroke="white" 
-          strokeWidth="2.5" 
-          strokeLinecap="round" 
-          fill="none"
-          opacity="0.6"
+          d="M20 18 C 26 18, 34 18, 34 28" 
+          stroke="url(#supaGradAnim)" 
+          strokeWidth="6" 
+          strokeLinecap="round"
+          className="anim-path"
         />
-        <path 
-          d="M 10 24 L 13 26 M 10 24 L 12 21" 
-          stroke="white" 
-          strokeWidth="2.5" 
-          strokeLinecap="round" 
-          fill="none"
-          opacity="0.6"
+        
+        {/* Animated Node */}
+        <circle 
+          cx="34" 
+          cy="34" 
+          r="4" 
+          fill="#3ECF8E"
+          className="anim-node"
         />
       </svg>
     </Box>
