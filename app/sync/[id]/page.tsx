@@ -343,7 +343,7 @@ export default function SyncDetailPage() {
   const status = statusConfig[job.status] || statusConfig.pending;
 
   return (
-    <Flex direction="column" minH="100vh" bg="surface.900">
+    <Flex direction="column" h="100vh" bg="surface.900" overflow="hidden">
       {/* Header */}
       <Box 
         as="header"
@@ -352,7 +352,7 @@ export default function SyncDetailPage() {
         borderColor="surface.700"
         flexShrink={0}
       >
-        <Flex justify="space-between" align="center" px={4} py={2}>
+        <Flex justify="space-between" align="center" px={3} py={1.5}>
           <HStack spacing={3}>
             <IconButton
               aria-label="Back"
@@ -445,22 +445,24 @@ export default function SyncDetailPage() {
           </Flex>
       </Box>
 
-      {/* Full Width Two-Column Layout */}
+      {/* Full Width Two-Column Layout - Fits in viewport */}
       <Flex flex={1} overflow="hidden">
-        {/* Left Panel - Main Details */}
+        {/* Left Panel - Main Details (narrower) */}
         <Box 
-          w={{ base: '100%', lg: '45%' }} 
-          p={4} 
-          overflowY="auto"
+          w={{ base: '100%', lg: '35%' }} 
+          p={3} 
+          display="flex"
+          flexDirection="column"
           borderRight={{ lg: '1px solid' }}
           borderColor="surface.700"
+          overflow="hidden"
         >
-          <VStack spacing={4} align="stretch">
-            {/* Connection Flow */}
-            <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <VStack spacing={3} align="stretch" h="100%">
+            {/* Connection Flow - Compact */}
+            <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} flexShrink={0}>
               <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="lg">
-                <CardBody py={3} px={4}>
-                  <HStack justify="center" spacing={4}>
+                <CardBody py={2} px={3}>
+                  <HStack justify="center" spacing={3}>
                     <VStack spacing={0}>
                       <Badge 
                         colorScheme={job.sourceConnection?.environment === 'production' ? 'red' : 'green'} 
@@ -475,7 +477,7 @@ export default function SyncDetailPage() {
                       <Text fontSize="2xs" color="surface.500">{job.sourceConnection?.environment}</Text>
                     </VStack>
                     
-                    <Box color="surface.500" fontSize="lg">→</Box>
+                    <Box color="surface.500" fontSize="md">→</Box>
                     
                     <VStack spacing={0}>
                       <Badge 
@@ -495,82 +497,82 @@ export default function SyncDetailPage() {
               </Card>
             </MotionBox>
 
-            {/* Progress Section */}
-            <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            {/* Progress Section - Compact */}
+            <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} flexShrink={0}>
               <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="lg">
-                <CardBody p={4}>
+                <CardBody p={3}>
                   {/* Current Operation */}
                   {job.status === 'running' && progress?.currentTable && (
-                    <HStack spacing={2} mb={3}>
+                    <HStack spacing={2} mb={2}>
                       <Box color="brand.400" className="pulse"><LoaderIcon /></Box>
-                      <Text color="surface.300" fontSize="sm">
-                        Processing <Code bg="surface.700" color="brand.300" px={1.5} py={0.5} borderRadius="md" fontSize="xs">{progress.currentTable}</Code>
+                      <Text color="surface.300" fontSize="xs">
+                        <Code bg="surface.700" color="brand.300" px={1} py={0.5} borderRadius="md" fontSize="xs">{progress.currentTable}</Code>
                       </Text>
                     </HStack>
                   )}
                   
                   {/* Progress Bar */}
-                  <VStack align="stretch" spacing={1} mb={4}>
+                  <VStack align="stretch" spacing={0.5} mb={3}>
                     <Flex justify="space-between" align="center">
-                      <Text color="surface.400" fontSize="xs" fontWeight="medium">PROGRESS</Text>
-                      <Text color="white" fontSize="sm" fontWeight="bold">{progressPercent}%</Text>
+                      <Text color="surface.400" fontSize="2xs" fontWeight="medium">PROGRESS</Text>
+                      <Text color="white" fontSize="xs" fontWeight="bold">{progressPercent}%</Text>
                     </Flex>
                     <Progress 
                       value={progressPercent} 
-                      size="sm"
+                      size="xs"
                       borderRadius="full"
                       bg="surface.700"
                       sx={{ '& > div': { bg: job.status === 'completed' ? 'green.400' : 'brand.400' } }}
                     />
-                    <Text color="surface.500" fontSize="xs">
+                    <Text color="surface.500" fontSize="2xs">
                       {completedCount} of {totalCount} tables
                     </Text>
                   </VStack>
                   
-                  {/* Stats Grid */}
-                  <SimpleGrid columns={4} spacing={2}>
-                    <VStack align="center" spacing={0} p={2} bg="surface.900" borderRadius="md">
-                      <Text color="green.400" fontSize="lg" fontWeight="bold">{(progress?.insertedRows || 0).toLocaleString()}</Text>
-                      <Text color="surface.500" fontSize="2xs">INSERTED</Text>
+                  {/* Stats Grid - Compact */}
+                  <SimpleGrid columns={4} spacing={1}>
+                    <VStack align="center" spacing={0} p={1.5} bg="surface.900" borderRadius="md">
+                      <Text color="green.400" fontSize="sm" fontWeight="bold">{(progress?.insertedRows || 0).toLocaleString()}</Text>
+                      <Text color="surface.500" fontSize="2xs">INS</Text>
                     </VStack>
-                    <VStack align="center" spacing={0} p={2} bg="surface.900" borderRadius="md">
-                      <Text color="blue.400" fontSize="lg" fontWeight="bold">{(progress?.updatedRows || 0).toLocaleString()}</Text>
-                      <Text color="surface.500" fontSize="2xs">UPDATED</Text>
+                    <VStack align="center" spacing={0} p={1.5} bg="surface.900" borderRadius="md">
+                      <Text color="blue.400" fontSize="sm" fontWeight="bold">{(progress?.updatedRows || 0).toLocaleString()}</Text>
+                      <Text color="surface.500" fontSize="2xs">UPD</Text>
                     </VStack>
-                    <VStack align="center" spacing={0} p={2} bg="surface.900" borderRadius="md">
-                      <Text color="yellow.400" fontSize="lg" fontWeight="bold">{(progress?.skippedRows || 0).toLocaleString()}</Text>
-                      <Text color="surface.500" fontSize="2xs">SKIPPED</Text>
+                    <VStack align="center" spacing={0} p={1.5} bg="surface.900" borderRadius="md">
+                      <Text color="yellow.400" fontSize="sm" fontWeight="bold">{(progress?.skippedRows || 0).toLocaleString()}</Text>
+                      <Text color="surface.500" fontSize="2xs">SKIP</Text>
                     </VStack>
-                    <VStack align="center" spacing={0} p={2} bg="surface.900" borderRadius="md">
-                      <Text color={progress?.errors ? 'red.400' : 'surface.500'} fontSize="lg" fontWeight="bold">{progress?.errors || 0}</Text>
-                      <Text color="surface.500" fontSize="2xs">ERRORS</Text>
+                    <VStack align="center" spacing={0} p={1.5} bg="surface.900" borderRadius="md">
+                      <Text color={progress?.errors ? 'red.400' : 'surface.500'} fontSize="sm" fontWeight="bold">{progress?.errors || 0}</Text>
+                      <Text color="surface.500" fontSize="2xs">ERR</Text>
                     </VStack>
                   </SimpleGrid>
                   
                   {/* Time Stats */}
                   {job.status === 'running' && (
-                    <HStack spacing={4} mt={3} pt={3} borderTop="1px solid" borderColor="surface.700" justify="center">
+                    <HStack spacing={3} mt={2} pt={2} borderTop="1px solid" borderColor="surface.700" justify="center">
                       <HStack spacing={1}>
                         <ClockIcon />
-                        <Text color="surface.400" fontSize="xs">{formatDuration(elapsedTime)}</Text>
+                        <Text color="surface.400" fontSize="2xs">{formatDuration(elapsedTime)}</Text>
                       </HStack>
-                      <Text color="surface.600" fontSize="xs">•</Text>
-                      <Text color="surface.400" fontSize="xs">{speed} rows/sec</Text>
+                      <Text color="surface.600" fontSize="2xs">•</Text>
+                      <Text color="surface.400" fontSize="2xs">{speed} rows/sec</Text>
                     </HStack>
                   )}
                 </CardBody>
               </Card>
             </MotionBox>
 
-            {/* Tables List */}
-            <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} flex={1}>
-              <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="lg" h="100%">
-                <CardBody p={3}>
-                  <Flex justify="space-between" align="center" mb={2}>
-                    <Text color="surface.400" fontSize="xs" fontWeight="medium">TABLES</Text>
-                    <Text color="surface.500" fontSize="xs">{completedCount}/{enabledTables.length}</Text>
+            {/* Tables List - Takes remaining space */}
+            <MotionBox initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} flex={1} minH={0}>
+              <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="lg" h="100%" display="flex" flexDirection="column">
+                <CardBody p={2} display="flex" flexDirection="column" flex={1} minH={0}>
+                  <Flex justify="space-between" align="center" mb={1.5} flexShrink={0}>
+                    <Text color="surface.400" fontSize="2xs" fontWeight="medium">TABLES</Text>
+                    <Text color="surface.500" fontSize="2xs">{completedCount}/{enabledTables.length}</Text>
                   </Flex>
-                  <VStack align="stretch" spacing={0.5} maxH="calc(100vh - 500px)" overflowY="auto">
+                  <VStack align="stretch" spacing={0} flex={1} overflowY="auto" minH={0}>
                     {enabledTables.map((table, idx) => {
                       const isComplete = progress?.currentTable 
                         ? enabledTables.findIndex(t => t.tableName === progress.currentTable) > idx
@@ -581,22 +583,22 @@ export default function SyncDetailPage() {
                         <HStack 
                           key={table.tableName} 
                           justify="space-between" 
-                          py={1.5} 
-                          px={2}
+                          py={1} 
+                          px={1.5}
                           bg={isCurrent ? 'brand.900/30' : 'transparent'}
-                          borderRadius="md"
+                          borderRadius="sm"
                           borderLeft="2px solid"
                           borderColor={isComplete ? 'green.500' : isCurrent ? 'brand.400' : 'transparent'}
                         >
                           <Text 
                             fontFamily="mono" 
-                            fontSize="xs" 
+                            fontSize="2xs" 
                             color={isComplete ? 'green.400' : isCurrent ? 'brand.300' : 'surface.400'}
                             isTruncated
                           >
                             {table.tableName}
                           </Text>
-                          {isComplete && <Box color="green.500"><CheckCircleIcon /></Box>}
+                          {isComplete && <Box color="green.500" fontSize="xs"><CheckCircleIcon /></Box>}
                           {isCurrent && <Spinner size="xs" color="brand.400" />}
                         </HStack>
                       );
@@ -608,63 +610,65 @@ export default function SyncDetailPage() {
           </VStack>
         </Box>
 
-        {/* Right Panel - Activity Log */}
+        {/* Right Panel - Activity Log (wider, fills remaining space) */}
         <Box 
-          w={{ base: '100%', lg: '55%' }} 
+          w={{ base: '100%', lg: '65%' }} 
           display={{ base: 'none', lg: 'flex' }}
           flexDirection="column"
           bg="surface.900"
+          overflow="hidden"
         >
           <Flex 
             justify="space-between" 
             align="center" 
-            px={4} 
-            py={3} 
+            px={3} 
+            py={2} 
             borderBottom="1px solid" 
             borderColor="surface.700"
             bg="surface.800"
+            flexShrink={0}
           >
             <HStack spacing={2}>
               <Text color="white" fontSize="sm" fontWeight="semibold">Activity Log</Text>
-              <Badge colorScheme="brand" variant="subtle" fontSize="xs">{job.logs.length}</Badge>
+              <Badge colorScheme="brand" variant="subtle" fontSize="2xs">{job.logs.length}</Badge>
             </HStack>
-            <HStack spacing={2}>
+            <HStack spacing={1}>
               {job.logs.some(l => l.level === 'error') && (
-                <Badge colorScheme="red" variant="solid" fontSize="xs">
+                <Badge colorScheme="red" variant="solid" fontSize="2xs" px={1.5}>
                   {job.logs.filter(l => l.level === 'error').length} errors
                 </Badge>
               )}
               {job.logs.some(l => l.level === 'warn') && (
-                <Badge colorScheme="yellow" variant="solid" fontSize="xs">
+                <Badge colorScheme="yellow" variant="solid" fontSize="2xs" px={1.5}>
                   {job.logs.filter(l => l.level === 'warn').length} warnings
                 </Badge>
               )}
             </HStack>
           </Flex>
           
-          <Box flex={1} overflowY="auto" p={3}>
+          <Box flex={1} overflowY="auto" p={2} minH={0}>
             {job.logs.length === 0 ? (
               <Flex justify="center" align="center" h="100%" color="surface.500">
                 <VStack spacing={2}>
                   <ClockIcon />
-                  <Text fontSize="sm">Waiting for activity...</Text>
+                  <Text fontSize="xs">Waiting for activity...</Text>
                 </VStack>
               </Flex>
             ) : (
-              <VStack align="stretch" spacing={1}>
+              <VStack align="stretch" spacing={0.5}>
                 {job.logs.map((log) => (
                   <HStack 
                     key={log.id} 
                     spacing={2} 
                     align="start" 
-                    py={1.5}
+                    py={1}
                     px={2}
                     bg={log.level === 'error' ? 'red.900/20' : log.level === 'warn' ? 'yellow.900/20' : 'transparent'}
-                    borderRadius="md"
+                    borderRadius="sm"
                     borderLeft="2px solid"
                     borderColor={log.level === 'error' ? 'red.500' : log.level === 'warn' ? 'yellow.500' : 'surface.700'}
                   >
-                    <Text color="surface.500" fontSize="xs" fontFamily="mono" w="70px" flexShrink={0}>
+                    <Text color="surface.500" fontSize="2xs" fontFamily="mono" w="65px" flexShrink={0}>
                       {formatTime(log.createdAt)}
                     </Text>
                     <Badge 
@@ -672,12 +676,12 @@ export default function SyncDetailPage() {
                       variant="subtle"
                       fontSize="2xs"
                       px={1}
-                      h="18px"
+                      h="16px"
                     >
                       {log.level.toUpperCase()}
                     </Badge>
                     <Text 
-                      fontSize="xs" 
+                      fontSize="2xs" 
                       color={log.level === 'error' ? 'red.300' : log.level === 'warn' ? 'yellow.300' : 'surface.300'}
                       flex={1}
                       fontFamily="mono"
@@ -693,22 +697,22 @@ export default function SyncDetailPage() {
         </Box>
       </Flex>
       
-      {/* Mobile Log View */}
-      <Box display={{ base: 'block', lg: 'none' }} p={4}>
-        <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="lg">
-          <CardBody p={3}>
-            <Flex justify="space-between" align="center" mb={2}>
-              <Text color="surface.400" fontSize="xs" fontWeight="medium">ACTIVITY LOG</Text>
-              <Text color="surface.500" fontSize="xs">{job.logs.length} entries</Text>
+      {/* Mobile Log View - Hidden on desktop */}
+      <Box display={{ base: 'block', lg: 'none' }} p={2} overflowY="auto" flex={1}>
+        <Card bg="surface.800" borderWidth="1px" borderColor="surface.700" borderRadius="lg" h="100%">
+          <CardBody p={2} display="flex" flexDirection="column" h="100%">
+            <Flex justify="space-between" align="center" mb={1} flexShrink={0}>
+              <Text color="surface.400" fontSize="2xs" fontWeight="medium">ACTIVITY LOG</Text>
+              <Text color="surface.500" fontSize="2xs">{job.logs.length} entries</Text>
             </Flex>
-            <VStack align="stretch" spacing={1} maxH="300px" overflowY="auto">
-              {job.logs.slice(0, 20).map((log) => (
-                <HStack key={log.id} spacing={2} align="start" py={1}>
-                  <Text color="surface.500" fontSize="2xs" fontFamily="mono" w="60px" flexShrink={0}>
+            <VStack align="stretch" spacing={0.5} flex={1} overflowY="auto">
+              {job.logs.slice(0, 50).map((log) => (
+                <HStack key={log.id} spacing={2} align="start" py={0.5}>
+                  <Text color="surface.500" fontSize="2xs" fontFamily="mono" w="55px" flexShrink={0}>
                     {formatTime(log.createdAt)}
                   </Text>
                   <Text 
-                    fontSize="xs" 
+                    fontSize="2xs" 
                     color={log.level === 'error' ? 'red.300' : log.level === 'warn' ? 'yellow.300' : 'surface.300'}
                     flex={1}
                   >
