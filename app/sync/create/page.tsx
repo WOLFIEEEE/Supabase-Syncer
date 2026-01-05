@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -149,11 +149,7 @@ export default function CreateSyncPage() {
   const router = useRouter();
   const toast = useToast();
 
-  useEffect(() => {
-    fetchConnections();
-  }, []);
-
-  const fetchConnections = async () => {
+  const fetchConnections = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/connections');
@@ -170,7 +166,11 @@ export default function CreateSyncPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchConnections();
+  }, [fetchConnections]);
 
   const fetchTables = async () => {
     if (!sourceId) return;

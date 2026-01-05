@@ -1,13 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable standalone output for Docker deployment
-  output: "standalone",
-  
-  turbopack: {
-    // Set root directory to this project
-    root: __dirname,
-  },
+  // Note: output: "standalone" is only for Docker deployment
+  // Vercel uses its own build system, so we don't set it here
+  // If deploying to Docker, uncomment: output: "standalone",
   
   // Suppress experimental warnings
   experimental: {
