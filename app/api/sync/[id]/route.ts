@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const includeLogs = searchParams.get('logs') !== 'false';
-    const logLimit = parseInt(searchParams.get('logLimit') || '100', 10);
+    const logLimit = parseInt(searchParams.get('logLimit') || '1000', 10);
     
     // Get job details (scoped to user)
     const job = await supabaseSyncJobStore.getById(id, user.id);

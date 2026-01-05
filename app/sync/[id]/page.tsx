@@ -189,7 +189,7 @@ export default function SyncDetailPage() {
 
   const fetchJob = useCallback(async () => {
     try {
-      const response = await fetch(`/api/sync/${jobId}?logs=true&logLimit=20`);
+      const response = await fetch(`/api/sync/${jobId}?logs=true&logLimit=1000`);
       const data = await response.json();
       if (data.success) {
         setJob(data.data);
@@ -706,7 +706,7 @@ export default function SyncDetailPage() {
               <Text color="surface.500" fontSize="2xs">{job.logs.length} entries</Text>
             </Flex>
             <VStack align="stretch" spacing={0.5} flex={1} overflowY="auto">
-              {job.logs.slice(0, 50).map((log) => (
+              {job.logs.map((log) => (
                 <HStack key={log.id} spacing={2} align="start" py={0.5}>
                   <Text color="surface.500" fontSize="2xs" fontFamily="mono" w="55px" flexShrink={0}>
                     {formatTime(log.createdAt)}

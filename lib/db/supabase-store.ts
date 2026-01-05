@@ -302,7 +302,7 @@ export const supabaseSyncJobStore = {
 // ============================================
 
 export const supabaseSyncLogStore = {
-  async getByJobId(jobId: string, limit = 100): Promise<SyncLog[]> {
+  async getByJobId(jobId: string, limit = 1000): Promise<SyncLog[]> {
     const supabase = await createClient();
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
