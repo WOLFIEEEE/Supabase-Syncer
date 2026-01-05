@@ -30,6 +30,8 @@ function formatUptime(ms: number): string {
 }
 
 export async function GET() {
+  const startTime = performance.now();
+  
   try {
     const supabase = await createClient();
     
@@ -37,20 +39,23 @@ export async function GET() {
     let dbStatus: 'connected' | 'not_configured' | 'error' = 'not_configured';
     let dbMessage = 'Using Supabase for storage';
     let dbType = 'PostgreSQL (Supabase)';
+    let dbResponseTime = 0;
     
     try {
+      const dbCheckStart = performance.now();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any)
         .from('connections')
         .select('id')
         .limit(1);
+      dbResponseTime = Math.round(performance.now() - dbCheckStart);
       
       if (error) {
         dbStatus = 'error';
         dbMessage = error.message;
       } else {
         dbStatus = 'connected';
-        dbMessage = 'Connected to Supabase';
+        dbMessage = `Connected to Supabase (${dbResponseTime}ms)`;
       }
     } catch (e) {
       dbStatus = 'error';
@@ -112,6 +117,9 @@ export async function GET() {
     const appStatus = (dbStatus === 'connected' && encryptionStatus === 'ok' && authStatus === 'ok')
       ? 'ok' : 'error';
     
+    // Calculate total response time
+    const totalResponseTime = Math.round(performance.now() - startTime);
+    
     return NextResponse.json({
       success: true,
       data: {
@@ -119,6 +127,7 @@ export async function GET() {
           status: appStatus,
           version: APP_VERSION,
           uptime,
+          responseTime: `${totalResponseTime}ms`,
         },
         database: {
           status: dbStatus,
