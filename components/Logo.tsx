@@ -55,98 +55,24 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
             </Text>
             <Box
               mx={1.5}
-              px={1}
+              px={2}
               py={0.5}
+              bgGradient="linear(to-br, #3ECF8E, #14B8A6)"
+              borderRadius="full"
               display="flex"
               alignItems="center"
               justifyContent="center"
-              position="relative"
+              boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
             >
-              <Box
-                width={text === 'md' ? '28px' : text === 'lg' ? '36px' : '44px'}
-                height={text === 'md' ? '28px' : text === 'lg' ? '36px' : '44px'}
-                position="relative"
+              <Text 
+                fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
+                fontWeight="900" 
+                color="white"
+                lineHeight="1"
+                fontFamily="JetBrains Mono, monospace"
               >
-                <svg
-                  viewBox="0 0 48 48"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ width: '100%', height: '100%' }}
-                  className="electric-r"
-                >
-                  <defs>
-                    <linearGradient id="electricGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#0D9488" />
-                      <stop offset="50%" stopColor="#14B8A6" />
-                      <stop offset="100%" stopColor="#0D9488" />
-                    </linearGradient>
-                  </defs>
-                  
-                  {/* Vertical stem - left side of R */}
-                  <rect x="8" y="6" width="5" height="36" rx="2.5" fill="url(#electricGrad)" />
-                  
-                  {/* Top horizontal bar */}
-                  <rect x="8" y="6" width="22" height="5" rx="2.5" fill="url(#electricGrad)" />
-                  
-                  {/* Middle horizontal bar (forms the top of the loop) */}
-                  <rect x="8" y="20" width="16" height="5" rx="2.5" fill="url(#electricGrad)" />
-                  
-                  {/* Right vertical bar (right side of the loop) */}
-                  <rect x="22" y="20" width="5" height="14" rx="2.5" fill="url(#electricGrad)" />
-                  
-                  {/* Diagonal leg - bottom right of R */}
-                  <path
-                    d="M 13 25 L 30 42"
-                    stroke="url(#electricGrad)"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="electric-path"
-                  />
-                  
-                  {/* Electric sparks/zigzag on the diagonal */}
-                  <path
-                    d="M 16 30 L 18 28 L 20 32 L 22 30 L 24 34 L 26 32"
-                    stroke="#5EEAD4"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    fill="none"
-                    opacity="0.9"
-                    className="electric-spark"
-                  />
-                  
-                  {/* Electric glow effect on diagonal */}
-                  <path
-                    d="M 13 25 L 30 42"
-                    stroke="#5EEAD4"
-                    strokeWidth="7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity="0.25"
-                    className="electric-glow"
-                  />
-                </svg>
-                <style jsx>{`
-                  .electric-r .electric-path {
-                    filter: drop-shadow(0 0 2px #14B8A6);
-                    animation: electric-pulse 2s ease-in-out infinite;
-                  }
-                  .electric-r .electric-spark {
-                    animation: electric-flicker 0.5s ease-in-out infinite;
-                  }
-                  .electric-r .electric-glow {
-                    animation: electric-pulse 2s ease-in-out infinite;
-                  }
-                  @keyframes electric-pulse {
-                    0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 2px #14B8A6); }
-                    50% { opacity: 1; filter: drop-shadow(0 0 4px #5EEAD4); }
-                  }
-                  @keyframes electric-flicker {
-                    0%, 100% { opacity: 0.6; }
-                    50% { opacity: 1; }
-                  }
-                `}</style>
-              </Box>
+                R
+              </Text>
             </Box>
             <Text 
               fontSize={text} 

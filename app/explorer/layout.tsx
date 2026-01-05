@@ -273,79 +273,17 @@ export default function ExplorerLayout({
                   </Text>
                   <Box 
                     mx={1} 
-                    px={0.5} 
+                    px={1.5} 
                     py={0.5} 
+                    bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
+                    borderRadius="full" 
                     display="flex" 
                     alignItems="center"
-                    position="relative"
+                    boxShadow="0 0 10px rgba(62, 207, 142, 0.2)"
                   >
-                    <Box width="20px" height="20px" position="relative">
-                      <svg
-                        viewBox="0 0 48 48"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        style={{ width: '100%', height: '100%' }}
-                        className="electric-r-explorer"
-                      >
-                        <defs>
-                          <linearGradient id="electricGradExp" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#0D9488" />
-                            <stop offset="50%" stopColor="#14B8A6" />
-                            <stop offset="100%" stopColor="#0D9488" />
-                          </linearGradient>
-                        </defs>
-                        <rect x="8" y="6" width="5" height="36" rx="2.5" fill="url(#electricGradExp)" />
-                        <rect x="8" y="6" width="22" height="5" rx="2.5" fill="url(#electricGradExp)" />
-                        <rect x="8" y="20" width="16" height="5" rx="2.5" fill="url(#electricGradExp)" />
-                        <rect x="22" y="20" width="5" height="14" rx="2.5" fill="url(#electricGradExp)" />
-                        <path
-                          d="M 13 25 L 30 42"
-                          stroke="url(#electricGradExp)"
-                          strokeWidth="5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="electric-path"
-                        />
-                        <path
-                          d="M 16 30 L 18 28 L 20 32 L 22 30 L 24 34 L 26 32"
-                          stroke="#5EEAD4"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          fill="none"
-                          opacity="0.9"
-                          className="electric-spark"
-                        />
-                        <path
-                          d="M 13 25 L 30 42"
-                          stroke="#5EEAD4"
-                          strokeWidth="7"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          opacity="0.25"
-                          className="electric-glow"
-                        />
-                      </svg>
-                      <style jsx>{`
-                        .electric-r-explorer .electric-path {
-                          filter: drop-shadow(0 0 2px #14B8A6);
-                          animation: electric-pulse-exp 2s ease-in-out infinite;
-                        }
-                        .electric-r-explorer .electric-spark {
-                          animation: electric-flicker-exp 0.5s ease-in-out infinite;
-                        }
-                        .electric-r-explorer .electric-glow {
-                          animation: electric-pulse-exp 2s ease-in-out infinite;
-                        }
-                        @keyframes electric-pulse-exp {
-                          0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 2px #14B8A6); }
-                          50% { opacity: 1; filter: drop-shadow(0 0 4px #5EEAD4); }
-                        }
-                        @keyframes electric-flicker-exp {
-                          0%, 100% { opacity: 0.6; }
-                          50% { opacity: 1; }
-                        }
-                      `}</style>
-                    </Box>
+                    <Text fontSize="xs" fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
+                      R
+                    </Text>
                   </Box>
                   <Text fontSize="xs" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
                     BASE

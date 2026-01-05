@@ -230,79 +230,17 @@ export default function StatusPage() {
                           </Text>
                           <Box 
                             mx={1.5} 
-                            px={1} 
+                            px={2} 
                             py={0.5} 
+                            bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
+                            borderRadius="full" 
                             display="flex" 
                             alignItems="center"
-                            position="relative"
+                            boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
                           >
-                            <Box width="36px" height="36px" position="relative">
-                              <svg
-                                viewBox="0 0 48 48"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                style={{ width: '100%', height: '100%' }}
-                                className="electric-r-status"
-                              >
-                                <defs>
-                                  <linearGradient id="electricGradStat" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#0D9488" />
-                                    <stop offset="50%" stopColor="#14B8A6" />
-                                    <stop offset="100%" stopColor="#0D9488" />
-                                  </linearGradient>
-                                </defs>
-                                <rect x="8" y="6" width="5" height="36" rx="2.5" fill="url(#electricGradStat)" />
-                                <rect x="8" y="6" width="22" height="5" rx="2.5" fill="url(#electricGradStat)" />
-                                <rect x="8" y="20" width="16" height="5" rx="2.5" fill="url(#electricGradStat)" />
-                                <rect x="22" y="20" width="5" height="14" rx="2.5" fill="url(#electricGradStat)" />
-                                <path
-                                  d="M 13 25 L 30 42"
-                                  stroke="url(#electricGradStat)"
-                                  strokeWidth="5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  className="electric-path"
-                                />
-                                <path
-                                  d="M 16 30 L 18 28 L 20 32 L 22 30 L 24 34 L 26 32"
-                                  stroke="#5EEAD4"
-                                  strokeWidth="2.5"
-                                  strokeLinecap="round"
-                                  fill="none"
-                                  opacity="0.9"
-                                  className="electric-spark"
-                                />
-                                <path
-                                  d="M 13 25 L 30 42"
-                                  stroke="#5EEAD4"
-                                  strokeWidth="7"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  opacity="0.25"
-                                  className="electric-glow"
-                                />
-                              </svg>
-                              <style jsx>{`
-                                .electric-r-status .electric-path {
-                                  filter: drop-shadow(0 0 2px #14B8A6);
-                                  animation: electric-pulse-stat 2s ease-in-out infinite;
-                                }
-                                .electric-r-status .electric-spark {
-                                  animation: electric-flicker-stat 0.5s ease-in-out infinite;
-                                }
-                                .electric-r-status .electric-glow {
-                                  animation: electric-pulse-stat 2s ease-in-out infinite;
-                                }
-                                @keyframes electric-pulse-stat {
-                                  0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 2px #14B8A6); }
-                                  50% { opacity: 1; filter: drop-shadow(0 0 4px #5EEAD4); }
-                                }
-                                @keyframes electric-flicker-stat {
-                                  0%, 100% { opacity: 0.6; }
-                                  50% { opacity: 1; }
-                                }
-                              `}</style>
-                            </Box>
+                            <Text fontSize="xl" fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
+                              R
+                            </Text>
                           </Box>
                           <Text fontSize="lg" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
                             BASE
