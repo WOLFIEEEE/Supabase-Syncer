@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
       } else {
         setEmailSent(true);
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Failed to send reset email',
         description: 'An error occurred',
@@ -85,8 +85,6 @@ export default function ForgotPasswordPage() {
   if (emailSent) {
     return (
       <Box 
-        minH="100vh" 
-        className="gradient-mesh"
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -114,7 +112,7 @@ export default function ForgotPasswordPage() {
               </Box>
               <Heading size="lg" mb={4}>Check your email</Heading>
               <Text color="surface.400" mb={6}>
-                We've sent a password reset link to <strong>{email}</strong>. 
+                We&apos;ve sent a password reset link to <strong>{email}</strong>. 
                 Please check your inbox.
               </Text>
               <Link href="/login" color="brand.400" _hover={{ color: 'brand.300' }}>
@@ -129,8 +127,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <Box 
-      minH="100vh" 
-      className="gradient-mesh"
       display="flex"
       alignItems="center"
       justifyContent="center"
@@ -166,7 +162,7 @@ export default function ForgotPasswordPage() {
               Reset Password
             </Heading>
             <Text color="surface.400" textAlign="center">
-              Enter your email address and we'll send you a link to reset your password.
+              Enter your email address and we&apos;ll send you a link to reset your password.
             </Text>
           </VStack>
 

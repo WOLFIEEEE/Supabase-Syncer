@@ -53,14 +53,6 @@ const EyeOffIcon = () => (
   </svg>
 );
 
-const DatabaseIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <ellipse cx="12" cy="5" rx="9" ry="3"/>
-    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-  </svg>
-);
-
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -120,8 +112,6 @@ export default function LoginPage() {
 
   return (
     <Box 
-      minH="100vh" 
-      className="gradient-mesh"
       display="flex"
       alignItems="center"
       justifyContent="center"
@@ -135,9 +125,6 @@ export default function LoginPage() {
           transition={{ duration: 0.5 }}
         >
           <VStack spacing={{ base: 6, md: 8 }} align="center" mb={{ base: 6, md: 8 }}>
-            <Box color="brand.400">
-              <DatabaseIcon />
-            </Box>
             <VStack spacing={2}>
               <Heading 
                 size={{ base: 'lg', md: 'xl' }}
@@ -146,7 +133,7 @@ export default function LoginPage() {
                 bgClip="text"
                 textAlign="center"
               >
-                Supabase Syncer
+                Sign In
               </Heading>
               <Text color="surface.400" textAlign="center" fontSize={{ base: 'sm', md: 'md' }} px={4}>
                 Sign in to manage your database synchronization
@@ -268,3 +255,4 @@ export default function LoginPage() {
     </Box>
   );
 }
+

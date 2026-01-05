@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseConnectionStore, supabaseSyncJobStore, supabaseSyncLogStore } from '@/lib/db/supabase-store';
+import { supabaseConnectionStore, supabaseSyncJobStore, supabaseSyncLogStore, getJobWithConnections } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { executeSyncRealtime } from '@/lib/services/sync-realtime';
 import { getUser } from '@/lib/supabase/server';
@@ -125,12 +125,62 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           },
           onComplete: async (success, newCheckpoint) => {
             const finalStatus = success ? 'completed' : 'failed';
+            const startTime = job.startedAt ? new Date(job.startedAt).getTime() : Date.now();
+            const duration = Date.now() - startTime;
+            
             try {
               await supabaseSyncJobStore.update(id, user.id, {
                 status: finalStatus,
                 completedAt: new Date().toISOString(),
                 checkpoint: (newCheckpoint as unknown as Json) || null,
               });
+              
+              // Get updated job with progress
+              const updatedJob = await supabaseSyncJobStore.getById(id, user.id);
+              const jobWithConnections = updatedJob ? await getJobWithConnections(updatedJob, user.id) : null;
+              
+              // Send email notification
+              if (user.email && jobWithConnections) {
+                const progress = updatedJob?.progress as any;
+                if (success) {
+                  const { notifySyncCompleted } = await import('@/lib/services/email-notifications');
+                  const { incrementDataTransfer } = await import('@/lib/services/usage-limits');
+                  
+                  const stats = {
+                    totalRows: progress?.totalRows || 0,
+                    insertedRows: progress?.insertedRows || 0,
+                    updatedRows: progress?.updatedRows || 0,
+                    duration,
+                  };
+                  
+                  // Estimate data transfer (rough: 1KB per row)
+                  const estimatedDataMb = (stats.totalRows * 1) / 1024;
+                  incrementDataTransfer(user.id, estimatedDataMb).catch(err => 
+                    console.error('Failed to update data transfer:', err)
+                  );
+                  
+                  notifySyncCompleted(
+                    user.id,
+                    user.email,
+                    id,
+                    jobWithConnections.sourceConnection?.name || 'Unknown',
+                    jobWithConnections.targetConnection?.name || 'Unknown',
+                    stats
+                  ).catch(err => console.error('Failed to send sync completed email:', err));
+                } else {
+                  const { notifySyncFailed } = await import('@/lib/services/email-notifications');
+                  const errorMsg = progress?.error || 'Unknown error';
+                  notifySyncFailed(
+                    user.id,
+                    user.email,
+                    id,
+                    jobWithConnections.sourceConnection?.name || 'Unknown',
+                    jobWithConnections.targetConnection?.name || 'Unknown',
+                    errorMsg
+                  ).catch(err => console.error('Failed to send sync failed email:', err));
+                }
+              }
+              
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'complete', success, status: finalStatus })}\n\n`));
             } catch (err) {
               console.error('Failed to update completion:', err);

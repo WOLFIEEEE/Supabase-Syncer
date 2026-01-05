@@ -5,6 +5,8 @@ import { calculateDiff } from '@/lib/services/diff-engine';
 import { getUser } from '@/lib/supabase/server';
 import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
 import { SyncJobInputSchema, PaginationSchema, validateInput } from '@/lib/validations/schemas';
+import { checkSyncJobLimit, incrementSyncJobCount } from '@/lib/services/usage-limits';
+import { notifySyncStarted } from '@/lib/services/email-notifications';
 
 // GET - List all sync jobs for the authenticated user
 export async function GET(request: NextRequest) {
@@ -196,6 +198,20 @@ export async function POST(request: NextRequest) {
       });
     }
     
+    // Check sync job limit using usage limits service
+    const syncJobLimitCheck = await checkSyncJobLimit(user.id);
+    if (!syncJobLimitCheck.allowed) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: syncJobLimitCheck.reason || 'Sync job limit reached',
+          usage: syncJobLimitCheck.currentUsage,
+          limits: syncJobLimitCheck.limits,
+        },
+        { status: 403 }
+      );
+    }
+    
     // Check concurrent job limit (max 3 running jobs per user)
     const allJobs = await supabaseSyncJobStore.getAll(user.id, 100, 0);
     const runningJobs = allJobs.filter(
@@ -215,6 +231,20 @@ export async function POST(request: NextRequest) {
       direction,
       tablesConfig: tables,
     });
+    
+    // Increment sync job count
+    await incrementSyncJobCount(user.id);
+    
+    // Send email notification (async, don't wait)
+    if (user.email) {
+      notifySyncStarted(
+        user.id,
+        user.email,
+        job.id,
+        sourceConnection.name,
+        targetConnection.name
+      ).catch(err => console.error('Failed to send sync started email:', err));
+    }
     
     return NextResponse.json({
       success: true,

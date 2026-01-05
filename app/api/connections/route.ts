@@ -5,6 +5,7 @@ import { testConnection, getSyncableTables } from '@/lib/services/drizzle-factor
 import { getUser } from '@/lib/supabase/server';
 import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
 import { ConnectionInputSchema, validateInput } from '@/lib/validations/schemas';
+import { checkConnectionLimit, updateConnectionCount } from '@/lib/services/usage-limits';
 
 // GET - List all connections for the authenticated user
 export async function GET() {
@@ -94,12 +95,17 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Check connection limit per user (max 10 connections)
-    const existingConnections = await supabaseConnectionStore.getAll(user.id);
-    if (existingConnections.length >= 10) {
+    // Check connection limit using usage limits service
+    const connectionLimitCheck = await checkConnectionLimit(user.id);
+    if (!connectionLimitCheck.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Maximum connection limit reached (10). Please delete an existing connection first.' },
-        { status: 400 }
+        { 
+          success: false, 
+          error: connectionLimitCheck.reason || 'Connection limit reached',
+          usage: connectionLimitCheck.currentUsage,
+          limits: connectionLimitCheck.limits,
+        },
+        { status: 403 }
       );
     }
     
@@ -125,6 +131,10 @@ export async function POST(request: NextRequest) {
       encryptedUrl,
       environment,
     });
+    
+    // Update connection count
+    const allConnections = await supabaseConnectionStore.getAll(user.id);
+    await updateConnectionCount(user.id, allConnections.length);
     
     return NextResponse.json({
       success: true,
@@ -197,6 +207,10 @@ export async function DELETE(request: NextRequest) {
         { status: 404 }
       );
     }
+    
+    // Update connection count after deletion
+    const allConnections = await supabaseConnectionStore.getAll(user.id);
+    await updateConnectionCount(user.id, allConnections.length);
     
     return NextResponse.json({
       success: true,

@@ -29,7 +29,10 @@ const MenuIcon = () => (
 
 const navLinks = [
   { label: 'Home', href: '/landing' },
+  { label: 'Features', href: '/features' },
+  { label: 'Pricing', href: '/pricing' },
   { label: 'Guide', href: '/guide' },
+  { label: 'FAQ', href: '/faq' },
   { label: 'Status', href: '/status' },
 ];
 

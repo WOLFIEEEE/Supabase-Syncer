@@ -73,3 +73,6 @@ export type NewSyncJob = typeof syncJobs.$inferInsert;
 export type SyncLog = typeof syncLogs.$inferSelect;
 export type NewSyncLog = typeof syncLogs.$inferInsert;
 
+// Note: Usage limits tables are defined in SQL migrations (004_add_usage_limits.sql)
+// They are managed via Supabase client directly, not through Drizzle ORM
+

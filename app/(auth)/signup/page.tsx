@@ -17,6 +17,7 @@ import {
   InputLeftElement,
   InputRightElement,
   IconButton,
+  Link,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -24,6 +25,13 @@ import { useAuth } from '@/lib/supabase/auth-context';
 const MotionBox = motion.create(Box);
 
 // Icons
+const MailIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+  </svg>
+);
+
 const LockIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -45,21 +53,23 @@ const EyeOffIcon = () => (
   </svg>
 );
 
-export default function ResetPasswordPage() {
+export default function SignupPage() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const router = useRouter();
   const toast = useToast();
-  const { updatePassword } = useAuth();
+  const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!password) {
+    if (!email || !password) {
       toast({
-        title: 'Password required',
+        title: 'Email and password required',
         status: 'error',
         duration: 3000,
       });
@@ -88,27 +98,21 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await updatePassword(password);
+      const { error } = await signUp(email, password);
 
       if (error) {
         toast({
-          title: 'Failed to reset password',
-          description: error.message,
+          title: 'Sign up failed',
+          description: error.message || 'Failed to create account',
           status: 'error',
           duration: 3000,
         });
       } else {
-        toast({
-          title: 'Password updated',
-          description: 'Your password has been successfully updated.',
-          status: 'success',
-          duration: 3000,
-        });
-        router.push('/');
+        setEmailSent(true);
       }
     } catch (error) {
       toast({
-        title: 'Failed to reset password',
+        title: 'Sign up failed',
         description: 'An error occurred',
         status: 'error',
         duration: 3000,
@@ -118,48 +122,118 @@ export default function ResetPasswordPage() {
     }
   };
 
+  if (emailSent) {
+    return (
+      <Box 
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        px={{ base: 4, md: 4 }}
+      >
+        <Container maxW="md">
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Box
+              bg="surface.800"
+              p={8}
+              borderRadius="2xl"
+              borderWidth="1px"
+              borderColor="surface.700"
+              textAlign="center"
+            >
+              <Box color="green.400" mb={4}>
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ margin: '0 auto' }}>
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </Box>
+              <Heading size="lg" mb={4}>Check your email</Heading>
+              <Text color="surface.400" mb={6}>
+                We've sent a confirmation link to <strong>{email}</strong>. 
+                Please check your inbox and click the link to verify your account.
+              </Text>
+              <Button onClick={() => router.push('/login')} colorScheme="teal">
+                Back to Login
+              </Button>
+            </Box>
+          </MotionBox>
+        </Container>
+      </Box>
+    );
+  }
+
   return (
     <Box 
-      minH="100vh" 
-      className="gradient-mesh"
       display="flex"
       alignItems="center"
       justifyContent="center"
-      px={4}
+      px={{ base: 4, md: 4 }}
+      py={{ base: 8, md: 0 }}
     >
-      <Container maxW="md">
+      <Container maxW="md" px={{ base: 0, md: 4 }}>
         <MotionBox
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <VStack spacing={4} align="center" mb={8}>
-            <Heading 
-              size="xl"
-              fontFamily="mono"
-              bgGradient="linear(to-r, brand.300, brand.500)"
-              bgClip="text"
-            >
-              Set New Password
-            </Heading>
-            <Text color="surface.400" textAlign="center">
-              Enter your new password below.
-            </Text>
+          <VStack spacing={{ base: 6, md: 8 }} align="center" mb={{ base: 6, md: 8 }}>
+            <VStack spacing={2}>
+              <Heading 
+                size={{ base: 'lg', md: 'xl' }}
+                fontFamily="mono"
+                bgGradient="linear(to-r, brand.300, brand.500)"
+                bgClip="text"
+                textAlign="center"
+              >
+                Create Account
+              </Heading>
+              <Text color="surface.400" textAlign="center" fontSize={{ base: 'sm', md: 'md' }} px={4}>
+                Get started with Supabase Syncer
+              </Text>
+            </VStack>
           </VStack>
 
           <Box
             bg="surface.800"
-            p={8}
-            borderRadius="2xl"
+            p={{ base: 6, md: 8 }}
+            borderRadius={{ base: 'xl', md: '2xl' }}
             borderWidth="1px"
             borderColor="surface.700"
             boxShadow="xl"
+            mx={{ base: 2, md: 0 }}
           >
             <form onSubmit={handleSubmit}>
               <VStack spacing={4}>
                 <FormControl>
                   <FormLabel color="surface.300" fontSize="sm" fontWeight="medium">
-                    New Password
+                    Email
+                  </FormLabel>
+                  <InputGroup size="lg">
+                    <InputLeftElement pointerEvents="none" color="surface.500">
+                      <MailIcon />
+                    </InputLeftElement>
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      bg="surface.900"
+                      borderColor="surface.600"
+                      _hover={{ borderColor: 'surface.500' }}
+                      _focus={{ 
+                        borderColor: 'brand.500',
+                        boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)'
+                      }}
+                    />
+                  </InputGroup>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel color="surface.300" fontSize="sm" fontWeight="medium">
+                    Password
                   </FormLabel>
                   <InputGroup size="lg">
                     <InputLeftElement pointerEvents="none" color="surface.500">
@@ -169,7 +243,7 @@ export default function ResetPasswordPage() {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter new password"
+                      placeholder="Create a password"
                       bg="surface.900"
                       borderColor="surface.600"
                       _hover={{ borderColor: 'surface.500' }}
@@ -195,7 +269,7 @@ export default function ResetPasswordPage() {
 
                 <FormControl>
                   <FormLabel color="surface.300" fontSize="sm" fontWeight="medium">
-                    Confirm New Password
+                    Confirm Password
                   </FormLabel>
                   <InputGroup size="lg">
                     <InputLeftElement pointerEvents="none" color="surface.500">
@@ -205,7 +279,7 @@ export default function ResetPasswordPage() {
                       type={showPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
+                      placeholder="Confirm your password"
                       bg="surface.900"
                       borderColor="surface.600"
                       _hover={{ borderColor: 'surface.500' }}
@@ -223,17 +297,24 @@ export default function ResetPasswordPage() {
                   size="lg"
                   width="full"
                   isLoading={isLoading}
-                  loadingText="Updating..."
+                  loadingText="Creating account..."
                   bg="brand.500"
                   color="white"
                   _hover={{ bg: 'brand.400' }}
                   _active={{ bg: 'brand.600' }}
                   mt={2}
                 >
-                  Update Password
+                  Create Account
                 </Button>
               </VStack>
             </form>
+
+            <Text color="surface.400" fontSize="sm" textAlign="center" mt={6}>
+              Already have an account?{' '}
+              <Link href="/login" color="brand.400" _hover={{ color: 'brand.300' }}>
+                Sign in
+              </Link>
+            </Text>
           </Box>
         </MotionBox>
       </Container>

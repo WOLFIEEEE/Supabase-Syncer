@@ -350,6 +350,18 @@ export default function LandingPageClient() {
               <Button variant="link" size="sm" color="surface.400" onClick={() => router.push('/features')}>
                 Features
               </Button>
+              <Button variant="link" size="sm" color="surface.400" onClick={() => router.push('/pricing')}>
+                Pricing
+              </Button>
+              <Button variant="link" size="sm" color="surface.400" onClick={() => router.push('/about')}>
+                About
+              </Button>
+              <Button variant="link" size="sm" color="surface.400" onClick={() => router.push('/contact')}>
+                Contact
+              </Button>
+              <Button variant="link" size="sm" color="surface.400" onClick={() => router.push('/faq')}>
+                FAQ
+              </Button>
               <Button variant="link" size="sm" color="surface.400" onClick={() => router.push('/status')}>
                 Status
               </Button>
