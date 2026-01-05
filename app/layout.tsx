@@ -3,8 +3,30 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Supabase Syncer",
-  description: "Database synchronization platform for Supabase environments",
+  title: {
+    default: "Pulse - Database Sync & Keep-Alive",
+    template: "%s | Pulse",
+  },
+  description: "Keep your Supabase databases alive and in sync. Prevent free tier pausing with automated health checks.",
+  keywords: ["supabase", "database", "sync", "keep-alive", "postgres", "health check", "monitoring"],
+  authors: [{ name: "Pulse" }],
+  creator: "Pulse",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "Pulse",
+    title: "Pulse - Database Sync & Keep-Alive",
+    description: "Keep your Supabase databases alive and in sync. Prevent free tier pausing with automated health checks.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pulse - Database Sync & Keep-Alive",
+    description: "Keep your Supabase databases alive and in sync.",
+  },
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({
@@ -18,6 +40,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body>
         <Providers>

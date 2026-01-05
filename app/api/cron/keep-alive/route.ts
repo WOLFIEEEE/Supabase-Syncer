@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { pingDatabase, shouldPing, type KeepAliveStats } from '@/lib/services/keep-alive';
+import { pingDatabase, shouldPing, logPingResult, type KeepAliveStats } from '@/lib/services/keep-alive';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 
 // Vercel Cron configuration
@@ -86,6 +86,9 @@ export async function GET(request: NextRequest) {
       );
       
       stats.results.push(result);
+      
+      // Log the ping result to history
+      await logPingResult(result);
       
       if (result.success) {
         stats.successful++;

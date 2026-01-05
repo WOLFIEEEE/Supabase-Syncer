@@ -224,12 +224,40 @@ export default function DashboardPage() {
         <Container maxW="7xl" py={{ base: 3, md: 4 }} px={{ base: 4, md: 6 }}>
           <Flex justify="space-between" align="center">
             <HStack spacing={{ base: 2, md: 3 }}>
-              <Box color="brand.400" display={{ base: 'none', sm: 'block' }}>
-                <DatabaseIcon />
+              {/* Pulse Logo */}
+              <Box display="flex" alignItems="center" gap={2}>
+                <svg 
+                  width="32" 
+                  height="32" 
+                  viewBox="0 0 48 48" 
+                  fill="none"
+                >
+                  <defs>
+                    <linearGradient id="hpg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#14B8A6"/>
+                      <stop offset="100%" stopColor="#0D9488"/>
+                    </linearGradient>
+                    <linearGradient id="hlg" x1="0%" y1="50%" x2="100%" y2="50%">
+                      <stop offset="0%" stopColor="#5EEAD4"/>
+                      <stop offset="50%" stopColor="#2DD4BF"/>
+                      <stop offset="100%" stopColor="#5EEAD4"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="24" cy="24" r="22" fill="url(#hpg)"/>
+                  <path 
+                    d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" 
+                    stroke="url(#hlg)" 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                  <circle cx="24" cy="12" r="2" fill="#5EEAD4" opacity="0.6"/>
+                </svg>
+                <Heading size={{ base: 'sm', md: 'md' }} fontWeight="bold" color="white" letterSpacing="-0.02em">
+                  Pulse
+                </Heading>
               </Box>
-              <Heading size={{ base: 'sm', md: 'md' }} fontFamily="mono" color="white">
-                Supabase Syncer
-              </Heading>
             </HStack>
             <HStack spacing={{ base: 1, md: 2 }}>
               {/* Cmd+K button - opens command palette */}

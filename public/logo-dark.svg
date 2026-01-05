@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Background circle -->
+  <defs>
+    <linearGradient id="pulseGradientDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E293B"/>
+      <stop offset="100%" style="stop-color:#0F172A"/>
+    </linearGradient>
+    <linearGradient id="lineGradientDark" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" style="stop-color:#14B8A6"/>
+      <stop offset="50%" style="stop-color:#2DD4BF"/>
+      <stop offset="100%" style="stop-color:#14B8A6"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Main circle with border -->
+  <circle cx="24" cy="24" r="22" fill="url(#pulseGradientDark)" stroke="#14B8A6" stroke-width="1.5"/>
+  
+  <!-- Pulse line (heartbeat) -->
+  <path 
+    d="M8 24 L14 24 L17 18 L20 30 L24 12 L28 36 L31 18 L34 24 L40 24" 
+    stroke="url(#lineGradientDark)" 
+    stroke-width="2.5" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+    fill="none"
+  />
+  
+  <!-- Glow effect -->
+  <circle cx="24" cy="12" r="2.5" fill="#2DD4BF" opacity="0.8"/>
+</svg>
+

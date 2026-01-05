@@ -8,8 +8,9 @@
  * by running a lightweight query that logs activity.
  */
 
-import { createDrizzleClient, type DrizzleConnection, maskDatabaseUrlForLogs } from './drizzle-factory';
+import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
 import { decrypt } from './encryption';
+import { createClient } from '@/lib/supabase/server';
 
 // Configuration
 export const KEEP_ALIVE_CONFIG = {
@@ -214,6 +215,114 @@ export function formatLastPinged(lastPingedAt: Date | null): string {
     return `${diffHours}h ago`;
   } else {
     return `${diffDays}d ago`;
+  }
+}
+
+/**
+ * Log a ping result to the database for history tracking
+ */
+export async function logPingResult(result: PingResult): Promise<void> {
+  try {
+    const supabase = await createClient();
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from('ping_logs')
+      .insert({
+        connection_id: result.connectionId,
+        success: result.success,
+        duration_ms: result.duration,
+        error_message: result.error || null,
+      });
+  } catch (error) {
+    // Don't throw - logging should not break the ping flow
+    console.error('[Keep Alive] Failed to log ping result:', error);
+  }
+}
+
+/**
+ * Get ping history for a connection
+ */
+export async function getPingHistory(
+  connectionId: string,
+  limit: number = 50
+): Promise<{
+  success: boolean;
+  duration: number;
+  error?: string;
+  timestamp: Date;
+}[]> {
+  try {
+    const supabase = await createClient();
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from('ping_logs')
+      .select('success, duration_ms, error_message, created_at')
+      .eq('connection_id', connectionId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) {
+      console.error('[Keep Alive] Failed to get ping history:', error);
+      return [];
+    }
+    
+    return (data || []).map((row: {
+      success: boolean;
+      duration_ms: number;
+      error_message: string | null;
+      created_at: string;
+    }) => ({
+      success: row.success,
+      duration: row.duration_ms,
+      error: row.error_message || undefined,
+      timestamp: new Date(row.created_at),
+    }));
+  } catch (error) {
+    console.error('[Keep Alive] Failed to get ping history:', error);
+    return [];
+  }
+}
+
+/**
+ * Get aggregated ping stats for a connection
+ */
+export async function getPingStats(connectionId: string): Promise<{
+  total: number;
+  successful: number;
+  failed: number;
+  avgDuration: number;
+  uptime: number; // percentage
+}> {
+  try {
+    const supabase = await createClient();
+    
+    // Get last 100 pings for stats
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from('ping_logs')
+      .select('success, duration_ms')
+      .eq('connection_id', connectionId)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    
+    if (error || !data || data.length === 0) {
+      return { total: 0, successful: 0, failed: 0, avgDuration: 0, uptime: 0 };
+    }
+    
+    const total = data.length;
+    const successful = data.filter((r: { success: boolean }) => r.success).length;
+    const failed = total - successful;
+    const avgDuration = Math.round(
+      data.reduce((sum: number, r: { duration_ms: number }) => sum + r.duration_ms, 0) / total
+    );
+    const uptime = Math.round((successful / total) * 100);
+    
+    return { total, successful, failed, avgDuration, uptime };
+  } catch (error) {
+    console.error('[Keep Alive] Failed to get ping stats:', error);
+    return { total: 0, successful: 0, failed: 0, avgDuration: 0, uptime: 0 };
   }
 }
 
