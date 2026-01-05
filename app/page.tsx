@@ -237,10 +237,17 @@ export default function DashboardPage() {
                       <stop offset="0%" stopColor="#3ECF8E"/>
                       <stop offset="100%" stopColor="#14B8A6"/>
                     </linearGradient>
+                    <linearGradient id="hpgLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#5EEAD4"/>
+                      <stop offset="100%" stopColor="#3ECF8E"/>
+                    </linearGradient>
                   </defs>
-                  <rect x="14" y="12" width="6" height="24" rx="3" fill="url(#hpg)" />
-                  <path d="M20 18 C 26 18, 34 18, 34 28" stroke="url(#hpg)" strokeWidth="6" strokeLinecap="round" />
-                  <circle cx="34" cy="34" r="4" fill="#3ECF8E" />
+                  <rect x="12" y="10" width="5" height="28" rx="2.5" fill="url(#hpg)" />
+                  <rect x="12" y="10" width="18" height="5" rx="2.5" fill="url(#hpg)" />
+                  <rect x="12" y="20" width="12" height="5" rx="2.5" fill="url(#hpg)" />
+                  <path d="M 17 25 L 30 38" stroke="url(#hpg)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M 26 32 L 30 38 L 28 36" stroke="url(#hpgLight)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  <circle cx="30" cy="38" r="3" fill="#5EEAD4" />
                 </svg>
                 <VStack spacing={0.5} align="start">
                   <HStack spacing={0}>

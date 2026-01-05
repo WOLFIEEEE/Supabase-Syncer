@@ -258,10 +258,17 @@ export default function ExplorerLayout({
                       <stop offset="0%" stopColor="#3ECF8E"/>
                       <stop offset="100%" stopColor="#14B8A6"/>
                     </linearGradient>
+                    <linearGradient id="epgLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#5EEAD4"/>
+                      <stop offset="100%" stopColor="#3ECF8E"/>
+                    </linearGradient>
                   </defs>
-                  <rect x="14" y="12" width="6" height="24" rx="3" fill="url(#epg)" />
-                  <path d="M20 18 C 26 18, 34 18, 34 28" stroke="url(#epg)" strokeWidth="6" strokeLinecap="round" />
-                  <circle cx="34" cy="34" r="4" fill="#3ECF8E" />
+                  <rect x="12" y="10" width="5" height="28" rx="2.5" fill="url(#epg)" />
+                  <rect x="12" y="10" width="18" height="5" rx="2.5" fill="url(#epg)" />
+                  <rect x="12" y="20" width="12" height="5" rx="2.5" fill="url(#epg)" />
+                  <path d="M 17 25 L 30 38" stroke="url(#epg)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M 26 32 L 30 38 L 28 36" stroke="url(#epgLight)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  <circle cx="30" cy="38" r="3" fill="#5EEAD4" />
                 </svg>
                 <HStack spacing={0}>
                   <Text fontSize="xs" fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
