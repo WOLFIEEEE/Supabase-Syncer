@@ -14,7 +14,7 @@ const sizes = {
   md: { icon: 32, text: 'lg' as const },
   lg: { icon: 40, text: 'xl' as const },
   xl: { icon: 48, text: '2xl' as const },
-  '2xl': { icon: 64, text: '3xl' as const },
+  '2xl': { icon: 64, text: 'lg' as const }, // Icon doubled, text stays same as 'md'
 };
 
 export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }: LogoProps) {
@@ -66,7 +66,7 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
               boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
             >
               <Text 
-                fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : text === 'xl' ? '2xl' : '3xl'} 
+                fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
                 fontWeight="900" 
                 color="white"
                 lineHeight="1"

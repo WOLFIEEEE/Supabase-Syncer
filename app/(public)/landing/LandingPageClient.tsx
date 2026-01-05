@@ -155,11 +155,11 @@ export default function LandingPageClient() {
                 <Image
                   src="/logo.png"
                   alt="suparbase logo"
-                  width={512}
-                  height={512}
+                  width={256}
+                  height={256}
                   style={{
-                    width: '512px',
-                    height: '512px',
+                    width: '256px',
+                    height: '256px',
                     objectFit: 'contain',
                   }}
                   priority
