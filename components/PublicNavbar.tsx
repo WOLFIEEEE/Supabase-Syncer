@@ -58,7 +58,7 @@ export default function PublicNavbar() {
             _hover={{ opacity: 0.8 }}
             transition="opacity 0.2s"
           >
-            <SuparbaseLogo size="md" showText={true} variant="full" />
+            <SuparbaseLogo size="2xl" showText={true} variant="full" />
           </Box>
 
           {/* Desktop Nav */}

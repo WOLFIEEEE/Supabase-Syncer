@@ -4,7 +4,7 @@ import { HStack, Text, Box, VStack } from '@chakra-ui/react';
 import Image from 'next/image';
 
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   showText?: boolean;
   variant?: 'full' | 'icon';
 }
@@ -14,6 +14,7 @@ const sizes = {
   md: { icon: 32, text: 'lg' as const },
   lg: { icon: 40, text: 'xl' as const },
   xl: { icon: 48, text: '2xl' as const },
+  '2xl': { icon: 64, text: '3xl' as const },
 };
 
 export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }: LogoProps) {
@@ -65,7 +66,7 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
               boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
             >
               <Text 
-                fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
+                fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : text === 'xl' ? '2xl' : '3xl'} 
                 fontWeight="900" 
                 color="white"
                 lineHeight="1"

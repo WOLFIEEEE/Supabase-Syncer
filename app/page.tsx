@@ -155,6 +155,13 @@ export default function DashboardPage() {
   const toast = useToast();
   const { user, signOut, isLoading: authLoading } = useAuth();
 
+  // Redirect to landing page if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/landing');
+    }
+  }, [user, authLoading, router]);
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -184,8 +191,10 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -200,6 +209,15 @@ export default function DashboardPage() {
       });
     }
   };
+
+  // Show loading or nothing while redirecting
+  if (authLoading || !user) {
+    return (
+      <Box minH="100vh" display="flex" alignItems="center" justifyContent="center">
+        <Spinner size="xl" color="teal.500" />
+      </Box>
+    );
+  }
 
   const stats = {
     totalConnections: connections.length,
