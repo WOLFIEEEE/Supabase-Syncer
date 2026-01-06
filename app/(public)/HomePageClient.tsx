@@ -81,7 +81,7 @@ const PulseConnection = () => (
       <Box w={12} h={12} borderRadius="xl" bg="surface.800" border="1px solid" borderColor="surface.600" display="flex" alignItems="center" justifyContent="center">
         <Box w={3} h={3} borderRadius="full" bg="teal.400" />
       </Box>
-      <Text fontSize="10px" color="surface.500" fontWeight="bold">DEV</Text>
+      <Text fontSize="10px" color="surface.400" fontWeight="bold">DEV</Text>
     </VStack>
     
     <Box flex={1} mx={4} h="1px" bg="surface.700" position="relative" overflow="hidden">
@@ -101,7 +101,7 @@ const PulseConnection = () => (
       <Box w={12} h={12} borderRadius="xl" bg="surface.800" border="1px solid" borderColor="surface.600" display="flex" alignItems="center" justifyContent="center">
         <Box w={3} h={3} borderRadius="full" bg="brand.400" />
       </Box>
-      <Text fontSize="10px" color="surface.500" fontWeight="bold">PROD</Text>
+      <Text fontSize="10px" color="surface.400" fontWeight="bold">PROD</Text>
     </VStack>
   </Box>
 );
@@ -159,7 +159,7 @@ export default function HomePageClient() {
       />
 
       {/* Main Hero Container */}
-      <Container maxW="5xl" pt={{ base: 32, md: 48 }} pb={20}>
+      <Container maxW="5xl" pt={{ base: 20, md: 28 }} pb={20}>
         <VStack spacing={12} align="center" textAlign="center">
           
           {/* Minimal Badge */}
@@ -186,7 +186,7 @@ export default function HomePageClient() {
                 }
                 .pulse-dot { animation: pulse-dot 2s infinite; }
               `}</style>
-              <Text fontSize="xs" fontWeight="600" color="surface.400" letterSpacing="0.05em">
+              <Text fontSize="xs" fontWeight="600" color="surface.300" letterSpacing="0.05em">
                 OPEN SOURCE DATABASE SYNC
               </Text>
             </HStack>
@@ -220,7 +220,7 @@ export default function HomePageClient() {
             </Heading>
             <Text 
               fontSize={{ base: 'lg', md: '2xl' }} 
-              color="surface.400" 
+              color="surface.300" 
               maxW="2xl"
               lineHeight="1.4"
               fontWeight="400"
@@ -274,7 +274,7 @@ export default function HomePageClient() {
             <Button
               size="lg"
               variant="link"
-              color="surface.400"
+              color="surface.300"
               fontSize="lg"
               fontWeight="600"
               _hover={{ color: 'white' }}
@@ -285,24 +285,58 @@ export default function HomePageClient() {
           </HStack>
 
           {/* Minimal Features Grid */}
-          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={8} pt={24} w="full">
+          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={6} pt={20} w="full">
             {features.map((f, i) => (
-              <MotionVStack 
-                key={i} 
-                spacing={3} 
-                align="center"
+              <MotionBox
+                key={i}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 + (i * 0.1) }}
+                whileHover={{ y: -4 }}
               >
-                <Box color={f.color} opacity={0.8}>
-                  <f.icon />
-                </Box>
-                <VStack spacing={0}>
-                  <Text fontWeight="700" color="white" fontSize="sm">{f.title}</Text>
-                  <Text color="surface.500" fontSize="xs" display={{ base: 'none', md: 'block' }}>{f.description}</Text>
-                </VStack>
-              </MotionVStack>
+                <Card
+                  bg="rgba(255,255,255,0.02)"
+                  border="1px solid"
+                  borderColor="surface.800"
+                  borderRadius="2xl"
+                  h="full"
+                  _hover={{
+                    borderColor: f.color,
+                    bg: 'rgba(255,255,255,0.04)',
+                    transform: 'translateY(-4px)',
+                  }}
+                  transition="all 0.3s ease"
+                >
+                  <CardBody p={6}>
+                    <VStack spacing={4} align="center">
+                      <Box
+                        p={3}
+                        bg="surface.900"
+                        borderRadius="xl"
+                        border="1px solid"
+                        borderColor="surface.800"
+                        color={f.color}
+                        _groupHover={{ borderColor: f.color }}
+                      >
+                        <f.icon />
+                      </Box>
+                      <VStack spacing={1} align="center">
+                        <Text fontWeight="700" color="white" fontSize="md" textAlign="center">
+                          {f.title}
+                        </Text>
+                        <Text 
+                          color="surface.400" 
+                          fontSize="xs" 
+                          textAlign="center"
+                          display={{ base: 'none', md: 'block' }}
+                        >
+                          {f.description}
+                        </Text>
+                      </VStack>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              </MotionBox>
             ))}
           </SimpleGrid>
 
@@ -314,9 +348,9 @@ export default function HomePageClient() {
         <MotionText
           fontFamily="mono"
           fontSize="xs"
-          color="surface.700"
+          color="surface.600"
           initial={{ opacity: 0, rotate: -90 }}
-          animate={{ opacity: 0.3, rotate: -90 }}
+          animate={{ opacity: 0.4, rotate: -90 }}
           transition={{ duration: 1, delay: 1 }}
         >
           // AES-256-GCM ENCRYPTED
@@ -326,9 +360,9 @@ export default function HomePageClient() {
         <MotionText
           fontFamily="mono"
           fontSize="xs"
-          color="surface.700"
+          color="surface.600"
           initial={{ opacity: 0, rotate: 90 }}
-          animate={{ opacity: 0.3, rotate: 90 }}
+          animate={{ opacity: 0.4, rotate: 90 }}
           transition={{ duration: 1, delay: 1 }}
         >
           v1.0.0-STABLE
@@ -348,7 +382,7 @@ export default function HomePageClient() {
                   <VStack align="start" spacing={6}>
                     <Badge colorScheme="teal" variant="subtle" px={3} py={1} borderRadius="lg">DEVELOPER FIRST</Badge>
                     <Heading size="xl" color="white" fontFamily="'Outfit', sans-serif">Built for your workflow.</Heading>
-                    <Text color="surface.400" fontSize="lg">
+                    <Text color="surface.300" fontSize="lg">
                       Tired of manual schema updates? We built suparbase to automate the boring parts of database management.
                     </Text>
                     <HStack spacing={4} pt={4}>
@@ -368,7 +402,7 @@ export default function HomePageClient() {
                 <CardBody p={12} display="flex" flexDir="column" justifyContent="center">
                   <VStack align="start" spacing={6}>
                     <Heading size="lg" color="white">Secure.</Heading>
-                    <Text color="surface.200">
+                    <Text color="surface.300">
                       Connection strings are encrypted using AES-256 before being stored. 
                     </Text>
                     <Divider borderColor="whiteAlpha.200" />
@@ -403,10 +437,10 @@ export default function HomePageClient() {
             </HStack>
             
             <HStack spacing={8}>
-              <Button variant="link" size="xs" color="surface.500" _hover={{ color: 'white' }} onClick={() => router.push('/privacy')}>Privacy</Button>
-              <Button variant="link" size="xs" color="surface.500" _hover={{ color: 'white' }} onClick={() => router.push('/terms')}>Terms</Button>
-              <Button variant="link" size="xs" color="surface.500" _hover={{ color: 'white' }} onClick={() => router.push('/status')}>Status</Button>
-              <Text color="surface.700" fontSize="xs">© {new Date().getFullYear()}</Text>
+              <Button variant="link" size="xs" color="surface.400" _hover={{ color: 'white' }} onClick={() => router.push('/privacy')}>Privacy</Button>
+              <Button variant="link" size="xs" color="surface.400" _hover={{ color: 'white' }} onClick={() => router.push('/terms')}>Terms</Button>
+              <Button variant="link" size="xs" color="surface.400" _hover={{ color: 'white' }} onClick={() => router.push('/status')}>Status</Button>
+              <Text color="surface.600" fontSize="xs">© {new Date().getFullYear()}</Text>
             </HStack>
           </Flex>
         </Container>
