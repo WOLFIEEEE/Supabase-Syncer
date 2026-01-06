@@ -21,12 +21,15 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
   const { icon, text } = sizes[size];
   
   return (
-    <HStack spacing={size === 'sm' ? 2 : 3} align="flex-start">
+    <HStack spacing={size === 'sm' ? 2 : 3} align="center">
       <Box 
         width={`${icon}px`} 
         height={`${icon}px`}
         position="relative"
         flexShrink={0}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
       >
         <Image
           src="/logo.png"
@@ -44,13 +47,14 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
       
       {showText && variant === 'full' && (
         <VStack spacing={1} align="start">
-          <HStack spacing={0}>
+          <HStack spacing={0} align="center">
             <Text 
               fontSize={text} 
               fontWeight="300" 
               color="white"
               letterSpacing="0.05em"
               opacity={0.9}
+              lineHeight="1.2"
             >
               SUPA
             </Text>
@@ -81,6 +85,7 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
               color="white"
               letterSpacing="0.05em"
               opacity={0.9}
+              lineHeight="1.2"
             >
               BASE
             </Text>
