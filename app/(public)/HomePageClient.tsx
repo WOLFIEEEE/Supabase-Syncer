@@ -407,6 +407,7 @@ export default function HomePageClient() {
             pt={4}
             gap={{ base: 4, sm: 6 }}
             align="center"
+            justify="center"
             w="100%"
             px={{ base: 4, sm: 0 }}
           >
@@ -442,7 +443,7 @@ export default function HomePageClient() {
               </Button>
             </MotionBox>
             
-            <HStack spacing={4} flexWrap="wrap" justify="center" w={{ base: 'full', sm: 'auto' }}>
+            <HStack spacing={4} flexWrap="wrap" justify="center" w={{ base: 'full', sm: 'auto' }} align="center">
               <Button
                 size="lg"
                 variant="link"
@@ -454,10 +455,10 @@ export default function HomePageClient() {
                 minH="44px"
               >
                 Quick Start
-                </Button>
+              </Button>
               <Text color="surface.600" display={{ base: 'none', sm: 'block' }}>•</Text>
-                <Button
-                  size="lg"
+              <Button
+                size="lg"
                 variant="link"
                 color="surface.300"
                 fontSize={{ base: 'md', sm: 'lg' }}
@@ -467,8 +468,8 @@ export default function HomePageClient() {
                 minH="44px"
               >
                 How It Works
-                </Button>
-              </HStack>
+              </Button>
+            </HStack>
           </Flex>
 
           {/* Minimal Features Grid */}
