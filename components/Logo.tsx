@@ -50,13 +50,14 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
           <HStack spacing={0} align="center">
             <Text 
               fontSize={text} 
-              fontWeight="300" 
+              fontWeight="700" 
               color="white"
-              letterSpacing="0.05em"
-              opacity={0.9}
+              letterSpacing="0.02em"
               lineHeight="1.2"
+              textTransform="lowercase"
+              fontFamily="sans-serif"
             >
-              SUPA
+              supa
             </Text>
             <Text 
               fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
@@ -67,19 +68,20 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
               lineHeight="1.2"
               fontFamily="'Playfair Display', 'Georgia', serif"
               fontStyle="italic"
-              mx={1.5}
+              mx={1}
             >
-              R
+              r
             </Text>
             <Text 
               fontSize={text} 
-              fontWeight="300" 
+              fontWeight="700" 
               color="white"
-              letterSpacing="0.05em"
-              opacity={0.9}
+              letterSpacing="0.02em"
               lineHeight="1.2"
+              textTransform="lowercase"
+              fontFamily="sans-serif"
             >
-              BASE
+              base
             </Text>
           </HStack>
           
