@@ -505,6 +505,345 @@ export default function HomePageClient() {
         </MotionText>
       </Box>
 
+      {/* Who's This For Section */}
+      <Box py={24} position="relative" overflow="hidden">
+        {/* Section Background */}
+        <Box
+          position="absolute"
+          inset={0}
+          style={{
+            backgroundImage: `
+              radial-gradient(ellipse 80% 50% at 50% 0%, rgba(62, 207, 142, 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99, 102, 241, 0.06) 0%, transparent 50%)
+            `
+          }}
+          pointerEvents="none"
+        />
+        
+        <Container maxW="6xl" position="relative">
+          {/* Section Header */}
+          <MotionVStack
+            spacing={4}
+            textAlign="center"
+            mb={16}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <HStack spacing={2}>
+              <Box w={8} h="1px" bg="teal.400/50" />
+              <Text 
+                fontSize="xs" 
+                fontWeight="700" 
+                color="teal.400" 
+                letterSpacing="0.15em"
+                textTransform="uppercase"
+              >
+                Before You Start
+              </Text>
+              <Box w={8} h="1px" bg="teal.400/50" />
+            </HStack>
+            <Heading
+              as="h2"
+              fontSize={{ base: '3xl', md: '5xl' }}
+              fontWeight="700"
+              color="white"
+              fontFamily="'Outfit', sans-serif"
+              letterSpacing="-0.02em"
+            >
+              Is this for{' '}
+              <Text as="span" color="teal.400">you</Text>
+              ?
+            </Heading>
+            <Text color="surface.400" fontSize="lg" maxW="2xl">
+              We built this with a specific audience in mind. Here&apos;s who will benefit the most — and who might need something else.
+            </Text>
+          </MotionVStack>
+
+          {/* Two Column Layout */}
+          <Grid templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }} gap={8}>
+            
+            {/* Perfect For Column */}
+            <MotionBox
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Card
+                bg="rgba(62, 207, 142, 0.03)"
+                border="1px solid"
+                borderColor="teal.400/20"
+                borderRadius="3xl"
+                overflow="hidden"
+                h="full"
+                position="relative"
+              >
+                <Box
+                  position="absolute"
+                  top={0}
+                  left={0}
+                  right={0}
+                  h="3px"
+                  bgGradient="linear(to-r, teal.400, teal.300)"
+                />
+                <CardBody p={{ base: 6, md: 10 }}>
+                  <VStack align="start" spacing={8}>
+                    {/* Header */}
+                    <HStack spacing={4}>
+                      <Box
+                        p={3}
+                        bg="teal.400/10"
+                        borderRadius="xl"
+                        color="teal.400"
+                      >
+                        <Box as="svg" w={6} h={6} viewBox="0 0 24 24" fill="none">
+                          <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                        </Box>
+                      </Box>
+                      <VStack align="start" spacing={0}>
+                        <Text fontSize="xl" fontWeight="700" color="white">Perfect For</Text>
+                        <Text fontSize="sm" color="teal.400">You&apos;ll love this</Text>
+                      </VStack>
+                    </HStack>
+
+                    {/* Items */}
+                    <VStack align="start" spacing={5} w="full">
+                      {[
+                        {
+                          title: 'Indie Hackers & Solo Devs',
+                          desc: 'Building MVPs and side projects? This saves hours of manual data migration.',
+                          icon: '🚀'
+                        },
+                        {
+                          title: 'Supabase Free Tier Users',
+                          desc: 'Our keep-alive feature prevents your database from pausing due to inactivity.',
+                          icon: '💚'
+                        },
+                        {
+                          title: 'Learning & Prototyping',
+                          desc: 'New to databases? Safely experiment without fear of breaking production.',
+                          icon: '🎓'
+                        },
+                        {
+                          title: 'Small Teams (< 10 devs)',
+                          desc: 'Multiple environments to manage? Sync schemas in seconds, not hours.',
+                          icon: '👥'
+                        },
+                        {
+                          title: 'Early-Stage Startups',
+                          desc: 'Move fast and break things — but not your database. Schema validation included.',
+                          icon: '⚡'
+                        }
+                      ].map((item, i) => (
+                        <MotionBox
+                          key={i}
+                          p={4}
+                          bg="rgba(255,255,255,0.02)"
+                          borderRadius="xl"
+                          border="1px solid"
+                          borderColor="transparent"
+                          w="full"
+                          cursor="default"
+                          whileHover={{ 
+                            borderColor: 'rgba(62, 207, 142, 0.3)',
+                            backgroundColor: 'rgba(62, 207, 142, 0.05)'
+                          }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <HStack spacing={4} align="start">
+                            <Text fontSize="2xl">{item.icon}</Text>
+                            <VStack align="start" spacing={1}>
+                              <Text fontWeight="600" color="white" fontSize="sm">{item.title}</Text>
+                              <Text color="surface.400" fontSize="xs" lineHeight="tall">{item.desc}</Text>
+                            </VStack>
+                          </HStack>
+                        </MotionBox>
+                      ))}
+                    </VStack>
+                  </VStack>
+                </CardBody>
+              </Card>
+            </MotionBox>
+
+            {/* Not For Column */}
+            <MotionBox
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <Card
+                bg="rgba(239, 68, 68, 0.03)"
+                border="1px solid"
+                borderColor="red.400/20"
+                borderRadius="3xl"
+                overflow="hidden"
+                h="full"
+                position="relative"
+              >
+                <Box
+                  position="absolute"
+                  top={0}
+                  left={0}
+                  right={0}
+                  h="3px"
+                  bgGradient="linear(to-r, red.400, orange.400)"
+                />
+                <CardBody p={{ base: 6, md: 10 }}>
+                  <VStack align="start" spacing={8}>
+                    {/* Header */}
+                    <HStack spacing={4}>
+                      <Box
+                        p={3}
+                        bg="red.400/10"
+                        borderRadius="xl"
+                        color="red.400"
+                      >
+                        <Box as="svg" w={6} h={6} viewBox="0 0 24 24" fill="none">
+                          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </Box>
+                      </Box>
+                      <VStack align="start" spacing={0}>
+                        <Text fontSize="xl" fontWeight="700" color="white">Not Ideal For</Text>
+                        <Text fontSize="sm" color="red.400">Consider alternatives</Text>
+                      </VStack>
+                    </HStack>
+
+                    {/* Items */}
+                    <VStack align="start" spacing={5} w="full">
+                      {[
+                        {
+                          title: 'Large Databases (50GB+)',
+                          desc: 'Syncing massive datasets can timeout or hit memory limits. Use dedicated migration tools.',
+                          icon: '💾'
+                        },
+                        {
+                          title: 'Enterprise Scale',
+                          desc: 'Hundreds of tables? Complex triggers? You need enterprise-grade solutions.',
+                          icon: '🏢'
+                        },
+                        {
+                          title: 'High-Traffic Production',
+                          desc: 'Millions of daily transactions require zero-downtime tools we don&apos;t provide.',
+                          icon: '📊'
+                        },
+                        {
+                          title: 'Non-Supabase Databases',
+                          desc: 'Built specifically for Supabase PostgreSQL. MySQL, MongoDB? Look elsewhere.',
+                          icon: '🔌'
+                        },
+                        {
+                          title: 'Regulated Industries',
+                          desc: 'Healthcare, finance? You need compliance certifications we don&apos;t have (yet).',
+                          icon: '🏛️'
+                        }
+                      ].map((item, i) => (
+                        <MotionBox
+                          key={i}
+                          p={4}
+                          bg="rgba(255,255,255,0.02)"
+                          borderRadius="xl"
+                          border="1px solid"
+                          borderColor="transparent"
+                          w="full"
+                          cursor="default"
+                          whileHover={{ 
+                            borderColor: 'rgba(239, 68, 68, 0.3)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.05)'
+                          }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <HStack spacing={4} align="start">
+                            <Text fontSize="2xl">{item.icon}</Text>
+                            <VStack align="start" spacing={1}>
+                              <Text fontWeight="600" color="white" fontSize="sm">{item.title}</Text>
+                              <Text color="surface.400" fontSize="xs" lineHeight="tall">{item.desc}</Text>
+                            </VStack>
+                          </HStack>
+                        </MotionBox>
+                      ))}
+                    </VStack>
+                  </VStack>
+                </CardBody>
+              </Card>
+            </MotionBox>
+          </Grid>
+
+          {/* Bottom Stats/Info Banner */}
+          <MotionBox
+            mt={12}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <Card
+              bg="rgba(255,255,255,0.02)"
+              border="1px solid"
+              borderColor="surface.800"
+              borderRadius="2xl"
+            >
+              <CardBody py={6} px={8}>
+                <Flex
+                  direction={{ base: 'column', md: 'row' }}
+                  justify="space-between"
+                  align="center"
+                  gap={6}
+                >
+                  <HStack spacing={3}>
+                    <Box
+                      p={2}
+                      bg="yellow.400/10"
+                      borderRadius="lg"
+                      color="yellow.400"
+                    >
+                      <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none">
+                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </Box>
+                    </Box>
+                    <VStack align="start" spacing={0}>
+                      <Text fontWeight="600" color="white" fontSize="sm">Recommended Limits</Text>
+                      <Text color="surface.400" fontSize="xs">For optimal performance</Text>
+                    </VStack>
+                  </HStack>
+                  
+                  <HStack spacing={8} flexWrap="wrap" justify="center">
+                    {[
+                      { label: 'Tables', value: '< 100' },
+                      { label: 'Database Size', value: '< 10GB' },
+                      { label: 'Rows per Table', value: '< 1M' },
+                      { label: 'Connections', value: '< 10' }
+                    ].map((stat, i) => (
+                      <VStack key={i} spacing={0} align="center">
+                        <Text fontFamily="mono" fontWeight="700" color="teal.400" fontSize="lg">{stat.value}</Text>
+                        <Text color="surface.500" fontSize="xs">{stat.label}</Text>
+                      </VStack>
+                    ))}
+                  </HStack>
+                </Flex>
+              </CardBody>
+            </Card>
+          </MotionBox>
+
+          {/* Honest Note */}
+          <MotionBox
+            mt={8}
+            textAlign="center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <Text color="surface.500" fontSize="sm" fontStyle="italic">
+              &quot;We&apos;d rather you know upfront than be disappointed later. If you&apos;re in the sweet spot, you&apos;ll love us.&quot;
+            </Text>
+          </MotionBox>
+        </Container>
+      </Box>
+
       {/* Rest of the page - Bento and Footer (Keeping them but cleaning up) */}
       <Box py={32} borderTop="1px solid" borderColor="rgba(255,255,255,0.05)">
         <Container maxW="7xl">
