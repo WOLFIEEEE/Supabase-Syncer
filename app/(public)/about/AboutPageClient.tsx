@@ -59,8 +59,8 @@ export default function AboutPageClient() {
     },
     {
       icon: CodeIcon,
-      title: 'Open Source',
-      description: 'Fully open-source and transparent. Contribute, fork, or customize to fit your needs.',
+      title: 'Developer-Focused',
+      description: 'Built by developers, for developers. Every feature is designed with your workflow in mind.',
     },
   ];
 
@@ -96,7 +96,7 @@ export default function AboutPageClient() {
               migrations, we provide the tools you need to work confidently with your databases.
             </Text>
             <Text color="surface.400" fontSize="md" lineHeight="tall">
-              We believe in open-source software, transparency, and putting developers first. Every feature we 
+              We believe in transparency and putting developers first. Every feature we 
               build is designed with your workflow in mind, ensuring that database management doesn't get in the 
               way of building great applications.
             </Text>

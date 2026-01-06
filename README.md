@@ -1,8 +1,7 @@
 # suparbase
 
-A powerful, self-hosted tool for synchronizing database schemas and data between Supabase environments (development, staging, production). Keep your databases alive and in sync with suparbase.
+A powerful database synchronization platform for Supabase environments (development, staging, production). Keep your databases alive and in sync with suparbase.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
@@ -692,7 +691,7 @@ Contributions welcome! Please read our contributing guidelines first.
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+Proprietary software. All rights reserved. See [Terms of Service](https://suparbase.com/terms) for usage terms.
 
 ---
 

@@ -3,7 +3,7 @@ import TermsPageClient from './TermsPageClient';
 
 export const metadata: Metadata = {
   title: 'Terms of Service | suparbase',
-  description: 'Terms of Service for suparbase - Read our terms and conditions for using the database synchronization tool. Open-source, self-hosted solution.',
+  description: 'Terms of Service for suparbase - Read our terms and conditions for using the database synchronization tool.',
   keywords: ['terms of service', 'terms and conditions', 'legal', 'supabase terms', 'database sync terms'],
   openGraph: {
     title: 'Terms of Service | suparbase',

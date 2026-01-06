@@ -187,7 +187,7 @@ export default function HomePageClient() {
                 .pulse-dot { animation: pulse-dot 2s infinite; }
               `}</style>
               <Text fontSize="xs" fontWeight="600" color="surface.300" letterSpacing="0.05em">
-                OPEN SOURCE DATABASE SYNC
+                DATABASE SYNC PLATFORM
               </Text>
             </HStack>
           </MotionBox>

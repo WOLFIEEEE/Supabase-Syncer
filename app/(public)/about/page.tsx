@@ -3,11 +3,11 @@ import AboutPageClient from './AboutPageClient';
 
 export const metadata: Metadata = {
   title: 'About | suparbase - Database Sync & Keep-Alive Tools',
-  description: 'Learn about suparbase - an open-source tool for syncing Supabase databases, preventing free tier pausing, and managing database migrations.',
-  keywords: ['about suparbase', 'supabase tools', 'database sync', 'open source', 'supabase community'],
+  description: 'Learn about suparbase - a database sync platform for Supabase databases, preventing free tier pausing, and managing database migrations.',
+  keywords: ['about suparbase', 'supabase tools', 'database sync', 'supabase community'],
   openGraph: {
     title: 'About | suparbase - Database Sync & Keep-Alive Tools',
-    description: 'Learn about suparbase - an open-source tool for syncing Supabase databases and managing database migrations.',
+    description: 'Learn about suparbase - a database sync platform for Supabase databases and managing database migrations.',
     url: 'https://suparbase.com/about',
     siteName: 'suparbase',
     images: [
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'About | suparbase - Database Sync & Keep-Alive Tools',
-    description: 'Learn about suparbase - an open-source tool for syncing Supabase databases and managing database migrations.',
+    description: 'Learn about suparbase - a database sync platform for Supabase databases and managing database migrations.',
     images: ['https://suparbase.com/logo.png'],
   },
   alternates: {

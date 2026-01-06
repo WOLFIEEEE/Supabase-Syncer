@@ -212,24 +212,20 @@ export default function TermsPageClient() {
 
                   <Box>
                     <Heading as="h2" size="lg" color="white" mb={4}>
-                      Open Source License
+                      License & Usage
                     </Heading>
                     <Text color="surface.300" lineHeight="tall" mb={4}>
-                      suparbase is open-source software. The source code is available under the MIT License. 
-                      You are free to:
+                      suparbase is a proprietary software platform. By using our service, you agree to:
                     </Text>
                     <VStack spacing={3} align="stretch" as="ul" pl={4}>
                       <Text as="li" color="surface.300" lineHeight="tall">
-                        Use the software for any purpose
+                        Use the service in accordance with these terms
                       </Text>
                       <Text as="li" color="surface.300" lineHeight="tall">
-                        Modify the software
+                        Not attempt to reverse engineer or copy the software
                       </Text>
                       <Text as="li" color="surface.300" lineHeight="tall">
-                        Distribute the software
-                      </Text>
-                      <Text as="li" color="surface.300" lineHeight="tall">
-                        Self-host the application
+                        Respect intellectual property rights
                       </Text>
                     </VStack>
                   </Box>

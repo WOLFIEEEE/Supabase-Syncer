@@ -249,19 +249,6 @@ export default function PrivacyPageClient() {
 
                   <Box>
                     <Heading as="h2" size="lg" color="white" mb={4}>
-                      Open Source
-                    </Heading>
-                    <Text color="surface.300" lineHeight="tall">
-                      suparbase is open-source software. You can self-host the application and have complete control 
-                      over your data. When self-hosting, all data remains on your infrastructure, and this privacy 
-                      policy applies to your own deployment.
-                    </Text>
-                  </Box>
-
-                  <Divider borderColor="surface.700" />
-
-                  <Box>
-                    <Heading as="h2" size="lg" color="white" mb={4}>
                       Changes to This Policy
                     </Heading>
                     <Text color="surface.300" lineHeight="tall">
