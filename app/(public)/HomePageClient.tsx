@@ -212,7 +212,7 @@ export default function HomePageClient() {
               <Text 
                 as="span" 
                 color="teal.400"
-                style={{ WebkitTextStroke: '1px rgba(255,255,255,0.1)', color: 'transparent' }}
+                style={{ WebkitTextStroke: '2px #3ECF8E', color: 'transparent' }}
               >
                 databases
               </Text>
