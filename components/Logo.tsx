@@ -59,19 +59,28 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
             >
               supa
             </Text>
-            <Text 
-              fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
-              fontWeight="900" 
-              bgGradient="linear(to-br, #3ECF8E, #14B8A6)"
-              bgClip="text"
-              color="transparent"
-              lineHeight="1.2"
-              fontFamily="'Playfair Display', 'Georgia', serif"
-              fontStyle="italic"
+            <Box
               mx={1}
+              px={2}
+              py={0.5}
+              bgGradient="linear(to-br, #3ECF8E, #14B8A6)"
+              borderRadius="md"
+              display="inline-flex"
+              alignItems="center"
+              justifyContent="center"
+              boxShadow="0 0 10px rgba(62, 207, 142, 0.4)"
             >
-              r
-            </Text>
+              <Text 
+                fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
+                fontWeight="900" 
+                color="white"
+                lineHeight="1"
+                fontFamily="'Playfair Display', 'Georgia', serif"
+                fontStyle="italic"
+              >
+                R
+              </Text>
+            </Box>
             <Text 
               fontSize={text} 
               fontWeight="700" 
