@@ -171,7 +171,14 @@ export default function SignupPage() {
                   </svg>
                 </Box>
               </Box>
-              <Heading size="xl" mb={3} color="white" fontWeight="700">
+              <Heading 
+                size="xl" 
+                mb={3} 
+                color="white" 
+                fontWeight="600"
+                fontFamily="'Playfair Display', serif"
+                fontStyle="italic"
+              >
                 Check your email
               </Heading>
               <Text color="surface.300" mb={6} fontSize="md" lineHeight="1.6">
@@ -229,10 +236,12 @@ export default function SignupPage() {
             >
               <Heading 
                 size="2xl"
-                fontWeight="700"
+                fontWeight="600"
                 color="white"
                 textAlign="center"
-                letterSpacing="-0.02em"
+                letterSpacing="0.01em"
+                fontFamily="'Playfair Display', serif"
+                fontStyle="italic"
               >
                 Create your account
               </Heading>

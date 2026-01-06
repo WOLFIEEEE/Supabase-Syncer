@@ -139,10 +139,12 @@ export default function LoginPage() {
             >
               <Heading 
                 size="2xl"
-                fontWeight="700"
+                fontWeight="600"
                 color="white"
                 textAlign="center"
-                letterSpacing="-0.02em"
+                letterSpacing="0.01em"
+                fontFamily="'Playfair Display', serif"
+                fontStyle="italic"
               >
                 Welcome back
               </Heading>
