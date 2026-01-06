@@ -615,27 +615,27 @@ export default function HomePageClient() {
                         {
                           title: 'Indie Hackers & Solo Devs',
                           desc: 'Building MVPs and side projects? This saves hours of manual data migration.',
-                          icon: '🚀'
+                          iconPath: 'M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0 M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5'
                         },
                         {
                           title: 'Supabase Free Tier Users',
                           desc: 'Our keep-alive feature prevents your database from pausing due to inactivity.',
-                          icon: '💚'
+                          iconPath: 'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'
                         },
                         {
                           title: 'Learning & Prototyping',
                           desc: 'New to databases? Safely experiment without fear of breaking production.',
-                          icon: '🎓'
+                          iconPath: 'M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c3 3 9 3 12 0v-5'
                         },
                         {
                           title: 'Small Teams (< 10 devs)',
                           desc: 'Multiple environments to manage? Sync schemas in seconds, not hours.',
-                          icon: '👥'
+                          iconPath: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75'
                         },
                         {
                           title: 'Early-Stage Startups',
                           desc: 'Move fast and break things — but not your database. Schema validation included.',
-                          icon: '⚡'
+                          iconPath: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z'
                         }
                       ].map((item, i) => (
                         <MotionBox
@@ -654,7 +654,17 @@ export default function HomePageClient() {
                           transition={{ duration: 0.2 }}
                         >
                           <HStack spacing={4} align="start">
-                            <Text fontSize="2xl">{item.icon}</Text>
+                            <Box
+                              p={2}
+                              bg="teal.400/10"
+                              borderRadius="lg"
+                              color="teal.400"
+                              flexShrink={0}
+                            >
+                              <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none">
+                                <path d={item.iconPath} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </Box>
+                            </Box>
                             <VStack align="start" spacing={1}>
                               <Text fontWeight="600" color="white" fontSize="sm">{item.title}</Text>
                               <Text color="surface.400" fontSize="xs" lineHeight="tall">{item.desc}</Text>
@@ -718,27 +728,27 @@ export default function HomePageClient() {
                         {
                           title: 'Large Databases (50GB+)',
                           desc: 'Syncing massive datasets can timeout or hit memory limits. Use dedicated migration tools.',
-                          icon: '💾'
+                          iconPath: 'M4 7V4h16v3 M9 20h6 M12 4v16 M8 7h8a4 4 0 0 1 4 4v0a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v0a4 4 0 0 1 4-4z'
                         },
                         {
                           title: 'Enterprise Scale',
                           desc: 'Hundreds of tables? Complex triggers? You need enterprise-grade solutions.',
-                          icon: '🏢'
+                          iconPath: 'M3 21h18 M5 21V7l8-4v18 M19 21V11l-6-4 M9 9v.01 M9 12v.01 M9 15v.01 M9 18v.01'
                         },
                         {
                           title: 'High-Traffic Production',
                           desc: 'Millions of daily transactions require zero-downtime tools we don&apos;t provide.',
-                          icon: '📊'
+                          iconPath: 'M18 20V10 M12 20V4 M6 20v-6'
                         },
                         {
                           title: 'Non-Supabase Databases',
                           desc: 'Built specifically for Supabase PostgreSQL. MySQL, MongoDB? Look elsewhere.',
-                          icon: '🔌'
+                          iconPath: 'M2 12h6 M22 12h-6 M12 2v6 M12 22v-6 M4.93 4.93l4.24 4.24 M14.83 14.83l4.24 4.24 M4.93 19.07l4.24-4.24 M14.83 9.17l4.24-4.24'
                         },
                         {
                           title: 'Regulated Industries',
                           desc: 'Healthcare, finance? You need compliance certifications we don&apos;t have (yet).',
-                          icon: '🏛️'
+                          iconPath: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'
                         }
                       ].map((item, i) => (
                         <MotionBox
@@ -757,7 +767,17 @@ export default function HomePageClient() {
                           transition={{ duration: 0.2 }}
                         >
                           <HStack spacing={4} align="start">
-                            <Text fontSize="2xl">{item.icon}</Text>
+                            <Box
+                              p={2}
+                              bg="red.400/10"
+                              borderRadius="lg"
+                              color="red.400"
+                              flexShrink={0}
+                            >
+                              <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none">
+                                <path d={item.iconPath} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </Box>
+                            </Box>
                             <VStack align="start" spacing={1}>
                               <Text fontWeight="600" color="white" fontSize="sm">{item.title}</Text>
                               <Text color="surface.400" fontSize="xs" lineHeight="tall">{item.desc}</Text>
