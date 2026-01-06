@@ -53,19 +53,18 @@ export default function PublicNavbar() {
       bgColor="rgba(9, 9, 11, 0.9)"
     >
       <Container maxW="6xl" py={3}>
-        <Flex justify="space-between" align="center" gap={4}>
-          {/* Logo - matching auth header style exactly */}
+        <Flex justify="space-between" align="center">
+          {/* Logo - exactly matching AuthHeader structure */}
           <Box
             cursor="pointer"
             onClick={() => router.push('/landing')}
             _hover={{ opacity: 0.8 }}
             transition="opacity 0.2s"
-            flexShrink={0}
           >
             <SuparbaseLogo size="2xl" showText={true} variant="full" />
           </Box>
 
-          {/* Desktop Nav */}
+          {/* Desktop Navigation */}
           <HStack spacing={1} display={{ base: 'none', md: 'flex' }}>
             {navLinks.map((link) => (
               <Button
@@ -81,7 +80,7 @@ export default function PublicNavbar() {
             ))}
           </HStack>
 
-          {/* CTA Buttons */}
+          {/* Right Side Actions */}
           <HStack spacing={2}>
             <Button
               colorScheme="teal"
@@ -92,7 +91,7 @@ export default function PublicNavbar() {
               Login
             </Button>
             
-            {/* Mobile Menu */}
+            {/* Mobile Menu Button */}
             <IconButton
               aria-label="Menu"
               icon={<MenuIcon />}
@@ -143,4 +142,3 @@ export default function PublicNavbar() {
     </Box>
   );
 }
-
