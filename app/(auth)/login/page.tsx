@@ -142,9 +142,8 @@ export default function LoginPage() {
                 fontWeight="600"
                 color="white"
                 textAlign="center"
-                letterSpacing="0.01em"
-                fontFamily="'Playfair Display', serif"
-                fontStyle="italic"
+                letterSpacing="-0.02em"
+                fontFamily="'Outfit', sans-serif"
               >
                 Welcome back
               </Heading>

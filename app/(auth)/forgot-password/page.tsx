@@ -136,8 +136,8 @@ export default function ForgotPasswordPage() {
                 mb={3} 
                 color="white" 
                 fontWeight="600"
-                fontFamily="'Playfair Display', serif"
-                fontStyle="italic"
+                fontFamily="'Outfit', sans-serif"
+                letterSpacing="-0.01em"
               >
                 Check your email
               </Heading>
@@ -199,9 +199,8 @@ export default function ForgotPasswordPage() {
                 fontWeight="600"
                 color="white"
                 textAlign="center"
-                letterSpacing="0.01em"
-                fontFamily="'Playfair Display', serif"
-                fontStyle="italic"
+                letterSpacing="-0.02em"
+                fontFamily="'Outfit', sans-serif"
               >
                 Reset password
               </Heading>
