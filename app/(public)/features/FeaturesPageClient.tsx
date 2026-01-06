@@ -219,20 +219,30 @@ export default function FeaturesPageClient() {
                 <Text color="surface.400" maxW="lg">
                   Start synchronizing your databases today. No credit card required.
                 </Text>
-                <HStack spacing={4} justify="center">
+                <HStack spacing={4} justify="center" flexWrap="wrap">
                   <Button
                     size="lg"
                     colorScheme="teal"
-                    onClick={() => router.push('/login')}
+                    onClick={() => router.push('/signup')}
+                    minH="48px"
                   >
                     Get Started
                   </Button>
                   <Button
                     size="lg"
                     variant="outline"
-                    onClick={() => router.push('/guide')}
+                    onClick={() => router.push('/getting-started')}
+                    minH="48px"
                   >
-                    View Guide
+                    Quick Start
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => router.push('/use-cases')}
+                    minH="48px"
+                  >
+                    See Use Cases
                   </Button>
                 </HStack>
               </VStack>

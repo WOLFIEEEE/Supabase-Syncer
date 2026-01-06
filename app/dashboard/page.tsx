@@ -355,7 +355,7 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }} gap={{ base: 3, md: 4 }}>
+            <Grid templateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }} gap={{ base: 3, md: 4 }}>
               <GridItem>
                 <Card bg="surface.800" borderColor="surface.700">
                   <CardBody p={{ base: 3, md: 4 }}>
@@ -418,6 +418,7 @@ export default function DashboardPage() {
               colorScheme="teal"
               onClick={() => router.push('/sync/create')}
               size={{ base: 'md', md: 'md' }}
+              minH="44px"
               w={{ base: '100%', sm: 'auto' }}
             >
               New Sync Job
@@ -428,6 +429,7 @@ export default function DashboardPage() {
               variant="solid"
               onClick={() => router.push('/schema-sync')}
               size={{ base: 'md', md: 'md' }}
+              minH="44px"
               w={{ base: '100%', sm: 'auto' }}
             >
               Schema Sync
@@ -438,6 +440,7 @@ export default function DashboardPage() {
               variant="solid"
               onClick={() => router.push('/explorer')}
               size={{ base: 'md', md: 'md' }}
+              minH="44px"
               w={{ base: '100%', sm: 'auto' }}
             >
               Data Explorer
@@ -447,6 +450,7 @@ export default function DashboardPage() {
               variant="outline"
               onClick={() => router.push('/connections')}
               size={{ base: 'md', md: 'md' }}
+              minH="44px"
               w={{ base: '100%', sm: 'auto' }}
             >
               Manage Connections

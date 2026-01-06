@@ -743,11 +743,11 @@ export default function ConnectionsPage() {
       <Modal 
         isOpen={isSchemaOpen} 
         onClose={onSchemaClose} 
-        size="6xl" 
+        size={{ base: 'full', md: '6xl' }}
         scrollBehavior="inside"
       >
         <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(4px)" />
-        <ModalContent bg="surface.800" borderColor="surface.700" maxH="90vh" mx={{ base: 2, md: 4 }}>
+        <ModalContent bg="surface.800" borderColor="surface.700" maxH="90vh" mx={{ base: 0, md: 4 }} my={{ base: 0, md: 'auto' }}>
           <ModalHeader color="white" pb={2}>
             <HStack spacing={3}>
               <Box 
@@ -1099,8 +1099,8 @@ export default function ConnectionsPage() {
                           <TabPanels>
                             {/* Columns Tab */}
                             <TabPanel px={0}>
-                              <Box overflowX="auto">
-                                <Table size="sm" variant="simple">
+                              <Box overflowX="auto" className="responsive-table" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                <Table size="sm" variant="simple" minW="100%">
                                   <Thead>
                                     <Tr>
                                       <Th color="surface.400" borderColor="surface.700">Column</Th>
@@ -1154,7 +1154,7 @@ export default function ConnectionsPage() {
                                                 : col.defaultValue}
                                             </Code>
                                           ) : (
-                                            <Text color="surface.500" fontSize="xs">—</Text>
+                                            <Text color="surface.500" fontSize="xs">N/A</Text>
                                           )}
                                         </Td>
                                       </Tr>

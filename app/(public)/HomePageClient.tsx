@@ -76,11 +76,21 @@ const ArrowRightIcon = () => (
 
 // Minimal Pulse Component
 const PulseConnection = () => (
-  <Box position="relative" w="320px" h="120px" display="flex" alignItems="center" justifyContent="space-between">
-    <VStack spacing={3} align="center">
+  <Box 
+    position="relative" 
+    w={{ base: '100%', sm: '320px' }} 
+    maxW={{ base: '280px', sm: '320px' }}
+    h={{ base: '90px', sm: '120px' }}
+    display="flex" 
+    alignItems="center" 
+    justifyContent="space-between"
+    px={{ base: 2, sm: 0 }}
+    mx="auto"
+  >
+    <VStack spacing={{ base: 2, sm: 3 }} align="center">
       <Box
-        w={16} 
-        h={16} 
+        w={{ base: 12, sm: 14 }} 
+        h={{ base: 12, sm: 14 }} 
         borderRadius="xl" 
         bg="surface.900" 
         border="1.5px solid" 
@@ -114,7 +124,7 @@ const PulseConnection = () => (
             ease: "easeInOut"
           }}
         />
-        <Box as="svg" w={8} h={8} viewBox="0 0 24 24" fill="none" color="teal.400">
+        <Box as="svg" w={{ base: 6, sm: 8 }} h={{ base: 6, sm: 8 }} viewBox="0 0 24 24" fill="none" color="teal.400">
           <path
             d="M4 7C4 5.89543 4.89543 5 6 5H10C11.1046 5 12 5.89543 12 7V9C12 10.1046 11.1046 11 10 11H6C4.89543 11 4 10.1046 4 9V7Z"
             stroke="currentColor"
@@ -145,10 +155,10 @@ const PulseConnection = () => (
           />
         </Box>
       </Box>
-      <Text fontSize="11px" color="surface.300" fontWeight="600" letterSpacing="0.05em">DEV</Text>
+      <Text fontSize={{ base: '10px', sm: '11px' }} color="surface.300" fontWeight="600" letterSpacing="0.05em">DEV</Text>
     </VStack>
     
-    <Box flex={1} mx={6} h="2px" bg="surface.800" position="relative" overflow="hidden" borderRadius="full">
+    <Box flex={1} mx={{ base: 4, sm: 6 }} h={{ base: '1px', sm: '2px' }} bg="surface.800" position="relative" overflow="hidden" borderRadius="full">
       <Box
         position="absolute"
         top={0}
@@ -172,10 +182,10 @@ const PulseConnection = () => (
       />
     </Box>
 
-    <VStack spacing={3} align="center">
+    <VStack spacing={{ base: 2, sm: 3 }} align="center">
       <Box
-        w={16} 
-        h={16} 
+        w={{ base: 12, sm: 14 }} 
+        h={{ base: 12, sm: 14 }} 
         borderRadius="xl" 
         bg="surface.900" 
         border="1.5px solid" 
@@ -209,7 +219,7 @@ const PulseConnection = () => (
             ease: "easeInOut"
           }}
         />
-        <Box as="svg" w={8} h={8} viewBox="0 0 24 24" fill="none" color="brand.400">
+        <Box as="svg" w={{ base: 6, sm: 8 }} h={{ base: 6, sm: 8 }} viewBox="0 0 24 24" fill="none" color="brand.400">
           <ellipse
             cx="12"
             cy="5"
@@ -236,7 +246,7 @@ const PulseConnection = () => (
           />
         </Box>
       </Box>
-      <Text fontSize="11px" color="surface.300" fontWeight="600" letterSpacing="0.05em">PROD</Text>
+      <Text fontSize={{ base: '10px', sm: '11px' }} color="surface.300" fontWeight="600" letterSpacing="0.05em">PROD</Text>
     </VStack>
   </Box>
 );
@@ -281,7 +291,7 @@ export default function HomePageClient() {
   }, [user, authLoading, router]);
 
   return (
-    <Box position="relative" bg="rgba(9, 9, 11, 1)" overflow="hidden" minH="100vh">
+    <Box position="relative" bg="rgba(9, 9, 11, 1)" overflow="hidden" minH="100vh" overflowX="hidden">
       {/* Subtle Grid Background */}
       <Box 
         position="absolute" 
@@ -294,7 +304,7 @@ export default function HomePageClient() {
       />
 
       {/* Main Hero Container */}
-      <Container maxW="5xl" pt={{ base: 20, md: 28 }} pb={20}>
+      <Container maxW="5xl" pt={{ base: 20, md: 28 }} pb={20} px={{ base: 4, sm: 6, md: 8 }}>
         <VStack spacing={12} align="center" textAlign="center">
           
           {/* Minimal Badge */}
@@ -304,15 +314,17 @@ export default function HomePageClient() {
             transition={{ duration: 0.5 }}
           >
             <HStack 
-              px={4} 
+              px={{ base: 3, sm: 4 }} 
               py={1.5} 
               bg="rgba(255,255,255,0.03)" 
               borderRadius="full" 
               border="1px solid" 
               borderColor="rgba(255,255,255,0.1)"
               spacing={2}
+              flexWrap="wrap"
+              justify="center"
             >
-              <Box w={1.5} h={1.5} borderRadius="full" bg="teal.400" className="pulse-dot" />
+              <Box w={1.5} h={1.5} borderRadius="full" bg="teal.400" className="pulse-dot" flexShrink={0} />
               <style jsx global>{`
                 @keyframes pulse-dot {
                   0% { transform: scale(1); opacity: 1; }
@@ -321,7 +333,13 @@ export default function HomePageClient() {
                 }
                 .pulse-dot { animation: pulse-dot 2s infinite; }
               `}</style>
-              <Text fontSize="xs" fontWeight="600" color="surface.300" letterSpacing="0.05em">
+              <Text 
+                fontSize={{ base: '2xs', sm: 'xs' }} 
+                fontWeight="600" 
+                color="surface.300" 
+                letterSpacing="0.05em"
+                whiteSpace="nowrap"
+              >
                 DATABASE SYNC PLATFORM
               </Text>
             </HStack>
@@ -336,32 +354,37 @@ export default function HomePageClient() {
           >
             <Heading
               as="h1"
-              fontSize={{ base: '5xl', md: '8xl' }}
+              fontSize={{ base: '3xl', sm: '4xl', md: '6xl', lg: '8xl' }}
               fontWeight="700"
-              lineHeight="0.95"
-              letterSpacing="-0.04em"
+              lineHeight={{ base: '1.1', md: '0.95' }}
+              letterSpacing={{ base: '-0.01em', md: '-0.04em' }}
               color="white"
               fontFamily="'Outfit', sans-serif"
+              px={{ base: 2, sm: 0 }}
             >
               Sync your <br />
-              <Text 
-                as="span" 
-                color="teal.400"
-                style={{ WebkitTextStroke: '2px #3ECF8E', color: 'transparent' }}
+              <Box
+                as="span"
+                color="transparent"
+                sx={{
+                  WebkitTextStroke: { base: '1.5px #3ECF8E', md: '2px #3ECF8E' },
+                  WebkitTextFillColor: 'transparent'
+                }}
               >
                 databases
-              </Text>
+              </Box>
               {' '}safely.
-            </Heading>
-            <Text 
-              fontSize={{ base: 'lg', md: '2xl' }} 
-              color="surface.300" 
-              maxW="2xl"
-              lineHeight="1.4"
+                </Heading>
+                <Text 
+              fontSize={{ base: 'md', sm: 'lg', md: '2xl' }} 
+                  color="surface.300" 
+                  maxW="2xl"
+              lineHeight={{ base: '1.5', md: '1.4' }}
               fontWeight="400"
-            >
+              px={{ base: 2, sm: 0 }}
+                >
               Zero-drift synchronization for Supabase. Built for teams that move fast without breaking things.
-            </Text>
+                </Text>
           </MotionVStack>
 
           {/* Creative Minimal Visual */}
@@ -370,27 +393,41 @@ export default function HomePageClient() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.5 }}
             pt={4}
+            w="100%"
+            display="flex"
+            justifyContent="center"
+            overflow="hidden"
           >
             <PulseConnection />
           </MotionBox>
 
           {/* Action Area */}
-          <HStack spacing={6} pt={4}>
+          <Flex 
+            direction={{ base: 'column', sm: 'row' }} 
+            spacing={6} 
+            pt={4}
+            gap={{ base: 4, sm: 6 }}
+            align="center"
+            w="100%"
+            px={{ base: 4, sm: 0 }}
+          >
             <MotionBox
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              w={{ base: 'full', sm: 'auto' }}
             >
-              <Button
-                size="lg"
-                height="72px"
-                px={12}
+                <Button
+                  size="lg"
+                height={{ base: '56px', sm: '72px' }}
+                px={{ base: 8, sm: 12 }}
+                w={{ base: 'full', sm: 'auto' }}
                 bg="white"
                 color="black"
-                fontSize="lg"
+                fontSize={{ base: 'md', sm: 'lg' }}
                 fontWeight="700"
                 borderRadius="2xl"
                 _hover={{ bg: 'teal.400', color: 'white' }}
-                onClick={() => router.push('/login')}
+                  onClick={() => router.push('/login')}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 rightIcon={
@@ -406,26 +443,42 @@ export default function HomePageClient() {
               </Button>
             </MotionBox>
             
-            <Button
-              size="lg"
-              variant="link"
-              color="surface.300"
-              fontSize="lg"
-              fontWeight="600"
-              _hover={{ color: 'white' }}
-              onClick={() => router.push('/guide')}
-            >
-              View Documentation
-            </Button>
-          </HStack>
+            <HStack spacing={4} flexWrap="wrap" justify="center" w={{ base: 'full', sm: 'auto' }}>
+              <Button
+                size="lg"
+                variant="link"
+                color="surface.300"
+                fontSize={{ base: 'md', sm: 'lg' }}
+                fontWeight="600"
+                _hover={{ color: 'white' }}
+                onClick={() => router.push('/getting-started')}
+                minH="44px"
+              >
+                Quick Start
+                </Button>
+              <Text color="surface.600" display={{ base: 'none', sm: 'block' }}>•</Text>
+                <Button
+                  size="lg"
+                variant="link"
+                color="surface.300"
+                fontSize={{ base: 'md', sm: 'lg' }}
+                fontWeight="600"
+                _hover={{ color: 'white' }}
+                onClick={() => router.push('/how-it-works')}
+                minH="44px"
+              >
+                How It Works
+                </Button>
+              </HStack>
+          </Flex>
 
           {/* Minimal Features Grid */}
-          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={6} pt={20} w="full">
+          <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={{ base: 3, sm: 4, md: 6 }} pt={{ base: 12, sm: 16, md: 20 }} w="full">
             {features.map((f, i) => (
-              <MotionBox
+                <MotionBox
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 + (i * 0.1) }}
                 whileHover={{ y: -4 }}
               >
@@ -442,10 +495,10 @@ export default function HomePageClient() {
                   }}
                   transition="all 0.3s ease"
                 >
-                  <CardBody p={6}>
-                    <VStack spacing={4} align="center">
+                  <CardBody p={{ base: 4, md: 6 }}>
+                    <VStack spacing={{ base: 3, md: 4 }} align="center">
                       <Box
-                        p={3}
+                        p={{ base: 2, md: 3 }}
                         bg="surface.900"
                         borderRadius="xl"
                         border="1px solid"
@@ -454,29 +507,30 @@ export default function HomePageClient() {
                         _groupHover={{ borderColor: f.color }}
                       >
                         <f.icon />
-                      </Box>
+                        </Box>
                       <VStack spacing={1} align="center">
-                        <Text fontWeight="700" color="white" fontSize="md" textAlign="center">
+                        <Text fontWeight="700" color="white" fontSize={{ base: 'sm', md: 'md' }} textAlign="center">
                           {f.title}
                         </Text>
                         <Text 
                           color="surface.400" 
                           fontSize="xs" 
                           textAlign="center"
-                          display={{ base: 'none', md: 'block' }}
+                          display="block"
+                          lineHeight="1.4"
                         >
                           {f.description}
-                        </Text>
-                      </VStack>
+                          </Text>
+                        </VStack>
                     </VStack>
-                  </CardBody>
-                </Card>
-              </MotionBox>
-            ))}
-          </SimpleGrid>
+                    </CardBody>
+                  </Card>
+                </MotionBox>
+              ))}
+            </SimpleGrid>
 
-        </VStack>
-      </Container>
+          </VStack>
+        </Container>
 
       {/* Decorative Side Elements - Minimal */}
       <Box position="absolute" top="20%" left="5%" display={{ base: 'none', lg: 'block' }}>
@@ -557,12 +611,12 @@ export default function HomePageClient() {
               ?
             </Heading>
             <Text color="surface.400" fontSize="lg" maxW="2xl">
-              We built this with a specific audience in mind. Here&apos;s who will benefit the most — and who might need something else.
+              We built this with a specific audience in mind. Here&apos;s who will benefit the most, and who might need something else.
             </Text>
           </MotionVStack>
 
           {/* Two Column Layout */}
-          <Grid templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }} gap={8}>
+          <Grid templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }} gap={{ base: 6, lg: 8 }}>
             
             {/* Perfect For Column */}
             <MotionBox
@@ -588,29 +642,29 @@ export default function HomePageClient() {
                   h="3px"
                   bgGradient="linear(to-r, teal.400, teal.300)"
                 />
-                <CardBody p={{ base: 6, md: 10 }}>
-                  <VStack align="start" spacing={8}>
+                <CardBody p={{ base: 4, md: 6, lg: 10 }}>
+                  <VStack align="start" spacing={{ base: 6, md: 8 }}>
                     {/* Header */}
-                    <HStack spacing={4}>
+                    <HStack spacing={{ base: 3, md: 4 }}>
                       <Box
-                        p={3}
+                        p={{ base: 2.5, md: 3 }}
                         bg="teal.400/10"
                         borderRadius="xl"
                         color="teal.400"
                       >
-                        <Box as="svg" w={6} h={6} viewBox="0 0 24 24" fill="none">
+                        <Box as="svg" w={{ base: 5, md: 6 }} h={{ base: 5, md: 6 }} viewBox="0 0 24 24" fill="none">
                           <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                         </Box>
                       </Box>
                       <VStack align="start" spacing={0}>
-                        <Text fontSize="xl" fontWeight="700" color="white">Perfect For</Text>
-                        <Text fontSize="sm" color="teal.400">You&apos;ll love this</Text>
+                        <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="700" color="white">Perfect For</Text>
+                        <Text fontSize={{ base: 'xs', md: 'sm' }} color="teal.400">You&apos;ll love this</Text>
                       </VStack>
                     </HStack>
 
                     {/* Items */}
-                    <VStack align="start" spacing={5} w="full">
+                    <VStack align="start" spacing={{ base: 3, md: 5 }} w="full">
                       {[
                         {
                           title: 'Indie Hackers & Solo Devs',
@@ -634,13 +688,13 @@ export default function HomePageClient() {
                         },
                         {
                           title: 'Early-Stage Startups',
-                          desc: 'Move fast and break things — but not your database. Schema validation included.',
+                          desc: 'Move fast and break things, but not your database. Schema validation included.',
                           iconPath: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z'
                         }
                       ].map((item, i) => (
                         <MotionBox
                           key={i}
-                          p={4}
+                          p={{ base: 3, md: 4 }}
                           bg="rgba(255,255,255,0.02)"
                           borderRadius="xl"
                           border="1px solid"
@@ -653,21 +707,26 @@ export default function HomePageClient() {
                           }}
                           transition={{ duration: 0.2 }}
                         >
-                          <HStack spacing={4} align="start">
+                          <HStack spacing={{ base: 3, md: 4 }} align="start">
                             <Box
-                              p={2}
+                              p={{ base: 2.5, md: 2 }}
                               bg="teal.400/10"
                               borderRadius="lg"
                               color="teal.400"
                               flexShrink={0}
+                              minW="44px"
+                              minH="44px"
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
                             >
-                              <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none">
+                              <Box as="svg" w={{ base: 5, md: 5 }} h={{ base: 5, md: 5 }} viewBox="0 0 24 24" fill="none">
                                 <path d={item.iconPath} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                               </Box>
                             </Box>
-                            <VStack align="start" spacing={1}>
-                              <Text fontWeight="600" color="white" fontSize="sm">{item.title}</Text>
-                              <Text color="surface.400" fontSize="xs" lineHeight="tall">{item.desc}</Text>
+                            <VStack align="start" spacing={1} flex={1}>
+                              <Text fontWeight="600" color="white" fontSize={{ base: 'sm', md: 'sm' }}>{item.title}</Text>
+                              <Text color="surface.400" fontSize="xs" lineHeight={{ base: '1.5', md: 'tall' }}>{item.desc}</Text>
                             </VStack>
                           </HStack>
                         </MotionBox>
@@ -702,28 +761,28 @@ export default function HomePageClient() {
                   h="3px"
                   bgGradient="linear(to-r, red.400, orange.400)"
                 />
-                <CardBody p={{ base: 6, md: 10 }}>
-                  <VStack align="start" spacing={8}>
+                <CardBody p={{ base: 4, md: 6, lg: 10 }}>
+                  <VStack align="start" spacing={{ base: 6, md: 8 }}>
                     {/* Header */}
-                    <HStack spacing={4}>
+                    <HStack spacing={{ base: 3, md: 4 }}>
                       <Box
-                        p={3}
+                        p={{ base: 2.5, md: 3 }}
                         bg="red.400/10"
                         borderRadius="xl"
                         color="red.400"
                       >
-                        <Box as="svg" w={6} h={6} viewBox="0 0 24 24" fill="none">
+                        <Box as="svg" w={{ base: 5, md: 6 }} h={{ base: 5, md: 6 }} viewBox="0 0 24 24" fill="none">
                           <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </Box>
                       </Box>
                       <VStack align="start" spacing={0}>
-                        <Text fontSize="xl" fontWeight="700" color="white">Not Ideal For</Text>
-                        <Text fontSize="sm" color="red.400">Consider alternatives</Text>
+                        <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="700" color="white">Not Ideal For</Text>
+                        <Text fontSize={{ base: 'xs', md: 'sm' }} color="red.400">Consider alternatives</Text>
                       </VStack>
                     </HStack>
 
                     {/* Items */}
-                    <VStack align="start" spacing={5} w="full">
+                    <VStack align="start" spacing={{ base: 3, md: 5 }} w="full">
                       {[
                         {
                           title: 'Large Databases (50GB+)',
@@ -753,7 +812,7 @@ export default function HomePageClient() {
                       ].map((item, i) => (
                         <MotionBox
                           key={i}
-                          p={4}
+                          p={{ base: 3, md: 4 }}
                           bg="rgba(255,255,255,0.02)"
                           borderRadius="xl"
                           border="1px solid"
@@ -766,23 +825,28 @@ export default function HomePageClient() {
                           }}
                           transition={{ duration: 0.2 }}
                         >
-                          <HStack spacing={4} align="start">
+                          <HStack spacing={{ base: 3, md: 4 }} align="start">
                             <Box
-                              p={2}
+                              p={{ base: 2.5, md: 2 }}
                               bg="red.400/10"
                               borderRadius="lg"
                               color="red.400"
                               flexShrink={0}
+                              minW="44px"
+                              minH="44px"
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
                             >
-                              <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none">
+                              <Box as="svg" w={{ base: 5, md: 5 }} h={{ base: 5, md: 5 }} viewBox="0 0 24 24" fill="none">
                                 <path d={item.iconPath} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                               </Box>
-                            </Box>
-                            <VStack align="start" spacing={1}>
-                              <Text fontWeight="600" color="white" fontSize="sm">{item.title}</Text>
-                              <Text color="surface.400" fontSize="xs" lineHeight="tall">{item.desc}</Text>
+                  </Box>
+                            <VStack align="start" spacing={1} flex={1}>
+                              <Text fontWeight="600" color="white" fontSize={{ base: 'sm', md: 'sm' }}>{item.title}</Text>
+                              <Text color="surface.400" fontSize="xs" lineHeight={{ base: '1.5', md: 'tall' }}>{item.desc}</Text>
                             </VStack>
-                          </HStack>
+                </HStack>
                         </MotionBox>
                       ))}
                     </VStack>
@@ -806,12 +870,12 @@ export default function HomePageClient() {
               borderColor="surface.800"
               borderRadius="2xl"
             >
-              <CardBody py={6} px={8}>
+              <CardBody py={{ base: 4, md: 6 }} px={{ base: 4, md: 8 }}>
                 <Flex
                   direction={{ base: 'column', md: 'row' }}
                   justify="space-between"
                   align="center"
-                  gap={6}
+                  gap={{ base: 4, md: 6 }}
                 >
                   <HStack spacing={3}>
                     <Box
@@ -840,7 +904,7 @@ export default function HomePageClient() {
                       <VStack key={i} spacing={0} align="center">
                         <Text fontFamily="mono" fontWeight="700" color="teal.400" fontSize="lg">{stat.value}</Text>
                         <Text color="surface.500" fontSize="xs">{stat.label}</Text>
-                      </VStack>
+          </VStack>
                     ))}
                   </HStack>
                 </Flex>
@@ -879,7 +943,7 @@ export default function HomePageClient() {
                     <Heading size="xl" color="white" fontFamily="'Outfit', sans-serif">Built for your workflow.</Heading>
                     <Text color="surface.300" fontSize="lg">
                       Tired of manual schema updates? We built suparbase to automate the boring parts of database management.
-                    </Text>
+                </Text>
                     <HStack spacing={4} pt={4}>
                       <Box bg="surface.900" p={4} borderRadius="2xl" border="1px solid" borderColor="surface.800">
                         <CodeIcon />
@@ -887,10 +951,10 @@ export default function HomePageClient() {
                       <Box bg="surface.900" p={4} borderRadius="2xl" border="1px solid" borderColor="surface.800">
                         <ZapIcon />
                       </Box>
-                    </HStack>
-                  </VStack>
-                </CardBody>
-              </Card>
+                </HStack>
+              </VStack>
+            </CardBody>
+          </Card>
             </GridItem>
             <GridItem colSpan={1}>
               <Card bgGradient="linear(to-br, surface.900, teal.900)" borderColor="surface.800" borderRadius="3xl" h="full">
@@ -933,11 +997,11 @@ export default function HomePageClient() {
           pointerEvents="none"
         />
         
-        <Container maxW="7xl" py={16} position="relative">
-          <VStack spacing={12} align="stretch">
+        <Container maxW="7xl" py={{ base: 12, md: 16 }} position="relative" px={{ base: 4, md: 6 }}>
+          <VStack spacing={{ base: 8, md: 12 }} align="stretch">
             {/* Main Footer Content */}
             <Grid 
-              templateColumns={{ base: '1fr', md: '2fr 1fr 1fr' }} 
+              templateColumns={{ base: '1fr', sm: '1fr', md: '2fr 1fr 1fr' }} 
               gap={{ base: 8, md: 12 }}
             >
               {/* Brand Column */}
@@ -989,7 +1053,12 @@ export default function HomePageClient() {
                 <VStack align={{ base: 'center', md: 'start' }} spacing={2}>
                   {[
                     { label: 'Features', path: '/features' },
+                    { label: 'Use Cases', path: '/use-cases' },
+                    { label: 'How It Works', path: '/how-it-works' },
+                    { label: 'Getting Started', path: '/getting-started' },
                     { label: 'Guide', path: '/guide' },
+                    { label: 'Best Practices', path: '/best-practices' },
+                    { label: 'Troubleshooting', path: '/troubleshooting' },
                     { label: 'Status', path: '/status' }
                   ].map((link) => (
                     <Button
@@ -1053,20 +1122,21 @@ export default function HomePageClient() {
             <Box h="1px" bgGradient="linear(to-r, transparent, rgba(255,255,255,0.1), transparent)" />
 
             {/* Bottom Bar */}
-            <Flex 
+          <Flex 
               direction={{ base: 'column', md: 'row' }}
-              justify="space-between" 
-              align="center"
-              gap={4}
+            justify="space-between" 
+            align="center"
+              gap={{ base: 2, md: 4 }}
             >
               <Text 
                 color="surface.600" 
                 fontSize="xs"
                 fontFamily="mono"
+                textAlign={{ base: 'center', md: 'left' }}
               >
                 © {new Date().getFullYear()} Suparbase. All rights reserved.
               </Text>
-              <HStack spacing={6}>
+            <HStack spacing={6} flexWrap="wrap" justify="center">
                 <Text 
                   color="surface.600" 
                   fontSize="xs"
@@ -1074,7 +1144,7 @@ export default function HomePageClient() {
                 >
                   v1.0.0
                 </Text>
-                <Box w="1px" h="12px" bg="surface.800" />
+                <Box w="1px" h="12px" bg="surface.800" display={{ base: 'none', sm: 'block' }} />
                 <Text 
                   color="surface.600" 
                   fontSize="xs"
@@ -1082,8 +1152,8 @@ export default function HomePageClient() {
                 >
                   Beta
                 </Text>
-              </HStack>
-            </Flex>
+            </HStack>
+          </Flex>
           </VStack>
         </Container>
       </Box>

@@ -1,0 +1,437 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  VStack,
+  HStack,
+  Card,
+  CardBody,
+  SimpleGrid,
+  Badge,
+  Flex,
+  Icon,
+  Button,
+  Code,
+  Divider,
+} from '@chakra-ui/react';
+import { motion } from 'framer-motion';
+
+const MotionCard = motion.create(Card);
+const MotionBox = motion.create(Box);
+
+// Icons
+const ArrowRightIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="5" y1="12" x2="19" y2="12"/>
+    <polyline points="12 5 19 12 12 19"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const steps = [
+  {
+    number: 1,
+    title: 'Connect Databases',
+    description: 'Add your source and target Supabase database connections. Credentials are encrypted with AES-256-GCM before storage.',
+    icon: '🔌',
+    details: 'We securely store your connection strings using industry-standard encryption. Your credentials never leave our servers unencrypted.'
+  },
+  {
+    number: 2,
+    title: 'Schema Analysis',
+    description: 'suparbase analyzes both databases to understand table structures, columns, types, and relationships.',
+    icon: '🔍',
+    details: 'We compare schemas to identify differences: new tables, modified columns, missing indexes, and foreign key changes.'
+  },
+  {
+    number: 3,
+    title: 'Validation',
+    description: 'Schema compatibility is validated to ensure safe synchronization. Conflicts are detected and reported.',
+    icon: '✅',
+    details: 'We check for incompatible changes, data type mismatches, and potential data loss scenarios before proceeding.'
+  },
+  {
+    number: 4,
+    title: 'Sync Execution',
+    description: 'Changes are applied to the target database. You can preview with dry-run or execute immediately.',
+    icon: '⚡',
+    details: 'Schema changes are applied in the correct order, respecting dependencies. Data can be synced selectively by table.'
+  },
+  {
+    number: 5,
+    title: 'Monitoring',
+    description: 'Real-time progress tracking shows sync status, completion percentage, and any errors encountered.',
+    icon: '📊',
+    details: 'Monitor sync progress in real-time. Get notifications on completion or failure. View detailed logs for troubleshooting.'
+  }
+];
+
+const features = [
+  {
+    title: 'Keep-Alive Mechanism',
+    description: 'Automatically pings your Supabase databases to prevent free tier pausing.',
+    how: 'We send periodic health check requests to your database connections. This keeps them active and prevents the 7-day inactivity pause.',
+    icon: '💓'
+  },
+  {
+    title: 'Schema Validation',
+    description: 'Ensures compatibility before syncing to prevent errors.',
+    how: 'We compare source and target schemas, checking for incompatible changes. Type mismatches, missing columns, and constraint conflicts are detected early.',
+    icon: '🛡️'
+  },
+  {
+    title: 'Encrypted Storage',
+    description: 'All credentials are encrypted using AES-256-GCM encryption.',
+    how: 'Your database connection strings are encrypted at rest using AES-256-GCM. Only you can decrypt them with your account credentials.',
+    icon: '🔐'
+  },
+  {
+    title: 'Real-time Monitoring',
+    description: 'Track sync progress and get instant notifications.',
+    how: 'We provide real-time updates on sync status, progress percentage, and completion. Email notifications keep you informed.',
+    icon: '📡'
+  }
+];
+
+export default function HowItWorksPageClient() {
+  const router = useRouter();
+
+  return (
+    <Box minH="100vh" bg="rgba(9, 9, 11, 1)">
+      <Container maxW="7xl" py={{ base: 8, md: 12 }} px={{ base: 4, md: 6 }}>
+        <VStack spacing={16} align="stretch">
+          {/* Header */}
+          <VStack spacing={4} align="center" textAlign="center">
+            <Badge colorScheme="teal" px={3} py={1} borderRadius="full" fontSize="sm">
+              TECHNICAL OVERVIEW
+            </Badge>
+            <Heading
+              as="h1"
+              fontSize={{ base: '3xl', md: '5xl' }}
+              fontWeight="700"
+              color="white"
+              fontFamily="'Outfit', sans-serif"
+              letterSpacing="-0.02em"
+            >
+              How <Text as="span" color="teal.400">It Works</Text>
+            </Heading>
+            <Text
+              color="surface.400"
+              fontSize={{ base: 'md', md: 'lg' }}
+              maxW="3xl"
+              lineHeight="1.6"
+            >
+              A visual, step-by-step explanation of how suparbase synchronizes your databases,
+              keeps them alive, and ensures your data stays in sync across environments.
+            </Text>
+          </VStack>
+
+          {/* Sync Process Flow */}
+          <Box>
+            <VStack spacing={8} align="stretch">
+              <Heading size="lg" color="white" textAlign="center">
+                The Sync Process
+              </Heading>
+              
+              <SimpleGrid columns={{ base: 1, md: 5 }} spacing={{ base: 6, md: 4 }}>
+                {steps.map((step, index) => (
+                  <MotionBox
+                    key={step.number}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                  >
+                    <VStack spacing={{ base: 3, md: 4 }} align="center">
+                      {/* Step Number and Icon */}
+                      <Box position="relative">
+                        <Box
+                          w={{ base: 14, md: 16 }}
+                          h={{ base: 14, md: 16 }}
+                          borderRadius="full"
+                          bg="teal.400/10"
+                          border="2px solid"
+                          borderColor="teal.400/30"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          fontSize={{ base: 'xl', md: '2xl' }}
+                        >
+                          {step.icon}
+                        </Box>
+                        <Badge
+                          position="absolute"
+                          top={-2}
+                          right={-2}
+                          colorScheme="teal"
+                          borderRadius="full"
+                          w={{ base: 5, md: 6 }}
+                          h={{ base: 5, md: 6 }}
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          fontSize="xs"
+                        >
+                          {step.number}
+                        </Badge>
+                      </Box>
+
+                      {/* Step Card */}
+                      <Card
+                        bg="surface.800"
+                        borderColor="surface.700"
+                        borderWidth="1px"
+                        borderRadius="xl"
+                        w="full"
+                        h="full"
+                        _hover={{
+                          borderColor: 'teal.400',
+                          transform: 'translateY(-2px)',
+                        }}
+                        transition="all 0.3s"
+                      >
+                        <CardBody p={{ base: 4, md: 6 }}>
+                          <VStack spacing={3} align="start">
+                            <Heading size="sm" color="white" fontSize={{ base: 'sm', md: 'md' }}>
+                              {step.title}
+                            </Heading>
+                            <Text color="surface.400" fontSize={{ base: 'xs', md: 'sm' }} lineHeight="1.6">
+                              {step.description}
+                            </Text>
+                            <Box
+                              p={{ base: 2, md: 3 }}
+                              bg="surface.900"
+                              borderRadius="md"
+                              w="full"
+                            >
+                              <Text
+                                fontSize="xs"
+                                color="surface.500"
+                                lineHeight="1.5"
+                                fontStyle="italic"
+                              >
+                                {step.details}
+                              </Text>
+                            </Box>
+                          </VStack>
+                        </CardBody>
+                      </Card>
+
+                      {/* Arrow (not on last item) */}
+                      {index < steps.length - 1 && (
+                        <Box
+                          display={{ base: 'none', md: 'block' }}
+                          color="teal.400"
+                          fontSize="2xl"
+                        >
+                          <ArrowRightIcon />
+                        </Box>
+                      )}
+                    </VStack>
+                  </MotionBox>
+                ))}
+              </SimpleGrid>
+            </VStack>
+          </Box>
+
+          <Divider borderColor="surface.700" />
+
+          {/* Key Features Deep Dive */}
+          <Box>
+            <VStack spacing={8} align="stretch">
+              <Heading size="lg" color="white" textAlign="center">
+                Key Features Explained
+              </Heading>
+              
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 4, md: 6 }}>
+                {features.map((feature, index) => (
+                  <MotionCard
+                    key={feature.title}
+                    bg="surface.800"
+                    borderColor="surface.700"
+                    borderWidth="1px"
+                    borderRadius="xl"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    _hover={{
+                      borderColor: 'teal.400',
+                      transform: 'translateY(-2px)',
+                    }}
+                    transition="all 0.3s"
+                  >
+                    <CardBody p={{ base: 4, md: 6 }}>
+                      <VStack align="start" spacing={4}>
+                        <HStack spacing={3}>
+                          <Box fontSize={{ base: '2xl', md: '3xl' }}>{feature.icon}</Box>
+                          <Heading size="md" color="white" fontSize={{ base: 'sm', md: 'md' }}>
+                            {feature.title}
+                          </Heading>
+                        </HStack>
+                        <Text color="surface.300" fontSize={{ base: 'xs', md: 'sm' }} lineHeight="1.6">
+                          {feature.description}
+                        </Text>
+                        <Box
+                          p={{ base: 3, md: 4 }}
+                          bg="surface.900"
+                          borderRadius="md"
+                          borderLeft="3px solid"
+                          borderColor="teal.400"
+                          w="full"
+                        >
+                          <Text
+                            fontSize="xs"
+                            fontWeight="600"
+                            color="teal.400"
+                            mb={2}
+                            textTransform="uppercase"
+                            letterSpacing="0.05em"
+                          >
+                            How It Works
+                          </Text>
+                          <Text color="surface.400" fontSize={{ base: 'xs', md: 'sm' }} lineHeight="1.6">
+                            {feature.how}
+                          </Text>
+                        </Box>
+                      </VStack>
+                    </CardBody>
+                  </MotionCard>
+                ))}
+              </SimpleGrid>
+            </VStack>
+          </Box>
+
+          <Divider borderColor="surface.700" />
+
+          {/* Architecture Overview */}
+          <Box>
+            <VStack spacing={6} align="stretch">
+              <Heading size="lg" color="white" textAlign="center">
+                Architecture Overview
+              </Heading>
+              
+              <Card bg="surface.800" borderColor="surface.700" borderWidth="1px" borderRadius="xl">
+                <CardBody p={{ base: 6, md: 8 }}>
+                  <VStack spacing={6} align="stretch">
+                    <Text color="surface.300" fontSize="md" lineHeight="1.8">
+                      suparbase acts as a secure intermediary between your Supabase databases.
+                      We never store your actual data, only connection credentials (encrypted) and sync metadata.
+                    </Text>
+                    
+                    <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 3, md: 4 }}>
+                      <Box
+                        p={{ base: 3, md: 4 }}
+                        bg="surface.900"
+                        borderRadius="lg"
+                        borderWidth="1px"
+                        borderColor="surface.800"
+                      >
+                        <VStack align="start" spacing={2}>
+                          <Text fontSize="xs" fontWeight="700" color="teal.400" textTransform="uppercase">
+                            Your Databases
+                          </Text>
+                          <Text color="surface.400" fontSize={{ base: 'xs', md: 'sm' }}>
+                            Source and target Supabase PostgreSQL databases. Your data stays in your control.
+                          </Text>
+                        </VStack>
+                      </Box>
+                      
+                      <Box
+                        p={{ base: 3, md: 4 }}
+                        bg="surface.900"
+                        borderRadius="lg"
+                        borderWidth="1px"
+                        borderColor="surface.800"
+                      >
+                        <VStack align="start" spacing={2}>
+                          <Text fontSize="xs" fontWeight="700" color="teal.400" textTransform="uppercase">
+                            suparbase Platform
+                          </Text>
+                          <Text color="surface.400" fontSize={{ base: 'xs', md: 'sm' }}>
+                            Secure sync engine that connects to your databases, analyzes schemas, and executes syncs.
+                          </Text>
+                        </VStack>
+                      </Box>
+                      
+                      <Box
+                        p={{ base: 3, md: 4 }}
+                        bg="surface.900"
+                        borderRadius="lg"
+                        borderWidth="1px"
+                        borderColor="surface.800"
+                      >
+                        <VStack align="start" spacing={2}>
+                          <Text fontSize="xs" fontWeight="700" color="teal.400" textTransform="uppercase">
+                            Your Dashboard
+                          </Text>
+                          <Text color="surface.400" fontSize={{ base: 'xs', md: 'sm' }}>
+                            Web interface to manage connections, create syncs, and monitor progress in real-time.
+                          </Text>
+                        </VStack>
+                      </Box>
+                    </SimpleGrid>
+                  </VStack>
+                </CardBody>
+              </Card>
+            </VStack>
+          </Box>
+
+          {/* CTA Section */}
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <Card
+              bgGradient="linear(to-r, teal.500/10, brand.500/10)"
+              borderColor="teal.400/20"
+              borderWidth="1px"
+              borderRadius="2xl"
+            >
+              <CardBody p={{ base: 6, md: 8 }}>
+                <VStack spacing={6} align="center" textAlign="center">
+                  <Heading size="lg" color="white">
+                    Ready to Get Started?
+                  </Heading>
+                  <Text color="surface.400" fontSize="md" maxW="2xl">
+                    Now that you understand how it works, create your free account and start syncing your databases.
+                  </Text>
+                  <HStack spacing={4} flexWrap="wrap" justify="center">
+                    <Button
+                      colorScheme="teal"
+                      size="lg"
+                      onClick={() => router.push('/signup')}
+                      minH="48px"
+                    >
+                      Create Free Account
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => router.push('/getting-started')}
+                      minH="48px"
+                    >
+                      View Quick Start Guide
+                    </Button>
+                  </HStack>
+                </VStack>
+              </CardBody>
+            </Card>
+          </MotionBox>
+        </VStack>
+      </Container>
+    </Box>
+  );
+}
+

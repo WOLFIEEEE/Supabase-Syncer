@@ -30,6 +30,8 @@ const MenuIcon = () => (
 const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Features', href: '/features' },
+  { label: 'Use Cases', href: '/use-cases' },
+  { label: 'How It Works', href: '/how-it-works' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Guide', href: '/guide' },
   { label: 'FAQ', href: '/faq' },
@@ -52,7 +54,7 @@ export default function PublicNavbar() {
       backdropFilter="blur(10px)"
       bgColor="rgba(9, 9, 11, 0.9)"
     >
-      <Container maxW="6xl" py={3}>
+      <Container maxW="6xl" py={{ base: 2, md: 3 }} px={{ base: 4, md: 6 }}>
         <Flex justify="space-between" align="center">
           {/* Logo - exactly matching AuthHeader structure */}
           <Box
@@ -61,7 +63,12 @@ export default function PublicNavbar() {
             _hover={{ opacity: 0.8 }}
             transition="opacity 0.2s"
           >
-            <SuparbaseLogo size="2xl" showText={true} variant="full" />
+            <Box display={{ base: 'block', md: 'none' }}>
+              <SuparbaseLogo size="lg" showText={true} variant="full" />
+            </Box>
+            <Box display={{ base: 'none', md: 'block' }}>
+              <SuparbaseLogo size="2xl" showText={true} variant="full" />
+            </Box>
           </Box>
 
           {/* Desktop Navigation */}
@@ -72,6 +79,7 @@ export default function PublicNavbar() {
                 variant="ghost"
                 size="sm"
                 color="surface.300"
+                minH="44px"
                 _hover={{ color: 'white', bg: 'surface.700' }}
                 onClick={() => router.push(link.href)}
               >
@@ -85,6 +93,7 @@ export default function PublicNavbar() {
             <Button
               colorScheme="teal"
               size="sm"
+              minH="44px"
               onClick={() => router.push('/login')}
               display={{ base: 'none', sm: 'flex' }}
             >
@@ -98,6 +107,9 @@ export default function PublicNavbar() {
               variant="ghost"
               display={{ base: 'flex', md: 'none' }}
               onClick={onOpen}
+              size="md"
+              minW="44px"
+              minH="44px"
             />
           </HStack>
         </Flex>
@@ -108,7 +120,7 @@ export default function PublicNavbar() {
         <DrawerOverlay />
         <DrawerContent bg="surface.800">
           <DrawerCloseButton color="white" />
-          <DrawerBody pt={12}>
+          <DrawerBody pt={12} px={4}>
             <VStack spacing={2} align="stretch">
               {navLinks.map((link) => (
                 <Button
@@ -116,6 +128,7 @@ export default function PublicNavbar() {
                   variant="ghost"
                   justifyContent="flex-start"
                   color="surface.300"
+                  minH="44px"
                   _hover={{ color: 'white', bg: 'surface.700' }}
                   onClick={() => {
                     router.push(link.href);
@@ -128,6 +141,7 @@ export default function PublicNavbar() {
               <Button
                 colorScheme="teal"
                 mt={4}
+                minH="44px"
                 onClick={() => {
                   router.push('/login');
                   onClose();

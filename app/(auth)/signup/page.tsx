@@ -135,7 +135,7 @@ export default function SignupPage() {
         px={{ base: 4, md: 6 }}
         py={{ base: 8, md: 12 }}
       >
-        <Container maxW="md" px={0}>
+        <Container maxW={{ base: '100%', sm: 'md' }} px={0}>
           <MotionBox
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -190,6 +190,9 @@ export default function SignupPage() {
               <Button 
                 onClick={() => router.push('/login')} 
                 size="lg"
+                h="48px"
+                minH="48px"
+                w={{ base: 'full', sm: 'auto' }}
                 bgGradient="linear(to-r, brand.500, brand.600)"
                 color="white"
                 fontWeight="600"
@@ -225,7 +228,7 @@ export default function SignupPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <VStack spacing={8} align="stretch">
+          <VStack spacing={{ base: 6, md: 8 }} align="stretch">
             {/* Header */}
             <MotionVStack
               spacing={3}
@@ -235,11 +238,11 @@ export default function SignupPage() {
               transition={{ delay: 0.1 }}
             >
               <Heading 
-                size="2xl"
+                size={{ base: 'xl', md: '2xl' }}
                 fontWeight="600"
                 color="white"
                 textAlign="center"
-                letterSpacing="-0.02em"
+                letterSpacing={{ base: '-0.01em', md: '-0.02em' }}
                 fontFamily="'Outfit', sans-serif"
               >
                 Create your account
@@ -270,7 +273,7 @@ export default function SignupPage() {
                 backdropFilter="blur(10px)"
               >
                 <form onSubmit={handleSubmit}>
-                  <VStack spacing={5}>
+                  <VStack spacing={{ base: 4, md: 5 }}>
                     <FormControl>
                       <FormLabel 
                         color="surface.200" 
@@ -295,6 +298,7 @@ export default function SignupPage() {
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="you@example.com"
                           size="lg"
+                          h="48px"
                           bg="surface.900"
                           borderColor="surface.600"
                           color="white"
@@ -333,6 +337,7 @@ export default function SignupPage() {
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Create a strong password"
                           size="lg"
+                          h="48px"
                           bg="surface.900"
                           borderColor="surface.600"
                           color="white"
@@ -386,6 +391,7 @@ export default function SignupPage() {
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder="Confirm your password"
                           size="lg"
+                          h="48px"
                           bg="surface.900"
                           borderColor="surface.600"
                           color="white"
@@ -416,6 +422,8 @@ export default function SignupPage() {
                       type="submit"
                       size="lg"
                       width="full"
+                      h="48px"
+                      minH="48px"
                       isLoading={isLoading}
                       loadingText="Creating account..."
                       bgGradient="linear(to-r, brand.500, brand.600)"

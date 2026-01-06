@@ -198,16 +198,32 @@ export default function FAQPageClient() {
               <Text color="surface.400">
                 Can't find what you're looking for? Check out our guide or contact us directly.
               </Text>
-              <HStack spacing={4} justify="center">
+              <HStack spacing={4} justify="center" flexWrap="wrap">
+                <Button
+                  variant="outline"
+                  onClick={() => router.push('/troubleshooting')}
+                  minH="48px"
+                >
+                  Troubleshooting Guide
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push('/best-practices')}
+                  minH="48px"
+                >
+                  Best Practices
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => router.push('/guide')}
+                  minH="48px"
                 >
-                  Read the Guide
+                  Full Documentation
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => router.push('/contact')}
+                  minH="48px"
                 >
                   Contact Us
                 </Button>

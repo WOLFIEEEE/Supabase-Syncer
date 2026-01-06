@@ -180,18 +180,27 @@ export default function AboutPageClient() {
               <Text color="surface.400">
                 Join developers who are already using suparbase to manage their Supabase databases.
               </Text>
-              <HStack spacing={4} justify="center">
+              <HStack spacing={4} justify="center" flexWrap="wrap">
                 <Button
                   colorScheme="teal"
                   onClick={() => router.push('/signup')}
+                  minH="48px"
                 >
                   Get Started
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => router.push('/guide')}
+                  onClick={() => router.push('/use-cases')}
+                  minH="48px"
                 >
-                  Read the Guide
+                  See Use Cases
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push('/getting-started')}
+                  minH="48px"
+                >
+                  Quick Start Guide
                 </Button>
               </HStack>
             </VStack>

@@ -175,16 +175,25 @@ export default function PricingPageClient() {
               <Text color="surface.400">
                 Questions about pricing? Check out our FAQ or contact us.
               </Text>
-              <HStack spacing={4} justify="center">
+              <HStack spacing={4} justify="center" flexWrap="wrap">
                 <Button
                   variant="outline"
                   onClick={() => router.push('/faq')}
+                  minH="48px"
                 >
                   View FAQ
                 </Button>
                 <Button
                   variant="outline"
+                  onClick={() => router.push('/benefits')}
+                  minH="48px"
+                >
+                  See Benefits
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => router.push('/contact')}
+                  minH="48px"
                 >
                   Contact Us
                 </Button>
