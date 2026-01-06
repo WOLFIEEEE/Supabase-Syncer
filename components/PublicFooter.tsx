@@ -37,7 +37,12 @@ export default function PublicFooter() {
             {/* Brand Column */}
             <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
               <Box onClick={() => router.push('/')} cursor="pointer">
-                <SuparbaseLogo size="lg" showText={true} variant="full" />
+                <Box display={{ base: 'block', md: 'none' }}>
+                  <SuparbaseLogo size="lg" showText={true} variant="full" />
+                </Box>
+                <Box display={{ base: 'none', md: 'block' }}>
+                  <SuparbaseLogo size="2xl" showText={true} variant="full" />
+                </Box>
               </Box>
               <Text 
                 color="surface.500" 

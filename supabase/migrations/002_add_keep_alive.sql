@@ -19,3 +19,4 @@ WHERE keep_alive = true;
 COMMENT ON COLUMN connections.keep_alive IS 'When true, database will be pinged periodically to prevent Supabase from pausing it';
 COMMENT ON COLUMN connections.last_pinged_at IS 'Timestamp of the last successful keep-alive ping';
 
+

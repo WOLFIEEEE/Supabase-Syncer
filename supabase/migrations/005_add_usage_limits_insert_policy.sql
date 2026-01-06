@@ -19,3 +19,4 @@ CREATE POLICY "System can insert usage history for users"
     ON usage_history FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
+

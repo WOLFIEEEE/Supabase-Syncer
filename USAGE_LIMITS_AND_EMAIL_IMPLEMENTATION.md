@@ -196,3 +196,4 @@ SELECT reset_monthly_usage();
 - All usage data is user-scoped and protected by RLS policies.
 - Monthly usage resets automatically when period changes.
 
+

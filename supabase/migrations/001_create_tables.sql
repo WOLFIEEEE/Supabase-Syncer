@@ -210,3 +210,4 @@ BEGIN
     RAISE NOTICE 'Row Level Security enabled on all tables';
 END $$;
 
+

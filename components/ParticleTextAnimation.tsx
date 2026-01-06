@@ -51,8 +51,8 @@ export default function ParticleTextAnimation() {
       ctx.clearRect(0, 0, width, height);
 
       // Text configuration
-      const text = 'Suparbase';
-      const fontSize = Math.min(width / 8, 120);
+      const text = 'suparbase.com';
+      const fontSize = Math.min(width / 6, 160);
       ctx.font = `bold ${fontSize}px 'Outfit', sans-serif`;
       ctx.fillStyle = '#3ECF8E';
       ctx.textAlign = 'center';

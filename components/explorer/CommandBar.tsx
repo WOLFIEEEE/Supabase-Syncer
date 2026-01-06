@@ -442,3 +442,4 @@ export default function CommandBar({ isOpen, onClose, currentConnectionId }: Com
   );
 }
 
+

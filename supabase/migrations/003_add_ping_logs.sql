@@ -49,3 +49,4 @@ COMMENT ON TABLE ping_logs IS 'Stores keep-alive ping history for monitoring';
 COMMENT ON COLUMN ping_logs.duration_ms IS 'Time taken for the ping in milliseconds';
 COMMENT ON COLUMN ping_logs.error_message IS 'Error message if ping failed';
 
+
