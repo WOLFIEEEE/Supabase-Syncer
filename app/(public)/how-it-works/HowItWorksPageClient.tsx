@@ -198,111 +198,216 @@ export default function HowItWorksPageClient() {
             </Text>
           </VStack>
 
-          {/* Sync Process Flow */}
-          <Box>
-            <VStack spacing={8} align="stretch">
-              <Heading size="lg" color="white" textAlign="center">
-                The Sync Process
-              </Heading>
+          {/* Sync Process Flow - Creative Timeline Design */}
+          <Box position="relative">
+            <VStack spacing={12} align="stretch">
+              <VStack spacing={3} align="center">
+                <Heading size="lg" color="white" textAlign="center" fontSize={{ base: '2xl', md: '3xl' }}>
+                  The Sync Process
+                </Heading>
+                <Text color="surface.400" fontSize="sm" textAlign="center" maxW="2xl">
+                  A seamless flow from connection to completion
+                </Text>
+              </VStack>
               
-              <SimpleGrid columns={{ base: 1, md: 5 }} spacing={{ base: 6, md: 4 }}>
-                {steps.map((step, index) => (
-                  <MotionBox
-                    key={step.number}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                  >
-                    <VStack spacing={{ base: 3, md: 4 }} align="center">
-                      {/* Step Number and Icon */}
-                      <Box position="relative">
-                        <Box
-                          w={{ base: 14, md: 16 }}
-                          h={{ base: 14, md: 16 }}
-                          borderRadius="full"
-                          bg="teal.400/10"
-                          border="2px solid"
-                          borderColor="teal.400/30"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          fontSize={{ base: 'xl', md: '2xl' }}
-                        >
-                          {step.icon}
-                        </Box>
-                        <Badge
-                          position="absolute"
-                          top={-2}
-                          right={-2}
-                          colorScheme="teal"
-                          borderRadius="full"
-                          w={{ base: 5, md: 6 }}
-                          h={{ base: 5, md: 6 }}
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          fontSize="xs"
-                        >
-                          {step.number}
-                        </Badge>
-                      </Box>
-
-                      {/* Step Card */}
-                      <Card
-                        bg="surface.800"
-                        borderColor="surface.700"
-                        borderWidth="1px"
-                        borderRadius="xl"
-                        w="full"
-                        h="full"
-                        _hover={{
-                          borderColor: 'teal.400',
-                          transform: 'translateY(-2px)',
-                        }}
-                        transition="all 0.3s"
-                      >
-                        <CardBody p={{ base: 4, md: 6 }}>
-                          <VStack spacing={3} align="start">
-                            <Heading size="sm" color="white" fontSize={{ base: 'sm', md: 'md' }}>
-                              {step.title}
-                            </Heading>
-                            <Text color="surface.400" fontSize={{ base: 'xs', md: 'sm' }} lineHeight="1.6">
-                              {step.description}
-                            </Text>
+              {/* Timeline Container */}
+              <Box position="relative" w="full">
+                {/* Connecting Line - Desktop Only */}
+                <Box
+                  display={{ base: 'none', lg: 'block' }}
+                  position="absolute"
+                  top="80px"
+                  left="10%"
+                  right="10%"
+                  h="2px"
+                  bgGradient="linear(to-r, transparent, teal.400/30, teal.400/50, teal.400/30, transparent)"
+                  zIndex={0}
+                />
+                
+                {/* Steps Grid */}
+                <SimpleGrid columns={{ base: 1, lg: 5 }} spacing={{ base: 8, lg: 4 }} position="relative" zIndex={1}>
+                  {steps.map((step, index) => (
+                    <MotionBox
+                      key={step.number}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-100px" }}
+                      transition={{ duration: 0.5, delay: index * 0.15 }}
+                    >
+                      <Box position="relative" h="full">
+                        <VStack spacing={4} align="stretch" h="full">
+                          {/* Step Number Badge - Large and Prominent */}
+                          <Flex justify="center" align="center" position="relative">
+                          <Box position="relative">
+                            {/* Glow Effect */}
                             <Box
-                              p={{ base: 2, md: 3 }}
-                              bg="surface.900"
-                              borderRadius="md"
-                              w="full"
+                              position="absolute"
+                              inset="-4px"
+                              borderRadius="full"
+                              bg="teal.400/20"
+                              filter="blur(8px)"
+                              opacity={0.6}
+                            />
+                            {/* Main Icon Circle */}
+                            <Box
+                              w={{ base: 20, md: 24 }}
+                              h={{ base: 20, md: 24 }}
+                              borderRadius="full"
+                              bgGradient="linear(to-br, teal.400/20, teal.500/10)"
+                              border="3px solid"
+                              borderColor="teal.400/40"
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
+                              color="teal.400"
+                              position="relative"
+                              zIndex={1}
+                              _hover={{
+                                borderColor: 'teal.400',
+                                transform: 'scale(1.1)',
+                                boxShadow: '0 0 20px rgba(62, 207, 142, 0.4)',
+                              }}
+                              transition="all 0.3s"
                             >
-                              <Text
-                                fontSize="xs"
-                                color="surface.500"
-                                lineHeight="1.5"
-                                fontStyle="italic"
-                              >
-                                {step.details}
-                              </Text>
+                              {step.icon}
                             </Box>
-                          </VStack>
-                        </CardBody>
-                      </Card>
+                            {/* Step Number Badge */}
+                            <Badge
+                              position="absolute"
+                              top="-8px"
+                              right="-8px"
+                              bgGradient="linear(to-br, teal.400, teal.500)"
+                              color="white"
+                              borderRadius="full"
+                              w={{ base: 8, md: 10 }}
+                              h={{ base: 8, md: 10 }}
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
+                              fontSize={{ base: 'xs', md: 'sm' }}
+                              fontWeight="800"
+                              boxShadow="0 2px 8px rgba(62, 207, 142, 0.4)"
+                              zIndex={2}
+                            >
+                              {step.number}
+                            </Badge>
+                          </Box>
+                        </Flex>
 
-                      {/* Arrow (not on last item) */}
-                      {index < steps.length - 1 && (
-                        <Box
-                          display={{ base: 'none', md: 'block' }}
-                          color="teal.400"
-                          fontSize="2xl"
+                        {/* Step Card - Enhanced Design */}
+                        <Card
+                          bg="surface.800"
+                          borderColor="surface.700"
+                          borderWidth="1px"
+                          borderRadius="2xl"
+                          w="full"
+                          h="full"
+                          overflow="hidden"
+                          position="relative"
+                          _hover={{
+                            borderColor: 'teal.400/50',
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 8px 24px rgba(62, 207, 142, 0.15)',
+                          }}
+                          transition="all 0.3s"
                         >
-                          <ArrowRightIcon />
-                        </Box>
-                      )}
-                    </VStack>
-                  </MotionBox>
-                ))}
-              </SimpleGrid>
+                          {/* Gradient Accent Line */}
+                          <Box
+                            position="absolute"
+                            top={0}
+                            left={0}
+                            right={0}
+                            h="3px"
+                            bgGradient="linear(to-r, transparent, teal.400, transparent)"
+                            opacity={0.6}
+                          />
+                          
+                          <CardBody p={{ base: 5, md: 6 }}>
+                            <VStack spacing={4} align="start" h="full">
+                              {/* Title */}
+                              <Heading 
+                                size="md" 
+                                color="white" 
+                                fontSize={{ base: 'md', md: 'lg' }}
+                                fontWeight="700"
+                                lineHeight="1.2"
+                              >
+                                {step.title}
+                              </Heading>
+                              
+                              {/* Description */}
+                              <Text 
+                                color="surface.300" 
+                                fontSize={{ base: 'sm', md: 'md' }} 
+                                lineHeight="1.7"
+                                flex={1}
+                              >
+                                {step.description}
+                              </Text>
+                              
+                              {/* Details Box - Enhanced */}
+                              <Box
+                                p={4}
+                                bg="surface.900/80"
+                                borderRadius="xl"
+                                borderLeft="3px solid"
+                                borderColor="teal.400/50"
+                                w="full"
+                                position="relative"
+                                _before={{
+                                  content: '""',
+                                  position: 'absolute',
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: '3px',
+                                  bgGradient: 'linear(to-b, teal.400, transparent)',
+                                  opacity: 0.3,
+                                }}
+                              >
+                                <Text
+                                  fontSize={{ base: 'xs', md: 'sm' }}
+                                  color="surface.400"
+                                  lineHeight="1.6"
+                                >
+                                  {step.details}
+                                </Text>
+                              </Box>
+                            </VStack>
+                          </CardBody>
+                        </Card>
+
+                        {/* Connecting Arrow - Desktop Only */}
+                        {index < steps.length - 1 && (
+                          <Box
+                            display={{ base: 'none', lg: 'flex' }}
+                            position="absolute"
+                            top="80px"
+                            right="-20px"
+                            alignItems="center"
+                            justifyContent="center"
+                            zIndex={2}
+                          >
+                            <MotionBox
+                              animate={{ x: [0, 5, 0] }}
+                              transition={{ 
+                                duration: 2, 
+                                repeat: Infinity, 
+                                ease: "easeInOut" 
+                              }}
+                            >
+                              <Box color="teal.400/60" fontSize="2xl">
+                                <ArrowRightIcon />
+                              </Box>
+                            </MotionBox>
+                          </Box>
+                        )}
+                        </VStack>
+                      </Box>
+                    </MotionBox>
+                  ))}
+                </SimpleGrid>
+              </Box>
             </VStack>
           </Box>
 
