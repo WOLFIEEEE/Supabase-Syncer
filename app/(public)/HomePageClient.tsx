@@ -78,9 +78,9 @@ const ArrowRightIcon = () => (
 const PulseConnection = () => (
   <Box position="relative" w="320px" h="120px" display="flex" alignItems="center" justifyContent="space-between">
     <VStack spacing={3} align="center">
-      <Box 
-        w={14} 
-        h={14} 
+      <Box
+        w={16} 
+        h={16} 
         borderRadius="xl" 
         bg="surface.900" 
         border="1.5px solid" 
@@ -95,33 +95,53 @@ const PulseConnection = () => (
           transform: 'scale(1.05)'
         }}
       >
-        <Box position="relative">
-          <MotionBox
-            w={4} 
-            h={4} 
-            borderRadius="full" 
-            bg="teal.400"
-            boxShadow="0 0 12px rgba(62, 207, 142, 0.6)"
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.8, 0.4, 0.8]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
+        <MotionBox
+          position="absolute"
+          inset={0}
+          borderRadius="xl"
+          bg="transparent"
+          boxShadow="0 0 0px rgba(62, 207, 142, 0)"
+          animate={{
+            boxShadow: [
+              '0 0 0px rgba(62, 207, 142, 0)',
+              '0 0 20px rgba(62, 207, 142, 0.4)',
+              '0 0 0px rgba(62, 207, 142, 0)'
+            ]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <Box as="svg" w={8} h={8} viewBox="0 0 24 24" fill="none" color="teal.400">
+          <path
+            d="M4 7C4 5.89543 4.89543 5 6 5H10C11.1046 5 12 5.89543 12 7V9C12 10.1046 11.1046 11 10 11H6C4.89543 11 4 10.1046 4 9V7Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-          <Box
-            position="absolute"
-            top="50%"
-            left="50%"
-            transform="translate(-50%, -50%)"
-            w={4} 
-            h={4} 
-            borderRadius="full" 
-            bg="teal.400"
-            opacity={0.6}
+          <path
+            d="M14 7C14 5.89543 14.8954 5 16 5H18C19.1046 5 20 5.89543 20 7V9C20 10.1046 19.1046 11 18 11H16C14.8954 11 14 10.1046 14 9V7Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M4 15C4 13.8954 4.89543 13 6 13H10C11.1046 13 12 13.8954 12 15V17C12 18.1046 11.1046 19 10 19H6C4.89543 19 4 18.1046 4 17V15Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M14 15C14 13.8954 14.8954 13 16 13H18C19.1046 13 20 13.8954 20 15V17C20 18.1046 19.1046 19 18 19H16C14.8954 19 14 18.1046 14 17V15Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </Box>
       </Box>
@@ -153,9 +173,9 @@ const PulseConnection = () => (
     </Box>
 
     <VStack spacing={3} align="center">
-      <Box 
-        w={14} 
-        h={14} 
+      <Box
+        w={16} 
+        h={16} 
         borderRadius="xl" 
         bg="surface.900" 
         border="1.5px solid" 
@@ -170,33 +190,49 @@ const PulseConnection = () => (
           transform: 'scale(1.05)'
         }}
       >
-        <Box position="relative">
-          <MotionBox
-            w={4} 
-            h={4} 
-            borderRadius="full" 
-            bg="brand.400"
-            boxShadow="0 0 12px rgba(99, 102, 241, 0.6)"
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.8, 0.4, 0.8]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
+        <MotionBox
+          position="absolute"
+          inset={0}
+          borderRadius="xl"
+          bg="transparent"
+          boxShadow="0 0 0px rgba(99, 102, 241, 0)"
+          animate={{
+            boxShadow: [
+              '0 0 0px rgba(99, 102, 241, 0)',
+              '0 0 20px rgba(99, 102, 241, 0.4)',
+              '0 0 0px rgba(99, 102, 241, 0)'
+            ]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <Box as="svg" w={8} h={8} viewBox="0 0 24 24" fill="none" color="brand.400">
+          <ellipse
+            cx="12"
+            cy="5"
+            rx="9"
+            ry="3"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-          <Box
-            position="absolute"
-            top="50%"
-            left="50%"
-            transform="translate(-50%, -50%)"
-            w={4} 
-            h={4} 
-            borderRadius="full" 
-            bg="brand.400"
-            opacity={0.6}
+          <path
+            d="M3 5V19C3 20.6569 7.02944 22 12 22C16.9706 22 21 20.6569 21 19V5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M3 12C3 13.6569 7.02944 15 12 15C16.9706 15 21 13.6569 21 12"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </Box>
       </Box>
