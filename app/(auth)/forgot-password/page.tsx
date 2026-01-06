@@ -142,7 +142,7 @@ export default function ForgotPasswordPage() {
                 Check your email
               </Heading>
               <Text color="surface.300" mb={6} fontSize="md" lineHeight="1.6">
-                We've sent a password reset link to{' '}
+                We&apos;ve sent a password reset link to{' '}
                 <Text as="span" fontWeight="600" color="white">{email}</Text>.
                 <br />
                 Please check your inbox and click the link to reset your password.
@@ -211,7 +211,7 @@ export default function ForgotPasswordPage() {
                 fontSize="md"
                 maxW="sm"
               >
-                Enter your email address and we'll send you a link to reset your password
+                Enter your email address and we&apos;ll send you a link to reset your password
               </Text>
             </MotionVStack>
 
