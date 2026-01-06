@@ -38,11 +38,25 @@ DATABASE_URL=
 
 ### Start Application
 
+**For Local Development** (with port access):
 ```bash
+# Copy override file to enable port mapping
+cp docker-compose.override.yml.example docker-compose.override.yml
+
+# Start services
 docker-compose up -d
+
+# Access at: http://localhost:3000
 ```
 
-That's it! Redis is automatically configured and connected.
+**For Coolify** (production):
+```bash
+# No override file needed - Coolify handles routing
+docker-compose up -d
+# Access via your domain (e.g., https://suparbase.com)
+```
+
+**Note**: Port mapping is NOT needed in Coolify. Coolify's Traefik reverse proxy routes traffic based on domain names, not ports. Multiple apps can use port 3000 internally without conflicts.
 
 ## Services
 

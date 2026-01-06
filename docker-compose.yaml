@@ -40,8 +40,12 @@ services:
       dockerfile: Dockerfile
     container_name: supabase-syncer
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    # Port mapping: NOT needed in Coolify (Traefik handles routing via domains)
+    # For local development, uncomment the ports section below
+    # ports:
+    #   - "3000:3000"
+    expose:
+      - "3000"  # Internal port - Coolify's Traefik discovers this automatically
     depends_on:
       redis:
         condition: service_healthy
