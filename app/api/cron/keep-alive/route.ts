@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
     
     const duration = Date.now() - startTime;
     
-    console.log(`[Keep Alive Cron] ✅ Completed: ${stats.successful}/${stats.totalPinged} successful (${duration}ms)`);
+    console.log(`[Keep Alive Cron] Completed: ${stats.successful}/${stats.totalPinged} successful (${duration}ms)`);
     
     return NextResponse.json({
       success: stats.failed === 0,

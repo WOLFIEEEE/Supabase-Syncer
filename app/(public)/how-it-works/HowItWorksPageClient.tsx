@@ -71,6 +71,35 @@ const BarChartIcon = () => (
   </svg>
 );
 
+const HeartIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+  </svg>
+);
+
+const ShieldCheckIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <polyline points="9 12 11 14 15 10"/>
+  </svg>
+);
+
+const LockKeyIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    <circle cx="12" cy="16" r="1"/>
+  </svg>
+);
+
+const RadioIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M4.9 4.9C3.5 6.3 3 7.8 3 10s.5 3.7 1.9 5.1M19.1 4.9C20.5 6.3 21 7.8 21 10s-.5 3.7-1.9 5.1"/>
+    <path d="M12 2a8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8 8 8 0 0 0-8-8z"/>
+    <circle cx="12" cy="10" r="3"/>
+  </svg>
+);
+
 const steps = [
   {
     number: 1,
@@ -114,25 +143,25 @@ const features = [
     title: 'Keep-Alive Mechanism',
     description: 'Automatically pings your Supabase databases to prevent free tier pausing.',
     how: 'We send periodic health check requests to your database connections. This keeps them active and prevents the 7-day inactivity pause.',
-    icon: '💓'
+    icon: <HeartIcon />
   },
   {
     title: 'Schema Validation',
     description: 'Ensures compatibility before syncing to prevent errors.',
     how: 'We compare source and target schemas, checking for incompatible changes. Type mismatches, missing columns, and constraint conflicts are detected early.',
-    icon: '🛡️'
+    icon: <ShieldCheckIcon />
   },
   {
     title: 'Encrypted Storage',
     description: 'All credentials are encrypted using AES-256-GCM encryption.',
     how: 'Your database connection strings are encrypted at rest using AES-256-GCM. Only you can decrypt them with your account credentials.',
-    icon: '🔐'
+    icon: <LockKeyIcon />
   },
   {
     title: 'Real-time Monitoring',
     description: 'Track sync progress and get instant notifications.',
     how: 'We provide real-time updates on sync status, progress percentage, and completion. Email notifications keep you informed.',
-    icon: '📡'
+    icon: <RadioIcon />
   }
 ];
 
@@ -306,7 +335,9 @@ export default function HowItWorksPageClient() {
                     <CardBody p={{ base: 4, md: 6 }}>
                       <VStack align="start" spacing={4}>
                         <HStack spacing={3}>
-                          <Box fontSize={{ base: '2xl', md: '3xl' }}>{feature.icon}</Box>
+                          <Box fontSize={{ base: '2xl', md: '3xl' }} color="teal.400" display="flex" alignItems="center">
+                            {feature.icon}
+                          </Box>
                           <Heading size="md" color="white" fontSize={{ base: 'sm', md: 'md' }}>
                             {feature.title}
                           </Heading>

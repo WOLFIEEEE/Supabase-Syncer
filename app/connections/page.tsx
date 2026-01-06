@@ -952,9 +952,14 @@ export default function ConnectionsPage() {
                             
                             {/* What happens when enabled */}
                             <Box>
-                              <Text color="teal.300" fontWeight="semibold" mb={1}>
-                                ✅ What happens when enabled?
-                              </Text>
+                              <HStack spacing={2} color="teal.300" fontWeight="semibold" mb={1}>
+                                <Box display="flex" alignItems="center">
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                  </svg>
+                                </Box>
+                                <Text>What happens when enabled?</Text>
+                              </HStack>
                               <VStack align="stretch" spacing={2} color="surface.300" pl={2}>
                                 <HStack align="start" spacing={2}>
                                   <Text color="green.400">•</Text>
