@@ -21,29 +21,29 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
   const { icon, text } = sizes[size];
   
   return (
-    <VStack spacing={1} align="start">
-      <HStack spacing={size === 'sm' ? 2 : 3}>
-        <Box 
-          width={`${icon}px`} 
-          height={`${icon}px`}
-          position="relative"
-          flexShrink={0}
-        >
-          <Image
-            src="/logo.png"
-            alt="suparbase logo"
-            width={icon}
-            height={icon}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-            }}
-            priority
-          />
-        </Box>
-        
-        {showText && variant === 'full' && (
+    <HStack spacing={size === 'sm' ? 2 : 3} align="flex-start">
+      <Box 
+        width={`${icon}px`} 
+        height={`${icon}px`}
+        position="relative"
+        flexShrink={0}
+      >
+        <Image
+          src="/logo.png"
+          alt="suparbase logo"
+          width={icon}
+          height={icon}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+          priority
+        />
+      </Box>
+      
+      {showText && variant === 'full' && (
+        <VStack spacing={1} align="start">
           <HStack spacing={0}>
             <Text 
               fontSize={text} 
@@ -85,22 +85,19 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
               BASE
             </Text>
           </HStack>
-        )}
-      </HStack>
-      
-      {showText && variant === 'full' && (
-        <Text 
-          fontSize="xs" 
-          fontWeight="400" 
-          color="surface.400"
-          letterSpacing="0.1em"
-          textTransform="uppercase"
-          ml={size === 'sm' ? `${icon + 8}px` : `${icon + 12}px`}
-        >
-          reimagining
-        </Text>
+          
+          <Text 
+            fontSize="xs" 
+            fontWeight="400" 
+            color="surface.400"
+            letterSpacing="0.1em"
+            textTransform="uppercase"
+          >
+            reimagining
+          </Text>
+        </VStack>
       )}
-    </VStack>
+    </HStack>
   );
 }
 
