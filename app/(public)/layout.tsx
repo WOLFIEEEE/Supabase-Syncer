@@ -1,7 +1,8 @@
 'use client';
 
-import { Box } from '@chakra-ui/react';
+import { Box, Flex } from '@chakra-ui/react';
 import PublicNavbar from '@/components/PublicNavbar';
+import PublicFooter from '@/components/PublicFooter';
 
 export default function PublicLayout({
   children,
@@ -9,10 +10,13 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Box minH="100vh" className="gradient-mesh">
+    <Flex direction="column" minH="100vh" className="gradient-mesh">
       <PublicNavbar />
-      {children}
-    </Box>
+      <Box flex={1}>
+        {children}
+      </Box>
+      <PublicFooter />
+    </Flex>
   );
 }
 
