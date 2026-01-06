@@ -404,7 +404,6 @@ export default function HomePageClient() {
           {/* Action Area */}
           <Flex 
             direction={{ base: 'column', sm: 'row' }} 
-            spacing={6} 
             pt={4}
             gap={{ base: 4, sm: 6 }}
             align="center"

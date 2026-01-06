@@ -191,7 +191,6 @@ export default function BenefitsPageClient() {
                   borderColor: `${benefit.color}.400`,
                   transform: 'translateY(-4px)',
                 }}
-                transition="all 0.3s"
               >
                 <CardBody p={6}>
                   <VStack align="start" spacing={4}>

@@ -207,7 +207,6 @@ export default function UseCasesPageClient() {
                     borderColor: `${useCase.color}.400`,
                     transform: 'translateY(-4px)',
                   }}
-                  transition="all 0.3s"
                 >
                   <CardBody p={{ base: 4, md: 8 }}>
                     <VStack align="start" spacing={{ base: 4, md: 6 }}>
