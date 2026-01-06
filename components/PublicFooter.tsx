@@ -13,6 +13,7 @@ import {
   Link,
 } from '@chakra-ui/react';
 import { SuparbaseLogo } from './Logo';
+import ParticleTextAnimation from './ParticleTextAnimation';
 
 export default function PublicFooter() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function PublicFooter() {
             {/* Brand Column */}
             <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
               <Box onClick={() => router.push('/')} cursor="pointer">
-                <SuparbaseLogo size="sm" showText={true} variant="full" />
+                <SuparbaseLogo size="lg" showText={true} variant="full" />
               </Box>
               <Text 
                 color="surface.500" 
@@ -197,6 +198,9 @@ export default function PublicFooter() {
           </Flex>
         </VStack>
       </Container>
+
+      {/* Particle Text Animation */}
+      <ParticleTextAnimation />
     </Box>
   );
 }

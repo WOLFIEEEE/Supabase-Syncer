@@ -28,28 +28,31 @@ const MotionBox = motion.create(Box);
 const MotionText = motion.create(Text);
 const MotionVStack = motion.create(VStack);
 
-// Icons
+// Improved Icons
 const SyncIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M21 2v6h-6M3 22v-6h6M21 13A9 9 0 1 1 3 11" />
+    <circle cx="12" cy="12" r="1" />
   </svg>
 );
 
 const ShieldIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="m9 12 2 2 4-4"/>
   </svg>
 );
 
 const CodeIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <polyline points="16 18 22 12 16 6"/>
     <polyline points="8 6 2 12 8 18"/>
+    <line x1="12" y1="4" x2="12" y2="4.01" />
   </svg>
 );
 
 const ZapIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
   </svg>
 );
@@ -251,33 +254,6 @@ const PulseConnection = () => (
   </Box>
 );
 
-const features = [
-  {
-    icon: SyncIcon,
-    title: 'One-Click Sync',
-    description: 'Effortless data migration between environments.',
-    color: 'teal.400',
-  },
-  {
-    icon: ShieldIcon,
-    title: 'Schema Guard',
-    description: 'Never break production with validation.',
-    color: 'purple.400',
-  },
-  {
-    icon: CodeIcon,
-    title: 'Idempotent SQL',
-    description: 'Safe, repeatable migrations generated for you.',
-    color: 'cyan.400',
-  },
-  {
-    icon: ZapIcon,
-    title: 'Keep-Alive',
-    description: 'Prevent free-tier pausing automatically.',
-    color: 'brand.400',
-  },
-];
-
 export default function HomePageClient() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
@@ -472,62 +448,342 @@ export default function HomePageClient() {
             </HStack>
           </Flex>
 
-          {/* Minimal Features Grid */}
-          <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={{ base: 3, sm: 4, md: 6 }} pt={{ base: 12, sm: 16, md: 20 }} w="full">
-            {features.map((f, i) => (
-                <MotionBox
-                key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 + (i * 0.1) }}
-                whileHover={{ y: -4 }}
+          {/* Feature Bento Grid */}
+          <Grid
+            templateColumns={{ base: '1fr', md: 'repeat(12, 1fr)' }}
+            templateRows={{ base: 'auto', md: 'repeat(2, 360px)' }}
+            gap={{ base: 4, md: 6 }}
+            pt={{ base: 12, sm: 16, md: 24 }}
+            w="full"
+          >
+            {/* 1. One-Click Sync - Featured Large */}
+            <GridItem colSpan={{ base: 1, md: 8 }} rowSpan={1}>
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                h="full"
               >
                 <Card
-                  bg="rgba(255,255,255,0.02)"
-                  border="1px solid"
-                  borderColor="surface.800"
-                  borderRadius="2xl"
                   h="full"
-                  _hover={{
-                    borderColor: f.color,
-                    bg: 'rgba(255,255,255,0.04)',
-                    transform: 'translateY(-4px)',
-                  }}
-                  transition="all 0.3s ease"
+                  bg="rgba(255,255,255,0.01)"
+                  border="1px solid"
+                  borderColor="rgba(255,255,255,0.05)"
+                  borderRadius="3xl"
+                  overflow="hidden"
+                  position="relative"
+                  _hover={{ borderColor: 'teal.400/30', bg: 'rgba(255,255,255,0.02)', transform: 'translateY(-2px)' }}
+                  transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+                  boxShadow="0 4px 20px rgba(0,0,0,0.1)"
                 >
-                  <CardBody p={{ base: 4, md: 6 }}>
-                    <VStack spacing={{ base: 3, md: 4 }} align="center">
-                      <Box
-                        p={{ base: 2, md: 3 }}
-                        bg="surface.900"
-                        borderRadius="xl"
+                  <CardBody p={{ base: 6, md: 10 }} display="flex" flexDirection={{ base: 'column', lg: 'row' }} alignItems={{ base: 'start', lg: 'center' }} gap={{ base: 6, lg: 10 }}>
+                    <VStack align="start" spacing={6} flex={1.2} minW={0}>
+                      <Box 
+                        p={4} 
+                        bg="teal.400/10" 
+                        borderRadius="2xl" 
+                        color="teal.400"
                         border="1px solid"
-                        borderColor="surface.800"
-                        color={f.color}
-                        _groupHover={{ borderColor: f.color }}
+                        borderColor="teal.400/20"
+                        boxShadow="0 0 20px rgba(62, 207, 142, 0.15)"
+                        w="fit-content"
                       >
-                        <f.icon />
-                        </Box>
-                      <VStack spacing={1} align="center">
-                        <Text fontWeight="700" color="white" fontSize={{ base: 'sm', md: 'md' }} textAlign="center">
-                          {f.title}
+                        <SyncIcon />
+                      </Box>
+                      <VStack align="start" spacing={3} w="full">
+                        <Heading size="md" color="white" fontWeight="700" fontFamily="'Outfit', sans-serif" lineHeight="1.2">One-Click Sync</Heading>
+                        <Text color="surface.400" fontSize="sm" lineHeight="1.7" maxW="md">
+                          Effortless data migration between environments. Push local changes to staging or production with a single click. No more manual SQL exports or fragile migration scripts.
                         </Text>
-                        <Text 
-                          color="surface.400" 
-                          fontSize="xs" 
-                          textAlign="center"
-                          display="block"
-                          lineHeight="1.4"
-                        >
-                          {f.description}
-                          </Text>
-                        </VStack>
+                      </VStack>
                     </VStack>
-                    </CardBody>
-                  </Card>
-                </MotionBox>
-              ))}
-            </SimpleGrid>
+                    
+                    {/* Visual Sync Illustration */}
+                    <Box 
+                      flex={1} 
+                      w="full" 
+                      h="full" 
+                      minH={{ base: '180px', lg: '200px' }}
+                      position="relative" 
+                      display="flex" 
+                      alignItems="center" 
+                      justifyContent="center"
+                      bg="rgba(255,255,255,0.02)"
+                      borderRadius="2xl"
+                      border="1px solid"
+                      borderColor="rgba(255,255,255,0.08)"
+                      overflow="hidden"
+                    >
+                      <Box position="relative" w="100%" maxW="280px" h="140px" display="flex" alignItems="center" justifyContent="center">
+                        <VStack spacing={2.5} position="absolute" left="0" align="center">
+                          <Box
+                            w="52px"
+                            h="52px"
+                            bg="surface.900"
+                            border="1.5px solid"
+                            borderColor="surface.700"
+                            borderRadius="xl"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            boxShadow="0 4px 16px rgba(0,0,0,0.4)"
+                            _groupHover={{ borderColor: 'teal.400/40' }}
+                            transition="all 0.3s"
+                          >
+                            <Box w={6} h={6} borderRadius="sm" bg="teal.400/25" border="2px solid" borderColor="teal.400" />
+                          </Box>
+                          <Text fontSize="10px" color="surface.400" fontWeight="700" letterSpacing="0.12em" textTransform="uppercase">LOCAL</Text>
+                        </VStack>
+                        
+                        <Box 
+                          position="absolute" 
+                          left="60px" 
+                          right="60px" 
+                          top="50%" 
+                          h="2.5px" 
+                          bg="surface.800" 
+                          transform="translateY(-50%)"
+                          borderRadius="full"
+                          overflow="hidden"
+                        >
+                          <MotionBox
+                            position="absolute"
+                            left="-50%"
+                            top="0"
+                            w="50%"
+                            h="100%"
+                            bgGradient="linear(to-r, transparent, teal.400, teal.400, transparent)"
+                            boxShadow="0 0 10px rgba(62, 207, 142, 0.5)"
+                            animate={{ left: '150%' }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          />
+                        </Box>
+                        
+                        <VStack spacing={2.5} position="absolute" right="0" align="center">
+                          <Box
+                            w="52px"
+                            h="52px"
+                            bg="surface.900"
+                            border="1.5px solid"
+                            borderColor="surface.700"
+                            borderRadius="xl"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            boxShadow="0 4px 16px rgba(0,0,0,0.4)"
+                            _groupHover={{ borderColor: 'teal.400/40' }}
+                            transition="all 0.3s"
+                          >
+                            <Box w={6} h={6} borderRadius="sm" bg="teal.400/25" border="2px solid" borderColor="teal.400" />
+                          </Box>
+                          <Text fontSize="10px" color="surface.400" fontWeight="700" letterSpacing="0.12em" textTransform="uppercase">PROD</Text>
+                        </VStack>
+                        
+                        {/* Status Badge */}
+                        <Box 
+                          position="absolute" 
+                          bottom="8px" 
+                          left="50%"
+                          transform="translateX(-50%)"
+                          px={3.5} 
+                          py={1.5} 
+                          bg="rgba(9, 9, 11, 0.8)"
+                          backdropFilter="blur(10px)"
+                          borderRadius="full" 
+                          border="1px solid" 
+                          borderColor="teal.400/30"
+                          boxShadow="0 4px 12px rgba(62, 207, 142, 0.2)"
+                        >
+                          <HStack spacing={2.5}>
+                            <Box w={2} h={2} borderRadius="full" bg="teal.400" className="pulse-dot" boxShadow="0 0 8px rgba(62, 207, 142, 0.6)" />
+                            <Text fontSize="9px" color="teal.400" fontWeight="800" letterSpacing="0.08em">SYNC ACTIVE</Text>
+                          </HStack>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </CardBody>
+                </Card>
+              </MotionBox>
+            </GridItem>
+
+            {/* 2. Schema Guard - Vertical Side */}
+            <GridItem colSpan={{ base: 1, md: 4 }} rowSpan={{ base: 1, md: 2 }}>
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                h="full"
+              >
+                <Card
+                  h="full"
+                  bg="rgba(255,255,255,0.01)"
+                  border="1px solid"
+                  borderColor="rgba(255,255,255,0.05)"
+                  borderRadius="3xl"
+                  overflow="hidden"
+                  position="relative"
+                  _hover={{ borderColor: 'purple.400/30', bg: 'rgba(255,255,255,0.02)', transform: 'translateY(-2px)' }}
+                  transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+                  boxShadow="0 4px 20px rgba(0,0,0,0.1)"
+                >
+                  <CardBody p={{ base: 6, md: 8 }} display="flex" flexDirection="column" gap={6} h="full">
+                    <VStack align="start" spacing={6} flex="0 0 auto">
+                      <Box 
+                        p={4} 
+                        bg="purple.400/10" 
+                        borderRadius="2xl" 
+                        color="purple.400" 
+                        w="fit-content"
+                        border="1px solid"
+                        borderColor="purple.400/20"
+                        boxShadow="0 0 20px rgba(168, 85, 247, 0.15)"
+                      >
+                        <ShieldIcon />
+                      </Box>
+                      <VStack align="start" spacing={3} w="full">
+                        <Heading size="md" color="white" fontWeight="700" fontFamily="'Outfit', sans-serif" lineHeight="1.2">Schema Guard</Heading>
+                        <Text color="surface.400" fontSize="sm" lineHeight="1.7">
+                          Automated validation checks before every sync. We detect destructive changes and potential data loss before they happen, keeping your production safe.
+                        </Text>
+                      </VStack>
+                    </VStack>
+                    
+                    {/* Terminal Mockup */}
+                    <Box 
+                      mt="auto" 
+                      w="full" 
+                      bg="rgba(0,0,0,0.6)"
+                      backdropFilter="blur(10px)"
+                      borderRadius="xl" 
+                      border="1px solid" 
+                      borderColor="rgba(255,255,255,0.1)" 
+                      p={5}
+                      boxShadow="0 8px 32px rgba(0,0,0,0.4)"
+                    >
+                      <HStack spacing={2} mb={4}>
+                        <Box w={3} h={3} borderRadius="full" bg="red.500" opacity={0.6} />
+                        <Box w={3} h={3} borderRadius="full" bg="orange.500" opacity={0.6} />
+                        <Box w={3} h={3} borderRadius="full" bg="green.500" opacity={0.6} />
+                      </HStack>
+                      <VStack align="start" spacing={4} w="full">
+                        {[
+                          { text: 'Detecting conflicts...', status: 'complete' },
+                          { text: 'Checking constraints...', status: 'complete' },
+                          { text: 'Validating types...', status: 'loading' }
+                        ].map((item, i) => (
+                          <HStack key={i} w="full" justify="space-between" align="center">
+                            <Text fontSize="11px" color="surface.200" fontFamily="mono" letterSpacing="0.01em">
+                              <Box as="span" color="purple.400" fontWeight="600" mr={2.5}>$</Box>
+                              {item.text}
+                            </Text>
+                            {item.status === 'complete' ? (
+                              <Box color="teal.400" transform="scale(0.85)">
+                                <CheckIcon />
+                              </Box>
+                            ) : (
+                              <Box w={2.5} h={2.5} borderRadius="full" bg="purple.400" className="pulse-dot" boxShadow="0 0 8px rgba(168, 85, 247, 0.6)" />
+                            )}
+                          </HStack>
+                        ))}
+                      </VStack>
+                    </Box>
+                  </CardBody>
+                </Card>
+              </MotionBox>
+            </GridItem>
+
+            {/* 3. Idempotent SQL - Medium Row */}
+            <GridItem colSpan={{ base: 1, md: 4 }} rowSpan={1}>
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                h="full"
+              >
+                <Card
+                  h="full"
+                  bg="rgba(255,255,255,0.01)"
+                  border="1px solid"
+                  borderColor="rgba(255,255,255,0.05)"
+                  borderRadius="3xl"
+                  overflow="hidden"
+                  position="relative"
+                  _hover={{ borderColor: 'cyan.400/30', bg: 'rgba(255,255,255,0.02)', transform: 'translateY(-2px)' }}
+                  transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+                  boxShadow="0 4px 20px rgba(0,0,0,0.1)"
+                >
+                  <CardBody p={{ base: 6, md: 8 }} display="flex" flexDirection="column" gap={6} justifyContent="center" h="full">
+                    <Box 
+                      p={4} 
+                      bg="cyan.400/10" 
+                      borderRadius="2xl" 
+                      color="cyan.400" 
+                      w="fit-content"
+                      border="1px solid"
+                      borderColor="cyan.400/20"
+                      boxShadow="0 0 20px rgba(34, 211, 238, 0.15)"
+                    >
+                      <CodeIcon />
+                    </Box>
+                    <VStack align="start" spacing={3} w="full">
+                      <Heading size="md" color="white" fontWeight="700" fontFamily="'Outfit', sans-serif" lineHeight="1.2">Idempotent SQL</Heading>
+                      <Text color="surface.400" fontSize="sm" lineHeight="1.7">
+                        Safe, repeatable migrations generated automatically. Our SQL handles &quot;already exists&quot; errors gracefully and ensures consistency.
+                      </Text>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              </MotionBox>
+            </GridItem>
+
+            {/* 4. Keep-Alive - Medium Row */}
+            <GridItem colSpan={{ base: 1, md: 4 }} rowSpan={1}>
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                h="full"
+              >
+                <Card
+                  h="full"
+                  bg="rgba(255,255,255,0.01)"
+                  border="1px solid"
+                  borderColor="rgba(255,255,255,0.05)"
+                  borderRadius="3xl"
+                  overflow="hidden"
+                  position="relative"
+                  _hover={{ borderColor: 'brand.400/30', bg: 'rgba(255,255,255,0.02)', transform: 'translateY(-2px)' }}
+                  transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+                  boxShadow="0 4px 20px rgba(0,0,0,0.1)"
+                >
+                  <CardBody p={{ base: 6, md: 8 }} display="flex" flexDirection="column" gap={6} justifyContent="center" h="full">
+                    <Box 
+                      p={4} 
+                      bg="brand.400/10" 
+                      borderRadius="2xl" 
+                      color="brand.400" 
+                      w="fit-content"
+                      border="1px solid"
+                      borderColor="brand.400/20"
+                      boxShadow="0 0 20px rgba(99, 102, 241, 0.15)"
+                    >
+                      <ZapIcon />
+                    </Box>
+                    <VStack align="start" spacing={3} w="full">
+                      <Heading size="md" color="white" fontWeight="700" fontFamily="'Outfit', sans-serif" lineHeight="1.2">Keep-Alive</Heading>
+                      <Text color="surface.400" fontSize="sm" lineHeight="1.7">
+                        Prevent free-tier pausing automatically. We send subtle pulses to your database to keep it awake, active, and always ready for your users.
+                      </Text>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              </MotionBox>
+            </GridItem>
+          </Grid>
 
           </VStack>
         </Container>
@@ -615,245 +871,197 @@ export default function HomePageClient() {
             </Text>
           </MotionVStack>
 
-          {/* Two Column Layout */}
-          <Grid templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }} gap={{ base: 6, lg: 8 }}>
-            
-            {/* Perfect For Column */}
-            <MotionBox
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <Card
-                bg="rgba(62, 207, 142, 0.03)"
-                border="1px solid"
-                borderColor="teal.400/20"
-                borderRadius="3xl"
-                overflow="hidden"
+          {/* Audience Comparison Bento Grid */}
+          <Grid
+            templateColumns={{ base: '1fr', md: 'repeat(12, 1fr)' }}
+            templateRows={{ base: 'auto', md: 'repeat(2, auto)' }}
+            gap={{ base: 4, md: 6 }}
+          >
+            {/* 1. Perfect For - Large Featured Area */}
+            <GridItem colSpan={{ base: 1, md: 7 }} rowSpan={{ base: 1, md: 2 }}>
+              <MotionBox
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
                 h="full"
-                position="relative"
               >
-                <Box
-                  position="absolute"
-                  top={0}
-                  left={0}
-                  right={0}
-                  h="3px"
-                  bgGradient="linear(to-r, teal.400, teal.300)"
-                />
-                <CardBody p={{ base: 4, md: 6, lg: 10 }}>
-                  <VStack align="start" spacing={{ base: 6, md: 8 }}>
-                    {/* Header */}
-                    <HStack spacing={{ base: 3, md: 4 }}>
-                      <Box
-                        p={{ base: 2.5, md: 3 }}
-                        bg="teal.400/10"
-                        borderRadius="xl"
-                        color="teal.400"
-                      >
-                        <Box as="svg" w={{ base: 5, md: 6 }} h={{ base: 5, md: 6 }} viewBox="0 0 24 24" fill="none">
-                          <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                <Card
+                  h="full"
+                  bg="rgba(62, 207, 142, 0.02)"
+                  border="1px solid"
+                  borderColor="teal.400/20"
+                  borderRadius="3xl"
+                  overflow="hidden"
+                  position="relative"
+                  _hover={{ borderColor: 'teal.400/40', bg: 'rgba(62, 207, 142, 0.04)' }}
+                  transition="all 0.4s ease"
+                >
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    h="2px"
+                    bgGradient="linear(to-r, teal.400, teal.200)"
+                  />
+                  <CardBody p={{ base: 6, md: 10 }}>
+                    <VStack align="start" spacing={8}>
+                      <HStack spacing={4}>
+                        <Box p={3} bg="teal.400/10" borderRadius="2xl" color="teal.400">
+                          <Box as="svg" w={6} h={6} viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                          </Box>
                         </Box>
-                      </Box>
-                      <VStack align="start" spacing={0}>
-                        <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="700" color="white">Perfect For</Text>
-                        <Text fontSize={{ base: 'xs', md: 'sm' }} color="teal.400">You&apos;ll love this</Text>
-                      </VStack>
-                    </HStack>
+                        <VStack align="start" spacing={0}>
+                          <Text fontSize="xl" fontWeight="700" color="white">Perfect For</Text>
+                          <Text fontSize="xs" color="teal.400" fontWeight="600" letterSpacing="0.05em">BUILDERS & HACKERS</Text>
+                        </VStack>
+                      </HStack>
 
-                    {/* Items */}
-                    <VStack align="start" spacing={{ base: 3, md: 5 }} w="full">
-                      {[
-                        {
-                          title: 'Indie Hackers & Solo Devs',
-                          desc: 'Building MVPs and side projects? This saves hours of manual data migration.',
-                          iconPath: 'M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0 M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5'
-                        },
-                        {
-                          title: 'Supabase Free Tier Users',
-                          desc: 'Our keep-alive feature prevents your database from pausing due to inactivity.',
-                          iconPath: 'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'
-                        },
-                        {
-                          title: 'Learning & Prototyping',
-                          desc: 'New to databases? Safely experiment without fear of breaking production.',
-                          iconPath: 'M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c3 3 9 3 12 0v-5'
-                        },
-                        {
-                          title: 'Small Teams (< 10 devs)',
-                          desc: 'Multiple environments to manage? Sync schemas in seconds, not hours.',
-                          iconPath: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75'
-                        },
-                        {
-                          title: 'Early-Stage Startups',
-                          desc: 'Move fast and break things, but not your database. Schema validation included.',
-                          iconPath: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z'
-                        }
-                      ].map((item, i) => (
-                        <MotionBox
-                          key={i}
-                          p={{ base: 3, md: 4 }}
-                          bg="rgba(255,255,255,0.02)"
-                          borderRadius="xl"
-                          border="1px solid"
-                          borderColor="transparent"
-                          w="full"
-                          cursor="default"
-                          whileHover={{ 
-                            borderColor: 'rgba(62, 207, 142, 0.3)',
-                            backgroundColor: 'rgba(62, 207, 142, 0.05)'
-                          }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <HStack spacing={{ base: 3, md: 4 }} align="start">
-                            <Box
-                              p={{ base: 2.5, md: 2 }}
-                              bg="teal.400/10"
-                              borderRadius="lg"
-                              color="teal.400"
-                              flexShrink={0}
-                              minW="44px"
-                              minH="44px"
-                              display="flex"
-                              alignItems="center"
-                              justifyContent="center"
-                            >
-                              <Box as="svg" w={{ base: 5, md: 5 }} h={{ base: 5, md: 5 }} viewBox="0 0 24 24" fill="none">
-                                <path d={item.iconPath} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </Box>
-                            </Box>
-                            <VStack align="start" spacing={1} flex={1}>
-                              <Text fontWeight="600" color="white" fontSize={{ base: 'sm', md: 'sm' }}>{item.title}</Text>
-                              <Text color="surface.400" fontSize="xs" lineHeight={{ base: '1.5', md: 'tall' }}>{item.desc}</Text>
+                      <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={6} w="full">
+                        {[
+                          {
+                            title: 'Indie Hackers',
+                            desc: 'Building MVPs? Save hours on manual migrations.',
+                            icon: <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0 M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></Box>
+                          },
+                          {
+                            title: 'Free Tier Users',
+                            desc: 'Keep your database awake 24/7 automatically.',
+                            icon: <ZapIcon />
+                          },
+                          {
+                            title: 'Small Teams',
+                            desc: 'Sync environments in seconds, not hours.',
+                            icon: <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></Box>
+                          },
+                          {
+                            title: 'Prototyping',
+                            desc: 'Safely experiment without fear of breaking prod.',
+                            icon: <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></Box>
+                          },
+                          {
+                            title: 'Early Startups',
+                            desc: 'Move fast with built-in schema validation.',
+                            icon: <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9zM11 3v18M6 3l4 6M18 3l-4 6"/></Box>
+                          }
+                        ].map((item, i) => (
+                          <MotionBox
+                            key={i}
+                            whileHover={{ scale: 1.02 }}
+                            p={4}
+                            bg="rgba(255,255,255,0.02)"
+                            borderRadius="2xl"
+                            border="1px solid"
+                            borderColor="rgba(255,255,255,0.05)"
+                          >
+                            <VStack align="start" spacing={3}>
+                              <Box color="teal.400">{item.icon}</Box>
+                              <VStack align="start" spacing={1}>
+                                <Text fontWeight="600" color="white" fontSize="sm">{item.title}</Text>
+                                <Text color="surface.400" fontSize="xs" lineHeight="1.5">{item.desc}</Text>
+                              </VStack>
                             </VStack>
+                          </MotionBox>
+                        ))}
+                      </SimpleGrid>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              </MotionBox>
+            </GridItem>
+
+            {/* 2. Not Ideal For - Side Warning Area */}
+            <GridItem colSpan={{ base: 1, md: 5 }} rowSpan={1}>
+              <MotionBox
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                h="full"
+              >
+                <Card
+                  h="full"
+                  bg="rgba(239, 68, 68, 0.01)"
+                  border="1px solid"
+                  borderColor="red.400/10"
+                  borderRadius="3xl"
+                  overflow="hidden"
+                  _hover={{ borderColor: 'red.400/30', bg: 'rgba(239, 68, 68, 0.02)' }}
+                  transition="all 0.4s ease"
+                >
+                  <CardBody p={{ base: 6, md: 8 }}>
+                    <VStack align="start" spacing={6}>
+                      <HStack spacing={3}>
+                        <Box p={2.5} bg="red.400/10" borderRadius="xl" color="red.400">
+                          <Box as="svg" w={5} h={5} viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </Box>
+                        </Box>
+                        <VStack align="start" spacing={0}>
+                          <Text fontSize="lg" fontWeight="700" color="white">Not Ideal For</Text>
+                          <Text fontSize="xs" color="red.400" fontWeight="600">LIMITATIONS</Text>
+                        </VStack>
+                      </HStack>
+
+                      <VStack align="start" spacing={4} w="full">
+                        {[
+                          { title: 'Large Databases', val: '50GB+', desc: 'Syncing massive datasets hits limits.' },
+                          { title: 'Enterprise', val: '100+ Tables', desc: 'Complex triggers & legacy schemas.' },
+                          { title: 'High Traffic', val: '1M+ Req/min', desc: 'Need zero-downtime replication.' },
+                          { title: 'Other DBs', val: 'MySQL/Mongo', desc: 'Built only for Supabase PostgreSQL.' },
+                          { title: 'Regulated', val: 'HIPAA/PCI', desc: 'Need compliance we don&apos;t have yet.' }
+                        ].map((item, i) => (
+                          <HStack key={i} w="full" justify="space-between" p={3} bg="rgba(255,255,255,0.02)" borderRadius="xl">
+                            <VStack align="start" spacing={0}>
+                              <Text fontWeight="600" color="white" fontSize="xs">{item.title}</Text>
+                              <Text color="surface.500" fontSize="2xs">{item.desc}</Text>
+                            </VStack>
+                            <Badge colorScheme="red" variant="subtle" fontSize="2xs">{item.val}</Badge>
                           </HStack>
-                        </MotionBox>
-                      ))}
-                    </VStack>
-                  </VStack>
-                </CardBody>
-              </Card>
-            </MotionBox>
-
-            {/* Not For Column */}
-            <MotionBox
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <Card
-                bg="rgba(239, 68, 68, 0.03)"
-                border="1px solid"
-                borderColor="red.400/20"
-                borderRadius="3xl"
-                overflow="hidden"
-                h="full"
-                position="relative"
-              >
-                <Box
-                  position="absolute"
-                  top={0}
-                  left={0}
-                  right={0}
-                  h="3px"
-                  bgGradient="linear(to-r, red.400, orange.400)"
-                />
-                <CardBody p={{ base: 4, md: 6, lg: 10 }}>
-                  <VStack align="start" spacing={{ base: 6, md: 8 }}>
-                    {/* Header */}
-                    <HStack spacing={{ base: 3, md: 4 }}>
-                      <Box
-                        p={{ base: 2.5, md: 3 }}
-                        bg="red.400/10"
-                        borderRadius="xl"
-                        color="red.400"
-                      >
-                        <Box as="svg" w={{ base: 5, md: 6 }} h={{ base: 5, md: 6 }} viewBox="0 0 24 24" fill="none">
-                          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </Box>
-                      </Box>
-                      <VStack align="start" spacing={0}>
-                        <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="700" color="white">Not Ideal For</Text>
-                        <Text fontSize={{ base: 'xs', md: 'sm' }} color="red.400">Consider alternatives</Text>
+                        ))}
                       </VStack>
-                    </HStack>
-
-                    {/* Items */}
-                    <VStack align="start" spacing={{ base: 3, md: 5 }} w="full">
-                      {[
-                        {
-                          title: 'Large Databases (50GB+)',
-                          desc: 'Syncing massive datasets can timeout or hit memory limits. Use dedicated migration tools.',
-                          iconPath: 'M4 7V4h16v3 M9 20h6 M12 4v16 M8 7h8a4 4 0 0 1 4 4v0a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v0a4 4 0 0 1 4-4z'
-                        },
-                        {
-                          title: 'Enterprise Scale',
-                          desc: 'Hundreds of tables? Complex triggers? You need enterprise-grade solutions.',
-                          iconPath: 'M3 21h18 M5 21V7l8-4v18 M19 21V11l-6-4 M9 9v.01 M9 12v.01 M9 15v.01 M9 18v.01'
-                        },
-                        {
-                          title: 'High-Traffic Production',
-                          desc: 'Millions of daily transactions require zero-downtime tools we don&apos;t provide.',
-                          iconPath: 'M18 20V10 M12 20V4 M6 20v-6'
-                        },
-                        {
-                          title: 'Non-Supabase Databases',
-                          desc: 'Built specifically for Supabase PostgreSQL. MySQL, MongoDB? Look elsewhere.',
-                          iconPath: 'M2 12h6 M22 12h-6 M12 2v6 M12 22v-6 M4.93 4.93l4.24 4.24 M14.83 14.83l4.24 4.24 M4.93 19.07l4.24-4.24 M14.83 9.17l4.24-4.24'
-                        },
-                        {
-                          title: 'Regulated Industries',
-                          desc: 'Healthcare and finance industries need compliance certifications we don&apos;t have yet.',
-                          iconPath: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'
-                        }
-                      ].map((item, i) => (
-                        <MotionBox
-                          key={i}
-                          p={{ base: 3, md: 4 }}
-                          bg="rgba(255,255,255,0.02)"
-                          borderRadius="xl"
-                          border="1px solid"
-                          borderColor="transparent"
-                          w="full"
-                          cursor="default"
-                          whileHover={{ 
-                            borderColor: 'rgba(239, 68, 68, 0.3)',
-                            backgroundColor: 'rgba(239, 68, 68, 0.05)'
-                          }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <HStack spacing={{ base: 3, md: 4 }} align="start">
-                            <Box
-                              p={{ base: 2.5, md: 2 }}
-                              bg="red.400/10"
-                              borderRadius="lg"
-                              color="red.400"
-                              flexShrink={0}
-                              minW="44px"
-                              minH="44px"
-                              display="flex"
-                              alignItems="center"
-                              justifyContent="center"
-                            >
-                              <Box as="svg" w={{ base: 5, md: 5 }} h={{ base: 5, md: 5 }} viewBox="0 0 24 24" fill="none">
-                                <path d={item.iconPath} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </Box>
-                  </Box>
-                            <VStack align="start" spacing={1} flex={1}>
-                              <Text fontWeight="600" color="white" fontSize={{ base: 'sm', md: 'sm' }}>{item.title}</Text>
-                              <Text color="surface.400" fontSize="xs" lineHeight={{ base: '1.5', md: 'tall' }}>{item.desc}</Text>
-                            </VStack>
-                </HStack>
-                        </MotionBox>
-                      ))}
                     </VStack>
-                  </VStack>
-                </CardBody>
-              </Card>
-            </MotionBox>
+                  </CardBody>
+                </Card>
+              </MotionBox>
+            </GridItem>
+
+            {/* 3. Honest Disclaimer Area */}
+            <GridItem colSpan={{ base: 1, md: 5 }} rowSpan={1}>
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                h="full"
+              >
+                <Card
+                  h="full"
+                  bg="rgba(255,255,255,0.01)"
+                  border="1px solid"
+                  borderColor="rgba(255,255,255,0.05)"
+                  borderRadius="3xl"
+                  overflow="hidden"
+                  _hover={{ borderColor: 'surface.700', bg: 'rgba(255,255,255,0.02)' }}
+                  transition="all 0.4s ease"
+                >
+                  <CardBody p={{ base: 6, md: 8 }} display="flex" flexDirection="column" justifyContent="center">
+                    <VStack align="start" spacing={4}>
+                      <Text color="surface.300" fontSize="sm" fontStyle="italic" lineHeight="1.6">
+                        &quot;We built suparbase specifically for the Supabase ecosystem. If you&apos;re using MySQL or MongoDB, this isn&apos;t for you (yet).&quot;
+                      </Text>
+                      <HStack spacing={3}>
+                        <Box w={8} h="2px" bg="teal.400" borderRadius="full" />
+                        <Text color="teal.400" fontWeight="700" fontSize="xs" letterSpacing="0.1em">HONEST NOTE</Text>
+                      </HStack>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              </MotionBox>
+            </GridItem>
           </Grid>
 
           {/* Bottom Stats/Info Banner */}
