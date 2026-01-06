@@ -76,32 +76,131 @@ const ArrowRightIcon = () => (
 
 // Minimal Pulse Component
 const PulseConnection = () => (
-  <Box position="relative" w="300px" h="100px" display="flex" alignItems="center" justifyContent="between">
-    <VStack spacing={2}>
-      <Box w={12} h={12} borderRadius="xl" bg="surface.800" border="1px solid" borderColor="surface.600" display="flex" alignItems="center" justifyContent="center">
-        <Box w={3} h={3} borderRadius="full" bg="teal.400" />
+  <Box position="relative" w="320px" h="120px" display="flex" alignItems="center" justifyContent="space-between">
+    <VStack spacing={3} align="center">
+      <Box 
+        w={14} 
+        h={14} 
+        borderRadius="xl" 
+        bg="surface.900" 
+        border="1.5px solid" 
+        borderColor="teal.400/20" 
+        display="flex" 
+        alignItems="center" 
+        justifyContent="center"
+        position="relative"
+        transition="all 0.3s"
+        _hover={{
+          borderColor: 'teal.400/40',
+          transform: 'scale(1.05)'
+        }}
+      >
+        <Box position="relative">
+          <MotionBox
+            w={4} 
+            h={4} 
+            borderRadius="full" 
+            bg="teal.400"
+            boxShadow="0 0 12px rgba(62, 207, 142, 0.6)"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.8, 0.4, 0.8]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <Box
+            position="absolute"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            w={4} 
+            h={4} 
+            borderRadius="full" 
+            bg="teal.400"
+            opacity={0.6}
+          />
+        </Box>
       </Box>
-      <Text fontSize="10px" color="surface.400" fontWeight="bold">DEV</Text>
+      <Text fontSize="11px" color="surface.300" fontWeight="600" letterSpacing="0.05em">DEV</Text>
     </VStack>
     
-    <Box flex={1} mx={4} h="1px" bg="surface.700" position="relative" overflow="hidden">
+    <Box flex={1} mx={6} h="2px" bg="surface.800" position="relative" overflow="hidden" borderRadius="full">
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        w="100%"
+        h="100%"
+        bg="surface.700"
+        borderRadius="full"
+      />
       <MotionBox
         position="absolute"
         top={0}
         left="-100%"
-        w="100%"
+        w="40%"
         h="100%"
-        bgGradient="linear(to-r, transparent, teal.400, transparent)"
-        animate={{ left: '100%' }}
-        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        bgGradient="linear(to-r, transparent, teal.400, teal.400, transparent)"
+        borderRadius="full"
+        boxShadow="0 0 8px rgba(62, 207, 142, 0.5)"
+        animate={{ left: '140%' }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
       />
     </Box>
 
-    <VStack spacing={2}>
-      <Box w={12} h={12} borderRadius="xl" bg="surface.800" border="1px solid" borderColor="surface.600" display="flex" alignItems="center" justifyContent="center">
-        <Box w={3} h={3} borderRadius="full" bg="brand.400" />
+    <VStack spacing={3} align="center">
+      <Box 
+        w={14} 
+        h={14} 
+        borderRadius="xl" 
+        bg="surface.900" 
+        border="1.5px solid" 
+        borderColor="brand.400/20" 
+        display="flex" 
+        alignItems="center" 
+        justifyContent="center"
+        position="relative"
+        transition="all 0.3s"
+        _hover={{
+          borderColor: 'brand.400/40',
+          transform: 'scale(1.05)'
+        }}
+      >
+        <Box position="relative">
+          <MotionBox
+            w={4} 
+            h={4} 
+            borderRadius="full" 
+            bg="brand.400"
+            boxShadow="0 0 12px rgba(99, 102, 241, 0.6)"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.8, 0.4, 0.8]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <Box
+            position="absolute"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            w={4} 
+            h={4} 
+            borderRadius="full" 
+            bg="brand.400"
+            opacity={0.6}
+          />
+        </Box>
       </Box>
-      <Text fontSize="10px" color="surface.400" fontWeight="bold">PROD</Text>
+      <Text fontSize="11px" color="surface.300" fontWeight="600" letterSpacing="0.05em">PROD</Text>
     </VStack>
   </Box>
 );
@@ -348,9 +447,10 @@ export default function HomePageClient() {
         <MotionText
           fontFamily="mono"
           fontSize="xs"
-          color="surface.600"
+          color="surface.400"
+          fontWeight="500"
           initial={{ opacity: 0, rotate: -90 }}
-          animate={{ opacity: 0.4, rotate: -90 }}
+          animate={{ opacity: 0.8, rotate: -90 }}
           transition={{ duration: 1, delay: 1 }}
         >
           // AES-256-GCM ENCRYPTED
