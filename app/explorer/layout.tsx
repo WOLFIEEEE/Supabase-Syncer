@@ -175,53 +175,79 @@ export default function ExplorerLayout({
       >
         <Flex
           maxW="100%"
-          px={4}
-          py={3}
+          px={{ base: 2, md: 4 }}
+          py={{ base: 2, md: 3 }}
+          direction={{ base: 'column', md: 'row' }}
           justify="space-between"
-          align="center"
+          align={{ base: 'stretch', md: 'center' }}
+          gap={{ base: 2, md: 0 }}
         >
           {/* Left: Back button + Breadcrumbs */}
-          <HStack spacing={3}>
+          <Flex
+            direction={{ base: 'row', md: 'row' }}
+            align="center"
+            gap={{ base: 2, md: 3 }}
+            flex={1}
+            minW={0}
+            overflow="hidden"
+          >
             {pathname !== '/explorer' && (
               <Tooltip label="Back" hasArrow>
                 <IconButton
                   aria-label="Go back"
                   icon={<ArrowLeftIcon />}
                   variant="ghost"
-                  size="sm"
+                  size={{ base: 'sm', md: 'sm' }}
                   onClick={handleBack}
+                  flexShrink={0}
+                  minH="44px"
                 />
               </Tooltip>
             )}
             
-            <HStack spacing={2} divider={<Box color="surface.600"><ChevronRightIcon /></Box>}>
+            <HStack 
+              spacing={{ base: 1, md: 2 }} 
+              divider={<Box color="surface.600" display={{ base: 'none', sm: 'block' }}><ChevronRightIcon /></Box>}
+              flex={1}
+              minW={0}
+              overflow="hidden"
+            >
               {breadcrumbs.map((crumb, index) => (
                 <HStack
                   key={crumb.href}
-                  spacing={2}
+                  spacing={{ base: 1, md: 2 }}
                   cursor="pointer"
                   onClick={() => router.push(crumb.href)}
-                  px={2}
+                  px={{ base: 1, md: 2 }}
                   py={1}
                   borderRadius="md"
                   _hover={{ bg: 'surface.700' }}
                   transition="all 0.2s"
+                  flexShrink={index === breadcrumbs.length - 1 ? 0 : 1}
+                  minW={0}
                 >
-                  <Box color={index === breadcrumbs.length - 1 ? 'teal.400' : 'surface.400'}>
+                  <Box 
+                    color={index === breadcrumbs.length - 1 ? 'teal.400' : 'surface.400'}
+                    flexShrink={0}
+                    display={{ base: index === breadcrumbs.length - 1 ? 'block' : 'none', sm: 'block' }}
+                  >
                     {crumb.icon}
                   </Box>
                   <Text
-                    fontSize="sm"
+                    fontSize={{ base: 'xs', md: 'sm' }}
                     fontWeight={index === breadcrumbs.length - 1 ? 'semibold' : 'normal'}
                     color={index === breadcrumbs.length - 1 ? 'white' : 'surface.300'}
+                    noOfLines={1}
+                    minW={0}
                   >
                     {crumb.label}
                   </Text>
                   {crumb.badge && (
                     <Badge
                       colorScheme={crumb.badge === 'production' ? 'red' : 'green'}
-                      fontSize="xs"
+                      fontSize={{ base: '2xs', md: 'xs' }}
                       textTransform="lowercase"
+                      flexShrink={0}
                     >
                       {crumb.badge}
                     </Badge>
@@ -229,29 +255,36 @@ export default function ExplorerLayout({
                 </HStack>
               ))}
             </HStack>
-          </HStack>
+          </Flex>
           
           {/* Right: Actions */}
-          <HStack spacing={2}>
+          <HStack spacing={{ base: 1, md: 2 }} flexShrink={0}>
             {/* Command Bar Trigger */}
             <Tooltip label="Command Palette (⌘K)" hasArrow>
               <Button
                 variant="ghost"
-                size="sm"
+                size={{ base: 'sm', md: 'sm' }}
                 color="surface.400"
                 _hover={{ bg: 'surface.700' }}
                 leftIcon={<CommandIcon />}
                 onClick={onCommandOpen}
+                minH="44px"
+                display={{ base: 'flex', md: 'flex' }}
               >
-                <HStack spacing={1}>
+                <HStack spacing={1} display={{ base: 'none', sm: 'flex' }}>
                   <Kbd bg="surface.700" fontSize="xs">⌘</Kbd>
                   <Kbd bg="surface.700" fontSize="xs">K</Kbd>
                 </HStack>
               </Button>
             </Tooltip>
             
-            {/* Logo */}
-            <VStack spacing={0.5} align="start" mr={4}>
+            {/* Logo - Hidden on mobile, shown on tablet+ */}
+            <VStack 
+              spacing={0.5} 
+              align="start" 
+              mr={{ base: 0, md: 4 }}
+              display={{ base: 'none', lg: 'flex' }}
+            >
               <HStack spacing={2}>
                 <Box width="24px" height="24px" position="relative" flexShrink={0}>
                   <Image
@@ -307,8 +340,9 @@ export default function ExplorerLayout({
                 aria-label="Dashboard"
                 icon={<HomeIcon />}
                 variant="ghost"
-                size="sm"
+                size={{ base: 'sm', md: 'sm' }}
                 onClick={() => router.push('/')}
+                minH="44px"
               />
             </Tooltip>
             
@@ -317,8 +351,9 @@ export default function ExplorerLayout({
                 aria-label="Logout"
                 icon={<LogoutIcon />}
                 variant="ghost"
-                size="sm"
+                size={{ base: 'sm', md: 'sm' }}
                 onClick={handleLogout}
+                minH="44px"
               />
             </Tooltip>
           </HStack>
@@ -343,25 +378,43 @@ export default function ExplorerLayout({
         bg="surface.800"
         borderTopWidth="1px"
         borderColor="surface.700"
-        py={2}
-        px={4}
+        py={{ base: 2, md: 2 }}
+        px={{ base: 2, md: 4 }}
       >
-        <Flex justify="space-between" align="center">
-          <HStack spacing={4}>
-            <Text fontSize="xs" color="surface.500">
+        <Flex 
+          direction={{ base: 'column', md: 'row' }}
+          justify="space-between" 
+          align={{ base: 'start', md: 'center' }}
+          gap={{ base: 2, md: 4 }}
+        >
+          <HStack spacing={{ base: 2, md: 4 }} flexWrap="wrap">
+            <Text fontSize={{ base: 'xs', md: 'xs' }} color="surface.500">
               Data Explorer
             </Text>
             {connectionInfo && (
-              <Badge colorScheme="teal" variant="subtle" fontSize="xs">
+              <Badge 
+                colorScheme="teal" 
+                variant="subtle" 
+                fontSize={{ base: '2xs', md: 'xs' }}
+                whiteSpace="nowrap"
+              >
                 Connected to {connectionInfo.name}
               </Badge>
             )}
           </HStack>
-          <HStack spacing={4}>
-            <Text fontSize="xs" color="surface.600">
+          <Text 
+            fontSize={{ base: '2xs', md: 'xs' }} 
+            color="surface.600"
+            textAlign={{ base: 'left', md: 'right' }}
+            lineHeight="1.4"
+          >
+            <Box as="span" display={{ base: 'none', sm: 'inline' }}>
               Single row operations only • Bulk disabled for safety
-            </Text>
-          </HStack>
+            </Box>
+            <Box as="span" display={{ base: 'inline', sm: 'none' }}>
+              Read-only mode
+            </Box>
+          </Text>
         </Flex>
       </Box>
     </Box>
