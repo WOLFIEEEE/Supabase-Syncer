@@ -10,8 +10,9 @@ import {
   Button,
   Grid,
   Flex,
-  Image,
+  Link,
 } from '@chakra-ui/react';
+import { SuparbaseLogo } from './Logo';
 
 export default function PublicFooter() {
   const router = useRouter();
@@ -21,55 +22,28 @@ export default function PublicFooter() {
       position="relative"
       borderTop="1px solid" 
       borderColor="rgba(255,255,255,0.05)"
-      bg="rgba(0,0,0,0.2)"
-      backdropFilter="blur(10px)"
+      bg="rgba(0,0,0,0.3)"
+      backdropFilter="blur(20px)"
       mt="auto"
     >
-      {/* Subtle gradient overlay */}
-      <Box
-        position="absolute"
-        inset={0}
-        bgGradient="linear(to-t, rgba(62, 207, 142, 0.02), transparent)"
-        pointerEvents="none"
-      />
-      
-      <Container maxW="7xl" py={{ base: 12, md: 16 }} position="relative" px={{ base: 4, md: 6 }}>
-        <VStack spacing={{ base: 8, md: 12 }} align="stretch">
+      <Container maxW="7xl" py={{ base: 10, md: 12 }} position="relative" px={{ base: 4, md: 6 }}>
+        <VStack spacing={{ base: 8, md: 10 }} align="stretch">
           {/* Main Footer Content */}
           <Grid 
             templateColumns={{ base: '1fr', sm: '1fr', md: '2fr 1fr 1fr 1fr' }} 
-            gap={{ base: 8, md: 8 }}
+            gap={{ base: 8, md: 12 }}
           >
             {/* Brand Column */}
-            <VStack align={{ base: 'center', md: 'start' }} spacing={4}>
-              <HStack spacing={3}>
-                <Box position="relative">
-                  <Image src="/logo.png" alt="logo" width={32} height={32} />
-                  <Box
-                    position="absolute"
-                    inset={0}
-                    borderRadius="full"
-                    bg="teal.400/20"
-                    filter="blur(8px)"
-                    zIndex={-1}
-                  />
-                </Box>
-                <Text 
-                  color="white" 
-                  fontWeight="800" 
-                  letterSpacing="0.15em" 
-                  fontSize="sm"
-                  fontFamily="'Outfit', sans-serif"
-                >
-                  SUPARBASE
-                </Text>
-              </HStack>
+            <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
+              <Box onClick={() => router.push('/')} cursor="pointer">
+                <SuparbaseLogo size="sm" showText={true} variant="full" />
+              </Box>
               <Text 
                 color="surface.500" 
-                fontSize="sm" 
+                fontSize={{ base: 'xs', md: 'sm' }} 
                 maxW="xs"
                 textAlign={{ base: 'center', md: 'left' }}
-                lineHeight="tall"
+                lineHeight="1.6"
               >
                 Sync your databases safely. Built for developers who move fast.
               </Text>
@@ -79,37 +53,34 @@ export default function PublicFooter() {
             <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
               <Text 
                 fontSize="xs" 
-                fontWeight="700" 
-                color="surface.400" 
-                letterSpacing="0.1em"
+                fontWeight="600" 
+                color="surface.300" 
+                letterSpacing="0.05em"
                 textTransform="uppercase"
               >
                 Product
               </Text>
-              <VStack align={{ base: 'center', md: 'start' }} spacing={2}>
+              <VStack align={{ base: 'center', md: 'start' }} spacing={1.5}>
                 {[
                   { label: 'Features', path: '/features' },
                   { label: 'Pricing', path: '/pricing' },
                   { label: 'Benefits', path: '/benefits' },
                   { label: 'Status', path: '/status' }
                 ].map((link) => (
-                  <Button
+                  <Link
                     key={link.path}
-                    variant="ghost"
-                    size="sm"
-                    color="surface.400"
+                    as="button"
+                    color="surface.500"
                     fontSize="sm"
                     fontWeight="400"
                     _hover={{ 
                       color: 'white',
-                      bg: 'rgba(255,255,255,0.05)'
                     }}
                     onClick={() => router.push(link.path)}
-                    px={0}
-                    minH="32px"
+                    transition="color 0.2s"
                   >
                     {link.label}
-                  </Button>
+                  </Link>
                 ))}
               </VStack>
             </VStack>
@@ -118,14 +89,14 @@ export default function PublicFooter() {
             <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
               <Text 
                 fontSize="xs" 
-                fontWeight="700" 
-                color="surface.400" 
-                letterSpacing="0.1em"
+                fontWeight="600" 
+                color="surface.300" 
+                letterSpacing="0.05em"
                 textTransform="uppercase"
               >
                 Learn
               </Text>
-              <VStack align={{ base: 'center', md: 'start' }} spacing={2}>
+              <VStack align={{ base: 'center', md: 'start' }} spacing={1.5}>
                 {[
                   { label: 'Getting Started', path: '/getting-started' },
                   { label: 'How It Works', path: '/how-it-works' },
@@ -135,23 +106,20 @@ export default function PublicFooter() {
                   { label: 'Troubleshooting', path: '/troubleshooting' },
                   { label: 'FAQ', path: '/faq' }
                 ].map((link) => (
-                  <Button
+                  <Link
                     key={link.path}
-                    variant="ghost"
-                    size="sm"
-                    color="surface.400"
+                    as="button"
+                    color="surface.500"
                     fontSize="sm"
                     fontWeight="400"
                     _hover={{ 
                       color: 'white',
-                      bg: 'rgba(255,255,255,0.05)'
                     }}
                     onClick={() => router.push(link.path)}
-                    px={0}
-                    minH="32px"
+                    transition="color 0.2s"
                   >
                     {link.label}
-                  </Button>
+                  </Link>
                 ))}
               </VStack>
             </VStack>
@@ -160,73 +128,68 @@ export default function PublicFooter() {
             <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
               <Text 
                 fontSize="xs" 
-                fontWeight="700" 
-                color="surface.400" 
-                letterSpacing="0.1em"
+                fontWeight="600" 
+                color="surface.300" 
+                letterSpacing="0.05em"
                 textTransform="uppercase"
               >
                 Company
               </Text>
-              <VStack align={{ base: 'center', md: 'start' }} spacing={2}>
+              <VStack align={{ base: 'center', md: 'start' }} spacing={1.5}>
                 {[
                   { label: 'About', path: '/about' },
                   { label: 'Contact', path: '/contact' },
                   { label: 'Privacy', path: '/privacy' },
                   { label: 'Terms', path: '/terms' }
                 ].map((link) => (
-                  <Button
+                  <Link
                     key={link.path}
-                    variant="ghost"
-                    size="sm"
-                    color="surface.400"
+                    as="button"
+                    color="surface.500"
                     fontSize="sm"
                     fontWeight="400"
                     _hover={{ 
                       color: 'white',
-                      bg: 'rgba(255,255,255,0.05)'
                     }}
                     onClick={() => router.push(link.path)}
-                    px={0}
-                    minH="32px"
+                    transition="color 0.2s"
                   >
                     {link.label}
-                  </Button>
+                  </Link>
                 ))}
               </VStack>
             </VStack>
           </Grid>
 
           {/* Divider */}
-          <Box h="1px" bgGradient="linear(to-r, transparent, rgba(255,255,255,0.1), transparent)" />
+          <Box h="1px" bg="rgba(255,255,255,0.05)" />
 
           {/* Bottom Bar */}
           <Flex 
             direction={{ base: 'column', md: 'row' }}
             justify="space-between" 
             align="center"
-            gap={{ base: 2, md: 4 }}
+            gap={{ base: 3, md: 4 }}
+            pt={2}
           >
             <Text 
               color="surface.600" 
-              fontSize="xs"
-              fontFamily="mono"
+              fontSize={{ base: '2xs', md: 'xs' }}
               textAlign={{ base: 'center', md: 'left' }}
             >
               © {new Date().getFullYear()} Suparbase. All rights reserved.
             </Text>
-            <HStack spacing={6} flexWrap="wrap" justify="center">
+            <HStack spacing={4} flexWrap="wrap" justify="center">
               <Text 
                 color="surface.600" 
-                fontSize="xs"
-                fontFamily="mono"
+                fontSize={{ base: '2xs', md: 'xs' }}
               >
                 v1.0.0
               </Text>
-              <Box w="1px" h="12px" bg="surface.800" display={{ base: 'none', sm: 'block' }} />
+              <Box w="1px" h="10px" bg="surface.700" display={{ base: 'none', sm: 'block' }} />
               <Text 
                 color="surface.600" 
-                fontSize="xs"
-                fontFamily="mono"
+                fontSize={{ base: '2xs', md: 'xs' }}
               >
                 Beta
               </Text>
