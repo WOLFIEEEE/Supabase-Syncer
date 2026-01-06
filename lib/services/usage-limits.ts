@@ -81,10 +81,10 @@ export async function getUserUsageLimits(userId: string): Promise<UsageLimits> {
     return mapUsageLimits(existing);
   }
   
-  // Create new limits with defaults
+  // Create new limits with defaults using upsert to handle race conditions
   const { data: created, error: createError } = await (supabase as any)
     .from('usage_limits')
-    .insert({
+    .upsert({
       user_id: userId,
       max_connections: DEFAULT_LIMITS.maxConnections,
       max_sync_jobs_per_month: DEFAULT_LIMITS.maxSyncJobsPerMonth,
@@ -94,13 +94,43 @@ export async function getUserUsageLimits(userId: string): Promise<UsageLimits> {
       current_data_transfer_mb_this_month: 0,
       usage_period_start: new Date().toISOString(),
       email_notifications_enabled: true,
+    }, {
+      onConflict: 'user_id',
+      ignoreDuplicates: false
     })
     .select()
     .single();
   
-  if (createError || !created) {
-    console.error('Error creating usage limits:', createError);
-    throw new Error('Failed to create usage limits');
+  if (createError) {
+    console.error('Error creating/updating usage limits:', createError);
+    // If it's a unique constraint error, try to fetch again (race condition)
+    if (createError.code === '23505' || createError.message?.includes('duplicate')) {
+      const { data: retryData, error: retryError } = await (supabase as any)
+        .from('usage_limits')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (!retryError && retryData) {
+        return mapUsageLimits(retryData);
+      }
+    }
+    throw new Error(`Failed to create usage limits: ${createError.message || 'Unknown error'}`);
+  }
+  
+  if (!created) {
+    // If upsert didn't return data, try fetching again
+    const { data: fetched, error: fetchError } = await (supabase as any)
+      .from('usage_limits')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    if (!fetchError && fetched) {
+      return mapUsageLimits(fetched);
+    }
+    
+    throw new Error('Failed to create usage limits: No data returned');
   }
   
   return mapUsageLimits(created);
@@ -236,13 +266,21 @@ export async function incrementDataTransfer(userId: string, dataSizeMb: number):
 export async function updateConnectionCount(userId: string, count: number): Promise<void> {
   const supabase = await createClient();
   
-  await (supabase as any)
+  // Ensure usage limits exist first
+  await getUserUsageLimits(userId);
+  
+  const { error } = await (supabase as any)
     .from('usage_limits')
     .update({
       current_connections: count,
       updated_at: new Date().toISOString(),
     })
     .eq('user_id', userId);
+  
+  if (error) {
+    console.error('Error updating connection count:', error);
+    // Don't throw - this is not critical enough to fail the connection creation
+  }
 }
 
 /**

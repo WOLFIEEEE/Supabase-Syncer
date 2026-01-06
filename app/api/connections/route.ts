@@ -132,9 +132,14 @@ export async function POST(request: NextRequest) {
       environment,
     });
     
-    // Update connection count
-    const allConnections = await supabaseConnectionStore.getAll(user.id);
-    await updateConnectionCount(user.id, allConnections.length);
+    // Update connection count (non-blocking - don't fail if this errors)
+    try {
+      const allConnections = await supabaseConnectionStore.getAll(user.id);
+      await updateConnectionCount(user.id, allConnections.length);
+    } catch (updateError) {
+      console.error('Error updating connection count (non-critical):', updateError);
+      // Continue - connection was created successfully
+    }
     
     return NextResponse.json({
       success: true,
@@ -208,9 +213,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    // Update connection count after deletion
-    const allConnections = await supabaseConnectionStore.getAll(user.id);
-    await updateConnectionCount(user.id, allConnections.length);
+    // Update connection count after deletion (non-blocking)
+    try {
+      const allConnections = await supabaseConnectionStore.getAll(user.id);
+      await updateConnectionCount(user.id, allConnections.length);
+    } catch (updateError) {
+      console.error('Error updating connection count after deletion (non-critical):', updateError);
+      // Continue - connection was deleted successfully
+    }
     
     return NextResponse.json({
       success: true,
