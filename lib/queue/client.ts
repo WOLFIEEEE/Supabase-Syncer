@@ -4,9 +4,25 @@ import type { SyncJobData } from '@/types';
 
 // Redis connection
 const getRedisConnection = () => {
+  // In Docker: redis://redis:6379 (service name)
+  // In local dev: redis://localhost:6379
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+  
   return new IORedis(redisUrl, {
     maxRetriesPerRequest: null,
+    enableReadyCheck: true,
+    retryStrategy(times) {
+      const delay = Math.min(times * 50, 2000);
+      return delay;
+    },
+    reconnectOnError(err) {
+      const targetError = 'READONLY';
+      if (err.message.includes(targetError)) {
+        // Reconnect on READONLY errors
+        return true;
+      }
+      return false;
+    },
   });
 };
 

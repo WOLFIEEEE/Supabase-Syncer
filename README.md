@@ -73,28 +73,27 @@ npm run dev
 
 Visit `http://localhost:3000` to see the application.
 
-### Option 2: Docker
+### Option 2: Docker (Recommended)
 
 ```bash
 # Clone repository
 git clone https://github.com/WOLFIEEEE/Supabase-Syncer.git
 cd Supabase-Syncer
 
-# Create .env file with your external service URLs
+# Create .env file (Redis is auto-configured via Docker)
 cat > .env << EOF
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 ENCRYPTION_KEY=$(openssl rand -hex 16)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-# Optional: Add if you have external Redis
-# REDIS_URL=redis://your-redis-host:6379
+# Do NOT set REDIS_URL - it's automatically configured by docker-compose
 EOF
 
-# Build and run
+# Build and run (includes Redis automatically)
 docker-compose up -d
 ```
 
-> **Note**: Supabase and Redis are expected to be hosted externally. Just provide their URLs in the environment variables.
+> **Note**: Redis is automatically included and configured in Docker. Only Supabase needs to be external. See [DOCKER.md](./DOCKER.md) for details.
 
 ### Option 3: Coolify (Recommended for Production)
 
@@ -152,7 +151,9 @@ All tables include RLS policies so users can only access their own data.
 | `ENCRYPTION_KEY` | **Yes** | 32-character key for AES-256-GCM encryption |
 | `NEXT_PUBLIC_APP_URL` | **Recommended** | Application URL (for OAuth callbacks and email links) |
 | `DATABASE_URL` | No | PostgreSQL URL for persistent storage (uses Supabase by default) |
-| `REDIS_URL` | No | Redis URL for background job processing |
+| `REDIS_URL` | Auto-configured | Auto-set to `redis://redis:6379` by Docker (do not set manually) |
+
+> **Redis Note**: When using Docker, Redis is automatically included and configured. Do not set `REDIS_URL` manually unless using an external Redis service.
 
 ### Generating Secure Keys
 
@@ -274,14 +275,13 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 # External PostgreSQL (if not using Supabase)
 DATABASE_URL=postgresql://user:pass@host:5432/db
 
-# External Redis for background jobs
-REDIS_URL=redis://your-redis-host:6379
-
 # Node environment
 NODE_ENV=production
 ```
 
-**Security Tip**: Mark sensitive variables (`ENCRYPTION_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`, `REDIS_URL`) as **"Secret"** in Coolify to prevent them from being logged.
+> **Note**: `REDIS_URL` is automatically set by docker-compose to `redis://redis:6379`. Only set this manually if using an external Redis service (not recommended).
+
+**Security Tip**: Mark sensitive variables (`ENCRYPTION_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`) as **"Secret"** in Coolify to prevent them from being logged.
 
 ### Step 5: Deploy
 
@@ -535,8 +535,11 @@ GET    /api/usage                    - Get usage statistics
 │  Storage                                                     │
 │  ├── In-Memory Store (default, per-user scoped)             │
 │  ├── Supabase DB (optional, with RLS)                       │
-│  └── Redis (optional, background job queue)                 │
+│  └── Redis (self-hosted via Docker, background job queue)   │
 └─────────────────────────────────────────────────────────────┘
+          │
+          ├─────────────> Supabase (External Cloud)
+          └─────────────> Redis (Docker Container)
 ```
 
 ---

@@ -1,30 +1,44 @@
 {
-  "name": "suparbase",
+  "name": "supabase-syncer",
   "description": "Database synchronization and keep-alive tool for Supabase",
-  "build": {
-    "type": "dockerfile",
-    "dockerfile": "./Dockerfile",
-    "context": ".",
-    "args": {
-      "NEXT_PUBLIC_SUPABASE_URL": "${NEXT_PUBLIC_SUPABASE_URL}",
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "${NEXT_PUBLIC_SUPABASE_ANON_KEY}",
-      "NEXT_PUBLIC_APP_URL": "${NEXT_PUBLIC_APP_URL}"
+  "type": "docker-compose",
+  "dockerCompose": "./docker-compose.yaml",
+  "services": {
+    "app": {
+      "name": "Supabase Syncer",
+      "ports": {
+        "3000": "3000"
+      },
+      "healthcheck": {
+        "path": "/api/status",
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3
+      },
+      "environment": {
+        "NODE_ENV": "production",
+        "PORT": "3000",
+        "HOSTNAME": "0.0.0.0",
+        "REDIS_URL": "redis://redis:6379"
+      }
+    },
+    "redis": {
+      "name": "Redis Cache",
+      "internal": true
     }
   },
-  "ports": {
-    "3000": "3000"
-  },
-  "healthcheck": {
-    "path": "/api/status",
-    "interval": 30,
-    "timeout": 10,
-    "retries": 3
-  },
-  "environment": {
-    "NODE_ENV": "production",
-    "PORT": "3000",
-    "HOSTNAME": "0.0.0.0"
-  }
+  "volumes": [
+    {
+      "name": "redis_data",
+      "mount": "/data"
+    }
+  ],
+  "networks": [
+    {
+      "name": "app_network",
+      "driver": "bridge"
+    }
+  ]
 }
 
 

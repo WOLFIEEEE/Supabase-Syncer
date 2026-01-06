@@ -1,55 +1,52 @@
 # Dependencies
 node_modules
 npm-debug.log*
+yarn-debug.log*
 yarn-error.log*
 
-# Build outputs
-.next
-out
-dist
-build
-
-# Development files
+# Environment files
 .env
 .env.local
-.env.development
+.env.development.local
+.env.test.local
 .env.production.local
-*.log
 
-# IDE
-.idea
-.vscode
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
+# Next.js
+.next
+out
 
 # Testing
 coverage
 .nyc_output
 
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
 # Git
 .git
 .gitignore
 
-# Documentation (keep README for reference)
+# Documentation
 *.md
 !README.md
-LICENSE
 
-# Misc
-.dockerignore
+# Docker
 Dockerfile
-docker-compose*.yml
-*.txt
+docker-compose.yaml
+.dockerignore
+
+# Other
+.editorconfig
+.prettierrc
+.eslintrc.json
+tsconfig.tsbuildinfo
 cookies.txt
-
-# Drizzle studio
-drizzle
-
-# Plan files
-*.plan.md
-PRODUCTION_PLAN.md
-
+terminals
