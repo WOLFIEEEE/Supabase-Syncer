@@ -37,40 +37,74 @@ const CheckIcon = () => (
   </svg>
 );
 
+const PlugIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 2v6M8 8h8M6 12h12M4 20h16v-4H4v4z"/>
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="11" cy="11" r="8"/>
+    <path d="m21 21-4.35-4.35"/>
+  </svg>
+);
+
+const CheckCircleIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+    <polyline points="22 4 12 14.01 9 11.01"/>
+  </svg>
+);
+
+const ZapIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+);
+
+const BarChartIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="12" y1="20" x2="12" y2="10"/>
+    <line x1="18" y1="20" x2="18" y2="4"/>
+    <line x1="6" y1="20" x2="6" y2="16"/>
+  </svg>
+);
+
 const steps = [
   {
     number: 1,
     title: 'Connect Databases',
     description: 'Add your source and target Supabase database connections. Credentials are encrypted with AES-256-GCM before storage.',
-    icon: '🔌',
+    icon: <PlugIcon />,
     details: 'We securely store your connection strings using industry-standard encryption. Your credentials never leave our servers unencrypted.'
   },
   {
     number: 2,
     title: 'Schema Analysis',
     description: 'suparbase analyzes both databases to understand table structures, columns, types, and relationships.',
-    icon: '🔍',
+    icon: <SearchIcon />,
     details: 'We compare schemas to identify differences: new tables, modified columns, missing indexes, and foreign key changes.'
   },
   {
     number: 3,
     title: 'Validation',
     description: 'Schema compatibility is validated to ensure safe synchronization. Conflicts are detected and reported.',
-    icon: '✅',
+    icon: <CheckCircleIcon />,
     details: 'We check for incompatible changes, data type mismatches, and potential data loss scenarios before proceeding.'
   },
   {
     number: 4,
     title: 'Sync Execution',
     description: 'Changes are applied to the target database. You can preview with dry-run or execute immediately.',
-    icon: '⚡',
+    icon: <ZapIcon />,
     details: 'Schema changes are applied in the correct order, respecting dependencies. Data can be synced selectively by table.'
   },
   {
     number: 5,
     title: 'Monitoring',
     description: 'Real-time progress tracking shows sync status, completion percentage, and any errors encountered.',
-    icon: '📊',
+    icon: <BarChartIcon />,
     details: 'Monitor sync progress in real-time. Get notifications on completion or failure. View detailed logs for troubleshooting.'
   }
 ];

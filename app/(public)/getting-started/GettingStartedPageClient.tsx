@@ -28,6 +28,20 @@ import { motion } from 'framer-motion';
 const MotionCard = motion.create(Card);
 const MotionBox = motion.create(Box);
 
+const CheckIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const WarningIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/>
+    <line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+
 const steps = [
   {
     number: 1,
@@ -230,7 +244,7 @@ export default function GettingStartedPageClient() {
                           fontSize={{ base: 'md', md: 'lg' }}
                           flexShrink={0}
                         >
-                          {completedSteps.includes(step.number) ? '✓' : step.number}
+                          {completedSteps.includes(step.number) ? <CheckIcon /> : step.number}
                         </Box>
                         <VStack align="start" spacing={0} flex={1}>
                           <Heading size="md" color="white" fontSize={{ base: 'sm', md: 'md' }}>
@@ -368,7 +382,9 @@ export default function GettingStartedPageClient() {
                     <CardBody p={{ base: 4, md: 6 }}>
                       <VStack align="start" spacing={3}>
                         <HStack spacing={2}>
-                          <Box color="red.400" fontSize={{ base: 'lg', md: 'xl' }}>⚠️</Box>
+                          <Box color="red.400" fontSize={{ base: 'lg', md: 'xl' }} display="flex" alignItems="center">
+                            <WarningIcon />
+                          </Box>
                           <Text fontWeight="600" color="white" fontSize={{ base: 'xs', md: 'sm' }}>
                             {pitfall.issue}
                           </Text>

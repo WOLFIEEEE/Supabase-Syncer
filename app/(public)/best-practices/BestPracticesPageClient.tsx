@@ -20,10 +20,73 @@ import { motion } from 'framer-motion';
 
 const MotionCard = motion.create(Card);
 
+const PlugIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 2v6M8 8h8M6 12h12M4 20h16v-4H4v4z"/>
+  </svg>
+);
+
+const ZapIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+);
+
+const ClipboardIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+  </svg>
+);
+
+const KeyIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+  </svg>
+);
+
+const RocketIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+  </svg>
+);
+
+const SaveIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+    <polyline points="17 21 17 13 7 13 7 21"/>
+    <polyline points="7 3 7 8 15 8"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const XIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+
+const WarningIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/>
+    <line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+
 const practices = [
   {
     category: 'Connection Management',
-    icon: '🔌',
+    icon: <PlugIcon />,
     color: 'teal',
     tips: [
       {
@@ -48,7 +111,7 @@ const practices = [
   },
   {
     category: 'Sync Strategy',
-    icon: '⚡',
+    icon: <ZapIcon />,
     color: 'purple',
     tips: [
       {
@@ -73,7 +136,7 @@ const practices = [
   },
   {
     category: 'Schema Management',
-    icon: '📋',
+    icon: <ClipboardIcon />,
     color: 'blue',
     tips: [
       {
@@ -98,7 +161,7 @@ const practices = [
   },
   {
     category: 'Security',
-    icon: '🔐',
+    icon: <KeyIcon />,
     color: 'green',
     tips: [
       {
@@ -123,7 +186,7 @@ const practices = [
   },
   {
     category: 'Performance',
-    icon: '🚀',
+    icon: <RocketIcon />,
     color: 'yellow',
     tips: [
       {
@@ -148,7 +211,7 @@ const practices = [
   },
   {
     category: 'Backup Strategy',
-    icon: '💾',
+    icon: <SaveIcon />,
     color: 'pink',
     tips: [
       {
@@ -211,7 +274,9 @@ export default function BestPracticesPageClient() {
             {practices.map((category, categoryIndex) => (
               <Box key={category.category}>
                 <HStack spacing={3} mb={{ base: 4, md: 6 }}>
-                  <Box fontSize={{ base: 'xl', md: '2xl' }}>{category.icon}</Box>
+                  <Box color={`${category.color}.400`} fontSize={{ base: 'xl', md: '2xl' }} display="flex" alignItems="center" justifyContent="center">
+                    {category.icon}
+                  </Box>
                   <Heading size="md" color="white" fontSize={{ base: 'sm', md: 'md' }}>
                     {category.category}
                   </Heading>
@@ -245,15 +310,19 @@ export default function BestPracticesPageClient() {
                               borderColor="green.400"
                               borderRadius="md"
                             >
-                              <Text
-                                fontSize="xs"
-                                fontWeight="700"
-                                color="green.400"
-                                mb={1}
-                                textTransform="uppercase"
-                              >
-                                ✓ Do
-                              </Text>
+                              <HStack spacing={1} mb={1}>
+                                <Box color="green.400" display="flex" alignItems="center">
+                                  <CheckIcon />
+                                </Box>
+                                <Text
+                                  fontSize="xs"
+                                  fontWeight="700"
+                                  color="green.400"
+                                  textTransform="uppercase"
+                                >
+                                  Do
+                                </Text>
+                              </HStack>
                               <Text color="surface.300" fontSize="xs" lineHeight="1.5">
                                 {tip.do}
                               </Text>
@@ -265,15 +334,19 @@ export default function BestPracticesPageClient() {
                               borderColor="red.400"
                               borderRadius="md"
                             >
-                              <Text
-                                fontSize="xs"
-                                fontWeight="700"
-                                color="red.400"
-                                mb={1}
-                                textTransform="uppercase"
-                              >
-                                ✗ Don't
-                              </Text>
+                              <HStack spacing={1} mb={1}>
+                                <Box color="red.400" display="flex" alignItems="center">
+                                  <XIcon />
+                                </Box>
+                                <Text
+                                  fontSize="xs"
+                                  fontWeight="700"
+                                  color="red.400"
+                                  textTransform="uppercase"
+                                >
+                                  Don't
+                                </Text>
+                              </HStack>
                               <Text color="surface.300" fontSize="xs" lineHeight="1.5">
                                 {tip.dont}
                               </Text>

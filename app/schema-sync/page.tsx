@@ -92,6 +92,22 @@ const XIcon = () => (
   </svg>
 );
 
+const WarningIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/>
+    <line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+
+const LightbulbIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M9 21h6M12 3a6 6 0 0 0-6 6c0 3.314 2.686 6 6 6s6-2.686 6-6a6 6 0 0 0-6-6z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/>
+    <line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+
 const PlayIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <polygon points="5 3 19 12 5 21 5 3"/>
@@ -718,7 +734,12 @@ export default function SchemaSyncPage() {
                                       {issue.tableName}{issue.columnName && `.${issue.columnName}`}
                                     </Code>
                                     <Text color="white" fontSize="sm" mt={1}>{issue.message}</Text>
-                                    <Text color="red.300" fontSize="xs" mt={1}>💡 {issue.recommendation}</Text>
+                                    <HStack spacing={1} mt={1}>
+                                      <Box color="red.300" display="flex" alignItems="center">
+                                        <LightbulbIcon />
+                                      </Box>
+                                      <Text color="red.300" fontSize="xs">{issue.recommendation}</Text>
+                                    </HStack>
                                   </Box>
                                 ))}
                               </VStack>
@@ -887,7 +908,14 @@ export default function SchemaSyncPage() {
                   <Alert status="error" borderRadius="md">
                     <AlertIcon />
                     <Box flex={1}>
-                      <AlertTitle>⚠️ Production Database</AlertTitle>
+                      <AlertTitle>
+                        <HStack spacing={2}>
+                          <Box display="flex" alignItems="center">
+                            <WarningIcon />
+                          </Box>
+                          <Text>Production Database</Text>
+                        </HStack>
+                      </AlertTitle>
                       <AlertDescription>
                         <Text mb={2}>Type "{targetConnection?.name}" to confirm execution:</Text>
                         <Input
@@ -961,7 +989,9 @@ export default function SchemaSyncPage() {
                       {executionResults.every(r => r.success) ? (
                         <Box transform="scale(2)"><CheckIcon /></Box>
                       ) : (
-                        <Text fontSize="3xl">⚠️</Text>
+                        <Box fontSize="3xl" display="flex" alignItems="center" justifyContent="center" color="red.400">
+                          <WarningIcon />
+                        </Box>
                       )}
                     </Box>
 

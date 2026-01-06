@@ -1008,9 +1008,16 @@ export default function ConnectionsPage() {
                               p={3} 
                               borderRadius="md"
                             >
-                              <Text color="yellow.200" fontWeight="semibold" mb={1}>
-                                ⚠️ Important Notes
-                              </Text>
+                              <HStack spacing={2} color="yellow.200" fontWeight="semibold" mb={1}>
+                                <Box display="flex" alignItems="center">
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                  </svg>
+                                </Box>
+                                <Text>Important Notes</Text>
+                              </HStack>
                               <VStack align="stretch" spacing={1} color="yellow.100" fontSize="xs">
                                 <Text>• This feature uses minimal resources - just a simple query once daily</Text>
                                 <Text>• Your database credentials are encrypted and never exposed</Text>

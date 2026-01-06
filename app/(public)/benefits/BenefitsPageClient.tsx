@@ -24,10 +24,49 @@ import { motion } from 'framer-motion';
 const MotionCard = motion.create(Card);
 const MotionBox = motion.create(Box);
 
+const ClockIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="12 6 12 12 16 14"/>
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+
+const DollarIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="12" y1="1" x2="12" y2="23"/>
+    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+  </svg>
+);
+
+const SparklesIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+  </svg>
+);
+
+const LockIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+);
+
+const KeyIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+  </svg>
+);
+
 const benefits = [
   {
     title: 'Time Savings',
-    icon: '⏱️',
+    icon: <ClockIcon />,
     color: 'teal',
     metric: '5-10 hours/week',
     description: 'Automate manual database migrations and schema updates. What used to take hours now takes minutes.',
@@ -40,7 +79,7 @@ const benefits = [
   },
   {
     title: 'Risk Reduction',
-    icon: '🛡️',
+    icon: <ShieldIcon />,
     color: 'green',
     metric: '90% fewer errors',
     description: 'Schema validation prevents incompatible changes from breaking your databases.',
@@ -53,7 +92,7 @@ const benefits = [
   },
   {
     title: 'Cost Efficiency',
-    icon: '💰',
+    icon: <DollarIcon />,
     color: 'yellow',
     metric: 'Free tier optimized',
     description: 'Keep your Supabase free tier databases alive automatically. No more unexpected pauses.',
@@ -66,7 +105,7 @@ const benefits = [
   },
   {
     title: 'Developer Experience',
-    icon: '✨',
+    icon: <SparklesIcon />,
     color: 'purple',
     metric: 'Simple UI',
     description: 'Beautiful, intuitive interface vs complex CLI tools. Manage databases without command line expertise.',
@@ -79,7 +118,7 @@ const benefits = [
   },
   {
     title: 'Reliability',
-    icon: '🔒',
+    icon: <LockIcon />,
     color: 'blue',
     metric: '99.9% uptime',
     description: 'Automated processes eliminate human error. Consistent, repeatable sync operations.',
@@ -92,7 +131,7 @@ const benefits = [
   },
   {
     title: 'Security',
-    icon: '🔐',
+    icon: <KeyIcon />,
     color: 'pink',
     metric: 'AES-256-GCM',
     description: 'Enterprise-grade encryption for your credentials. Your data stays secure.',
@@ -195,7 +234,9 @@ export default function BenefitsPageClient() {
                 <CardBody p={6}>
                   <VStack align="start" spacing={4}>
                     <HStack spacing={3} w="full">
-                      <Box fontSize="3xl">{benefit.icon}</Box>
+                      <Box color={`${benefit.color}.400`} fontSize="3xl" display="flex" alignItems="center" justifyContent="center">
+                        {benefit.icon}
+                      </Box>
                       <VStack align="start" spacing={0} flex={1}>
                         <Heading size="sm" color="white">
                           {benefit.title}

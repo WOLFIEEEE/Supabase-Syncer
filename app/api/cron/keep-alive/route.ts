@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     );
   }
   
-  console.log('[Keep Alive Cron] 🚀 Starting keep-alive ping cycle...');
+  console.log('[Keep Alive Cron] Starting keep-alive ping cycle...');
   
   const stats: KeepAliveStats = {
     totalPinged: 0,

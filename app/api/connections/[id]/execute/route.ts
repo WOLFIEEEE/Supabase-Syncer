@@ -214,7 +214,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             success: true,
             rowsAffected: Array.isArray(result) ? result.length : 0
           });
-          console.log(`[${i + 1}/${statements.length}] ✓ Success`);
+          console.log(`[${i + 1}/${statements.length}] Success`);
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Unknown error';
           results.push({
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             success: false,
             error: errorMessage
           });
-          console.error(`[${i + 1}/${statements.length}] ✗ Failed: ${errorMessage}`);
+          console.error(`[${i + 1}/${statements.length}] Failed: ${errorMessage}`);
         }
       }
       
