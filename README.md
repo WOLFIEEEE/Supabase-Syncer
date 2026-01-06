@@ -409,7 +409,8 @@ For high availability:
 
 | Path | Description |
 |------|-------------|
-| `/` or `/landing` | Landing page with features and CTA |
+| `/` | Home page with features and CTA |
+| `/dashboard` | Main dashboard (requires login) |
 | `/features` | Detailed features page |
 | `/pricing` | Pricing information (currently free in beta) |
 | `/about` | About page with mission and values |

@@ -23,7 +23,7 @@ export default function AuthHeader() {
         <Flex justify="flex-start" align="center">
           <Box
             cursor="pointer"
-            onClick={() => router.push('/landing')}
+            onClick={() => router.push('/')}
             _hover={{ opacity: 0.8 }}
             transition="opacity 0.2s"
           >

@@ -59,7 +59,7 @@ export default function TermsPageClient() {
             <Button
               variant="ghost"
               leftIcon={<HomeIcon />}
-              onClick={() => router.push('/landing')}
+              onClick={() => router.push('/')}
               size="sm"
             >
               Home

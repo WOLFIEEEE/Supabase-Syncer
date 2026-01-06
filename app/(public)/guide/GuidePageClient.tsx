@@ -179,7 +179,7 @@ export default function GuidePageClient() {
         leftIcon={<HomeIcon />}
         color="surface.400"
         size="sm"
-        onClick={() => router.push('/landing')}
+        onClick={() => router.push('/')}
         mb={4}
       >
         Back to Home

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import LandingPageClient from './LandingPageClient';
+import HomePageClient from './HomePageClient';
 
 export const metadata: Metadata = {
   title: 'suparbase - Sync Supabase Databases | Keep Databases Alive',
@@ -43,7 +43,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LandingPage() {
-  return <LandingPageClient />;
+export default function HomePage() {
+  return <HomePageClient />;
 }
-

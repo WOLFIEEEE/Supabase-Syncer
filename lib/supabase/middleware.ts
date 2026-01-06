@@ -56,7 +56,7 @@ export async function updateSession(request: NextRequest) {
     '/auth/confirm',
     '/forgot-password',
     '/reset-password',
-    '/landing',
+    '/',
     '/guide',
     '/status',
   ];

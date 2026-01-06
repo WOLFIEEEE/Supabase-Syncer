@@ -173,7 +173,7 @@ export default function StatusPageClient() {
               <Button
                 variant="ghost"
                 leftIcon={<HomeIcon />}
-                onClick={() => router.push('/landing')}
+                onClick={() => router.push('/')}
                 size="sm"
               >
                 Home

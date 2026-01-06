@@ -155,10 +155,10 @@ export default function DashboardPage() {
   const toast = useToast();
   const { user, signOut, isLoading: authLoading } = useAuth();
 
-  // Redirect to landing page if not authenticated
+  // Redirect to home page if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/landing');
+      router.push('/');
     }
   }, [user, authLoading, router]);
 

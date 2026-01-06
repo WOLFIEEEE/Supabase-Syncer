@@ -66,7 +66,7 @@ export default function LoginPage() {
   const toast = useToast();
   const { signIn } = useAuth();
 
-  const redirectTo = searchParams.get('redirect') || '/';
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

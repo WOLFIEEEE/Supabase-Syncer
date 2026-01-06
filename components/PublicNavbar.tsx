@@ -28,7 +28,7 @@ const MenuIcon = () => (
 );
 
 const navLinks = [
-  { label: 'Home', href: '/landing' },
+  { label: 'Home', href: '/' },
   { label: 'Features', href: '/features' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Guide', href: '/guide' },
@@ -57,7 +57,7 @@ export default function PublicNavbar() {
           {/* Logo - exactly matching AuthHeader structure */}
           <Box
             cursor="pointer"
-            onClick={() => router.push('/landing')}
+            onClick={() => router.push('/')}
             _hover={{ opacity: 0.8 }}
             transition="opacity 0.2s"
           >
