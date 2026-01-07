@@ -77,7 +77,7 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 // MAIN PROXY FUNCTION
 // ============================================================================
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   // SECURITY: Check body size for API requests with body
   if (
     request.nextUrl.pathname.startsWith('/api/') &&

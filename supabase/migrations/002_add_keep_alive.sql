@@ -20,3 +20,4 @@ COMMENT ON COLUMN connections.keep_alive IS 'When true, database will be pinged 
 COMMENT ON COLUMN connections.last_pinged_at IS 'Timestamp of the last successful keep-alive ping';
 
 
+
