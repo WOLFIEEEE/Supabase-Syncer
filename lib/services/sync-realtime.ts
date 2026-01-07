@@ -27,6 +27,16 @@ import {
   clearProcessedRows,
 } from './idempotency-tracker';
 
+// Import security utilities
+import {
+  isValidTableName,
+  validateTableNames,
+  escapeIdentifier,
+  buildSafeTableLiteralArray,
+  sanitizeErrorMessage,
+  SecurityError,
+} from './security-utils';
+
 // Configuration - smaller batches for better progress visibility
 const SYNC_CONFIG = {
   maxRetries: 3,
@@ -55,9 +65,17 @@ async function getTableSyncOrder(
 ): Promise<string[]> {
   if (tableNames.length === 0) return [];
   
-  // Use a CTE to define the table list once, then reference it twice
-  // This avoids parameter duplication issues with postgres.js
-  const tableListSql = tableNames.map(t => `'${t.replace(/'/g, "''")}'`).join(', ');
+  // SECURITY: Validate all table names before use
+  const { valid: validTableNames, invalid: invalidTableNames } = validateTableNames(tableNames);
+  
+  if (invalidTableNames.length > 0) {
+    throw new SecurityError(`Invalid table names detected: ${invalidTableNames.slice(0, 3).join(', ')}`);
+  }
+  
+  if (validTableNames.length === 0) return [];
+  
+  // SECURITY: Build safe table list using validated and escaped literals
+  const tableListSql = buildSafeTableLiteralArray(validTableNames);
   
   // Get all FK relationships for these tables
   const fkResult = await conn.client.unsafe(`
@@ -256,8 +274,17 @@ async function detectCircularDependencies(
 ): Promise<string[][]> {
   if (tableNames.length === 0) return [];
   
-  // Use a CTE to define the table list once
-  const tableListSql = tableNames.map(t => `'${t.replace(/'/g, "''")}'`).join(', ');
+  // SECURITY: Validate all table names before use
+  const { valid: validTableNames, invalid: invalidTableNames } = validateTableNames(tableNames);
+  
+  if (invalidTableNames.length > 0) {
+    throw new SecurityError(`Invalid table names detected: ${invalidTableNames.slice(0, 3).join(', ')}`);
+  }
+  
+  if (validTableNames.length === 0) return [];
+  
+  // SECURITY: Build safe table list using validated and escaped literals
+  const tableListSql = buildSafeTableLiteralArray(validTableNames);
   
   const fkResult = await conn.client.unsafe(`
     WITH target_tables AS (
@@ -379,27 +406,23 @@ function estimateRowSize(row: Record<string, unknown>): number {
 // Maximum row size (1MB) - rows larger than this will be handled specially
 const MAX_ROW_SIZE = 1024 * 1024;
 
-/**
- * Sanitize identifier (table name, column name) for safe SQL usage
- * Prevents SQL injection by removing dangerous characters
- */
+// Note: sanitizeIdentifier, isValidIdentifier, and escapeIdentifier are imported from security-utils.ts
+// Local wrapper for backward compatibility - returns unquoted escaped identifier for string interpolation
 function sanitizeIdentifier(identifier: string): string {
-  // Remove or escape dangerous characters
-  // PostgreSQL identifiers can contain: letters, digits, underscores
-  // When quoted, they can contain almost anything except null character
-  return identifier
-    .replace(/\0/g, '') // Remove null bytes
-    .replace(/"/g, '""'); // Escape double quotes by doubling them
-}
-
-/**
- * Validate that a string is a safe PostgreSQL identifier
- */
-function isValidIdentifier(identifier: string): boolean {
-  // Check for null bytes or other dangerous patterns
-  if (identifier.includes('\0')) return false;
-  if (identifier.length === 0 || identifier.length > 63) return false;
-  return true;
+  // SECURITY: Remove dangerous characters using strict validation
+  if (!identifier || typeof identifier !== 'string') {
+    throw new SecurityError('Invalid identifier: empty or not a string');
+  }
+  
+  // Remove null bytes
+  const cleaned = identifier.replace(/\0/g, '');
+  
+  if (cleaned.length === 0 || cleaned.length > 63) {
+    throw new SecurityError('Invalid identifier: invalid length');
+  }
+  
+  // Escape double quotes by doubling them
+  return cleaned.replace(/"/g, '""');
 }
 
 // ============================================================================

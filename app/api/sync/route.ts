@@ -7,6 +7,8 @@ import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limi
 import { SyncJobInputSchema, PaginationSchema, validateInput } from '@/lib/validations/schemas';
 import { checkSyncJobLimit, incrementSyncJobCount } from '@/lib/services/usage-limits';
 import { notifySyncStarted } from '@/lib/services/email-notifications';
+import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
+import { sanitizeErrorMessage } from '@/lib/services/security-utils';
 
 // GET - List all sync jobs for the authenticated user
 export async function GET(request: NextRequest) {
@@ -53,9 +55,10 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
+    // SECURITY: Log full error server-side, sanitize for client
     console.error('Error fetching sync jobs:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch sync jobs' },
+      { success: false, error: sanitizeErrorMessage(error) || 'Failed to fetch sync jobs' },
       { status: 500 }
     );
   }
@@ -64,6 +67,12 @@ export async function GET(request: NextRequest) {
 // POST - Create a new sync job (with optional dry run)
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+    
     const user = await getUser();
     
     if (!user) {
@@ -77,7 +86,7 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = checkRateLimit(user.id, 'sync');
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
-        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
+        { success: false, error: 'Too many sync requests. Please wait before starting another sync.' },
         { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'sync') }
       );
     }

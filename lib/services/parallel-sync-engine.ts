@@ -7,6 +7,11 @@
 
 import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
 import type { SyncProgress, SyncCheckpoint, TableConfig, Conflict } from '@/types';
+import {
+  validateTableNames,
+  buildSafeTableLiteralArray,
+  SecurityError,
+} from './security-utils';
 
 // ============================================================================
 // TYPES
@@ -120,8 +125,15 @@ async function getForeignKeyGraph(
   
   if (tableNames.length === 0) return graph;
   
-  // Get FK relationships
-  const tableListSql = tableNames.map(t => `'${t.replace(/'/g, "''")}'`).join(', ');
+  // SECURITY: Validate all table names before use
+  const { valid: validTableNames, invalid: invalidTableNames } = validateTableNames(tableNames);
+  
+  if (invalidTableNames.length > 0) {
+    throw new SecurityError(`Invalid table names detected: ${invalidTableNames.slice(0, 3).join(', ')}`);
+  }
+  
+  // SECURITY: Build safe table list using validated and escaped literals
+  const tableListSql = buildSafeTableLiteralArray(validTableNames);
   
   const fkResult = await conn.client.unsafe(`
     SELECT DISTINCT

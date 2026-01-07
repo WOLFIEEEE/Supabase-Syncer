@@ -1,6 +1,11 @@
 import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
 import { areTypesCompatible } from './schema-inspector';
 import type { TableDiff, SchemaDiff, ColumnDiff } from '@/types';
+import {
+  isValidTableName,
+  escapeIdentifier,
+  SecurityError,
+} from './security-utils';
 
 // ============================================================================
 // SAFE TYPE COERCION HELPERS
@@ -259,6 +264,13 @@ async function calculateTableDiff(
   since?: Date,
   sampleSize: number = 5
 ): Promise<TableDiff> {
+  // SECURITY: Validate table name before use
+  if (!isValidTableName(tableName)) {
+    throw new SecurityError(`Invalid table name: ${tableName}`);
+  }
+  
+  const safeTableName = escapeIdentifier(tableName);
+  
   // Get row counts
   const [sourceCount, targetCount] = await Promise.all([
     getRowCount(sourceConn, tableName),
@@ -268,15 +280,15 @@ async function calculateTableDiff(
   // Find rows that need to be inserted (exist in source but not in target)
   const insertQuery = since
     ? `
-      SELECT s.* FROM "${tableName}" s
-      LEFT JOIN "${tableName}" t ON s.id = t.id
+      SELECT s.* FROM ${safeTableName} s
+      LEFT JOIN ${safeTableName} t ON s.id = t.id
       WHERE t.id IS NULL AND s.updated_at >= $1
       ORDER BY s.updated_at DESC
       LIMIT $2
     `
     : `
-      SELECT s.* FROM "${tableName}" s
-      LEFT JOIN "${tableName}" t ON s.id = t.id
+      SELECT s.* FROM ${safeTableName} s
+      LEFT JOIN ${safeTableName} t ON s.id = t.id
       WHERE t.id IS NULL
       ORDER BY s.updated_at DESC
       LIMIT $1
@@ -286,16 +298,16 @@ async function calculateTableDiff(
   // Get source IDs first
   const sourceIdsResult = since
     ? await sourceConn.client.unsafe(
-        `SELECT id FROM "${tableName}" WHERE updated_at >= $1`,
+        `SELECT id FROM ${safeTableName} WHERE updated_at >= $1`,
         [since.toISOString()]
       )
-    : await sourceConn.client.unsafe(`SELECT id FROM "${tableName}"`);
+    : await sourceConn.client.unsafe(`SELECT id FROM ${safeTableName}`);
   
   const sourceIds = new Set(sourceIdsResult.map((r) => r.id));
   
   // Get target IDs
   const targetIdsResult = await targetConn.client.unsafe(
-    `SELECT id FROM "${tableName}"`
+    `SELECT id FROM ${safeTableName}`
   );
   const targetIds = new Set(targetIdsResult.map((r) => r.id));
   
@@ -308,7 +320,7 @@ async function calculateTableDiff(
     const sampleIds = insertIds.slice(0, sampleSize);
     const placeholders = sampleIds.map((_, i) => `$${i + 1}`).join(', ');
     const insertSampleResult = await sourceConn.client.unsafe(
-      `SELECT * FROM "${tableName}" WHERE id IN (${placeholders}) LIMIT ${sampleSize}`,
+      `SELECT * FROM ${safeTableName} WHERE id IN (${placeholders}) LIMIT ${sampleSize}`,
       sampleIds
     );
     sampleInserts = insertSampleResult as Record<string, unknown>[];
@@ -328,13 +340,13 @@ async function calculateTableDiff(
       
       // Get source timestamps
       const sourceTimestamps = await sourceConn.client.unsafe(
-        `SELECT id, updated_at FROM "${tableName}" WHERE id IN (${placeholders})`,
+        `SELECT id, updated_at FROM ${safeTableName} WHERE id IN (${placeholders})`,
         batch
       );
       
       // Get target timestamps
       const targetTimestamps = await targetConn.client.unsafe(
-        `SELECT id, updated_at FROM "${tableName}" WHERE id IN (${placeholders})`,
+        `SELECT id, updated_at FROM ${safeTableName} WHERE id IN (${placeholders})`,
         batch
       );
       
@@ -356,7 +368,7 @@ async function calculateTableDiff(
           
           if (sampleUpdates.length < sampleSize) {
             const fullRow = await sourceConn.client.unsafe(
-              `SELECT * FROM "${tableName}" WHERE id = $1`,
+              `SELECT * FROM ${safeTableName} WHERE id = $1`,
               [row.id]
             );
             if (fullRow[0]) {
@@ -383,9 +395,15 @@ async function calculateTableDiff(
  * Get row count for a table
  */
 async function getRowCount(conn: DrizzleConnection, tableName: string): Promise<number> {
+  // SECURITY: Validate table name before use
+  if (!isValidTableName(tableName)) {
+    throw new SecurityError(`Invalid table name: ${tableName}`);
+  }
+  
   try {
+    const safeTableName = escapeIdentifier(tableName);
     const result = await conn.client.unsafe(
-      `SELECT COUNT(*) as count FROM "${tableName}"`
+      `SELECT COUNT(*) as count FROM ${safeTableName}`
     );
     return safeParseInt(result[0]?.count);
   } catch (error) {
@@ -409,8 +427,15 @@ export async function getRowsToSync(
   hasMore: boolean;
   lastId: string | null;
 }> {
+  // SECURITY: Validate table name before use
+  if (!isValidTableName(tableName)) {
+    throw new SecurityError(`Invalid table name: ${tableName}`);
+  }
+  
+  const safeTableName = escapeIdentifier(tableName);
+  
   // Build query for source rows
-  let query = `SELECT * FROM "${tableName}"`;
+  let query = `SELECT * FROM ${safeTableName}`;
   const params: (string | Date)[] = [];
   const conditions: string[] = [];
   
@@ -428,12 +453,14 @@ export async function getRowsToSync(
     query += ` WHERE ${conditions.join(' AND ')}`;
   }
   
-  query += ` ORDER BY id ASC LIMIT ${batchSize + 1}`;
+  // SECURITY: Ensure batch size is within safe limits
+  const safeBatchSize = Math.min(Math.max(1, batchSize), 10000);
+  query += ` ORDER BY id ASC LIMIT ${safeBatchSize + 1}`;
   
   const rows = await sourceConn.client.unsafe(query, params);
   
-  const hasMore = rows.length > batchSize;
-  const resultRows = hasMore ? rows.slice(0, batchSize) : rows;
+  const hasMore = rows.length > safeBatchSize;
+  const resultRows = hasMore ? rows.slice(0, safeBatchSize) : rows;
   const lastRow = resultRows.length > 0 ? resultRows[resultRows.length - 1] : null;
   const lastId = lastRow ? safeString(lastRow.id) || null : null;
   

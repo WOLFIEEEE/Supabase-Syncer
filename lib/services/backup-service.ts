@@ -7,6 +7,13 @@
 
 import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
 import { createClient } from '@supabase/supabase-js';
+import {
+  isValidTableName,
+  validateTableNames,
+  escapeIdentifier as secureEscapeIdentifier,
+  escapeLiteral,
+  SecurityError,
+} from './security-utils';
 
 // ============================================================================
 // TYPES
@@ -120,9 +127,10 @@ function escapeSqlValue(value: unknown): string {
 
 /**
  * Escape SQL identifier (table/column names)
+ * SECURITY: Uses the centralized security utility with validation
  */
 function escapeIdentifier(name: string): string {
-  return `"${name.replace(/"/g, '""')}"`;
+  return secureEscapeIdentifier(name);
 }
 
 // ============================================================================

@@ -6,6 +6,8 @@ import { getUser } from '@/lib/supabase/server';
 import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
 import { ConnectionInputSchema, validateInput } from '@/lib/validations/schemas';
 import { checkConnectionLimit, updateConnectionCount } from '@/lib/services/usage-limits';
+import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
+import { sanitizeErrorMessage } from '@/lib/services/security-utils';
 
 // GET - List all connections for the authenticated user
 export async function GET() {
@@ -45,9 +47,10 @@ export async function GET() {
     });
     
   } catch (error) {
+    // SECURITY: Log full error server-side, sanitize for client
     console.error('Error fetching connections:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch connections' },
+      { success: false, error: sanitizeErrorMessage(error) || 'Failed to fetch connections' },
       { status: 500 }
     );
   }
@@ -56,6 +59,12 @@ export async function GET() {
 // POST - Create a new connection for the authenticated user
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+    
     const user = await getUser();
     
     if (!user) {
@@ -69,7 +78,7 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = checkRateLimit(user.id, 'write');
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
-        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
+        { success: false, error: 'Too many requests. Please slow down.' },
         { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'write') }
       );
     }

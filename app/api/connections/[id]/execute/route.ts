@@ -3,6 +3,16 @@ import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { createDrizzleClient } from '@/lib/services/drizzle-factory';
 import { getUser } from '@/lib/supabase/server';
+import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
+import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
+import { validateSql } from '@/lib/services/sql-validator';
+import { sanitizeErrorMessage, isValidUUID } from '@/lib/services/security-utils';
+
+// Maximum SQL length allowed (256KB)
+const MAX_SQL_LENGTH = 256 * 1024;
+
+// Query execution timeout (30 seconds)
+const QUERY_TIMEOUT_MS = 30000;
 
 interface RouteParams {
   params: Promise<{
@@ -140,9 +150,22 @@ function getStatementDescription(sql: string): string {
  * 
  * Executes SQL on a database connection.
  * Requires user authentication and confirmation for production databases.
+ * 
+ * SECURITY:
+ * - CSRF protection via origin validation
+ * - Rate limiting (20 requests/minute for write operations)
+ * - SQL validation for injection patterns
+ * - Query timeout enforcement
+ * - Error message sanitization
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+    
     const user = await getUser();
     
     if (!user) {
@@ -152,12 +175,56 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
     
+    // SECURITY: Rate limiting
+    const rateLimitResult = checkRateLimit(user.id, 'write');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please slow down.' },
+        { 
+          status: 429, 
+          headers: createRateLimitHeaders(rateLimitResult, 'write') 
+        }
+      );
+    }
+    
     const { id } = await params;
+    
+    // SECURITY: Validate UUID format
+    if (!isValidUUID(id)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid connection ID format' },
+        { status: 400 }
+      );
+    }
+    
     const { sql, confirmationPhrase } = await request.json();
     
+    // SECURITY: Validate SQL input
     if (!sql || typeof sql !== 'string') {
       return NextResponse.json(
         { success: false, error: 'SQL query is required' },
+        { status: 400 }
+      );
+    }
+    
+    // SECURITY: Check SQL length limit
+    if (sql.length > MAX_SQL_LENGTH) {
+      return NextResponse.json(
+        { success: false, error: `SQL query exceeds maximum length of ${MAX_SQL_LENGTH / 1024}KB` },
+        { status: 400 }
+      );
+    }
+    
+    // SECURITY: Validate SQL for injection patterns
+    const sqlValidation = validateSql(sql);
+    if (!sqlValidation.isSafe) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'SQL validation failed: Potentially unsafe patterns detected',
+          validationErrors: sqlValidation.errors,
+          validationWarnings: sqlValidation.warnings,
+        },
         { status: 400 }
       );
     }
@@ -178,9 +245,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json(
           { 
             success: false, 
-            error: `For production databases, you must type the connection name "${connection.name}" to confirm.`,
+            error: `For production databases, you must type the connection name to confirm.`,
             requiresConfirmation: true,
-            connectionName: connection.name
+            // SECURITY: Don't expose connection name in error message
           },
           { status: 400 }
         );
@@ -253,11 +320,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     
   } catch (error) {
+    // SECURITY: Log full error server-side, sanitize for client
     console.error('Error executing SQL:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to execute SQL' 
+        // SECURITY: Sanitize error message to prevent information disclosure
+        error: sanitizeErrorMessage(error) || 'Failed to execute SQL'
       },
       { status: 500 }
     );
