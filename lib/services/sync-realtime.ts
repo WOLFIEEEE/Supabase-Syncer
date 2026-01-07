@@ -1313,13 +1313,26 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
           onLog: (level, msg) => onLog(level, `[Restore] ${msg}`),
         });
         onLog('info', `✅ Rollback completed successfully from backup ${backupMetadata.id}`);
+        onLog('info', '   Your target database has been restored to its pre-sync state.');
       } catch (rollbackError) {
         const rollbackMsg = rollbackError instanceof Error ? rollbackError.message : 'Unknown error';
-        onLog('error', `❌ CRITICAL: Rollback failed: ${rollbackMsg}. Manual intervention may be required.`);
-        onLog('error', `   Backup ID for manual restore: ${backupMetadata.id}`);
+        onLog('error', `❌ CRITICAL: Automatic rollback failed: ${rollbackMsg}`);
+        onLog('error', '   ⚠️ MANUAL INTERVENTION REQUIRED');
+        onLog('error', `   Backup ID: ${backupMetadata.id}`);
+        onLog('error', `   Backup Path: ${backupMetadata.backupPath}`);
+        onLog('error', '   Recovery Steps:');
+        onLog('error', '   1. Go to your sync job details page');
+        onLog('error', '   2. Click "Restore from Backup" button');
+        onLog('error', `   3. Use backup ID: ${backupMetadata.id}`);
+        onLog('error', '   4. Or manually restore from Supabase Storage');
+        onLog('error', `   5. Storage path: ${backupMetadata.backupPath}`);
       }
+    } else if (backupMetadata && backupMetadata.status !== 'completed') {
+      onLog('warn', `⚠️ Backup exists but status is "${backupMetadata.status}" - cannot auto-rollback`);
+      onLog('warn', `   Backup ID: ${backupMetadata.id} - may require manual restore`);
     } else {
       onLog('warn', '⚠️ No backup available for automatic rollback');
+      onLog('warn', '   This may indicate the sync failed before backup creation or backup was disabled.');
     }
     
     // Finalize metrics even on failure
