@@ -1041,9 +1041,17 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
     const tableNames = enabledTables.map(t => t.tableName);
     
     // ========================================================================
+    // SAFETY CHECK: Ensure at least one table is enabled
+    // ========================================================================
+    if (enabledTables.length === 0) {
+      onLog('error', '❌ No tables enabled for sync. At least one table must be selected.');
+      throw new Error('No tables enabled for sync');
+    }
+    
+    // ========================================================================
     // PRODUCTION FEATURE: Pre-sync backup for rollback protection
     // ========================================================================
-    if (!checkpoint) { // Only backup on fresh sync, not resume
+    if (!checkpoint && tableNames.length > 0) { // Only backup on fresh sync, not resume, and if tables exist
       onLog('info', '🔒 Creating pre-sync backup for rollback protection...');
       try {
         backupMetadata = await createBackup({
