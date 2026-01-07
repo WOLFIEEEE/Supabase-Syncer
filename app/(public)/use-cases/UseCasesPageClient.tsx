@@ -157,111 +157,273 @@ export default function UseCasesPageClient() {
   const router = useRouter();
 
   return (
-    <Box minH="100vh" bg="rgba(9, 9, 11, 1)">
-      <Container maxW="7xl" py={{ base: 8, md: 12 }} px={{ base: 4, md: 6 }}>
-        <VStack spacing={12} align="stretch">
+    <Box minH="100vh" bg="rgba(9, 9, 11, 1)" position="relative" overflow="hidden">
+      {/* Animated Background Elements */}
+      <Box
+        position="absolute"
+        top="-20%"
+        right="-10%"
+        w="600px"
+        h="600px"
+        bgGradient="radial(circle, rgba(62, 207, 142, 0.08) 0%, transparent 70%)"
+        borderRadius="full"
+        filter="blur(60px)"
+        pointerEvents="none"
+        zIndex={0}
+      />
+      <Box
+        position="absolute"
+        bottom="-20%"
+        left="-10%"
+        w="500px"
+        h="500px"
+        bgGradient="radial(circle, rgba(147, 51, 234, 0.06) 0%, transparent 70%)"
+        borderRadius="full"
+        filter="blur(60px)"
+        pointerEvents="none"
+        zIndex={0}
+      />
+      
+      <Container maxW="7xl" py={{ base: 8, md: 16 }} px={{ base: 4, md: 6 }} position="relative" zIndex={1}>
+        <VStack spacing={16} align="stretch">
           {/* Header */}
-          <VStack spacing={4} align="center" textAlign="center">
-            <Badge colorScheme="teal" px={3} py={1} borderRadius="full" fontSize="sm">
-              REAL-WORLD SCENARIOS
-            </Badge>
-            <Heading
-              as="h1"
-              fontSize={{ base: '3xl', md: '5xl' }}
-              fontWeight="700"
-              color="white"
-              fontFamily="'Outfit', sans-serif"
-              letterSpacing="-0.02em"
+          <VStack spacing={6} align="center" textAlign="center">
+            <MotionBox
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
             >
-              Use Cases &{' '}
-              <Text as="span" color="teal.400">Scenarios</Text>
-            </Heading>
-            <Text
-              color="surface.400"
-              fontSize={{ base: 'md', md: 'lg' }}
-              maxW="3xl"
-              lineHeight="1.6"
+              <Badge 
+                colorScheme="teal" 
+                px={4} 
+                py={2} 
+                borderRadius="full" 
+                fontSize="sm"
+                fontWeight="700"
+                letterSpacing="0.1em"
+                textTransform="uppercase"
+                bgGradient="linear(to-r, teal.500/20, teal.400/20)"
+                borderWidth="1px"
+                borderColor="teal.400/30"
+                boxShadow="0 0 20px rgba(62, 207, 142, 0.2)"
+              >
+                REAL-WORLD SCENARIOS
+              </Badge>
+            </MotionBox>
+            <MotionBox
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
             >
-              See how suparbase solves real problems for developers, teams, and businesses.
-              From indie projects to startup teams, discover scenarios where suparbase makes a difference.
-            </Text>
+              <Heading
+                as="h1"
+                fontSize={{ base: '4xl', md: '6xl', lg: '7xl' }}
+                fontWeight="800"
+                color="white"
+                fontFamily="'Outfit', sans-serif"
+                letterSpacing="-0.03em"
+                lineHeight="1.1"
+              >
+                Use Cases &{' '}
+                <Text 
+                  as="span" 
+                  bgGradient="linear(to-r, teal.400, teal.300, purple.400)"
+                  bgClip="text"
+                  sx={{
+                    WebkitTextFillColor: 'transparent',
+                    WebkitBackgroundClip: 'text',
+                  }}
+                >
+                  Scenarios
+                </Text>
+              </Heading>
+            </MotionBox>
+            <MotionBox
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Text
+                color="surface.400"
+                fontSize={{ base: 'lg', md: 'xl' }}
+                maxW="4xl"
+                lineHeight="1.7"
+                fontWeight="400"
+              >
+                See how suparbase solves real problems for developers, teams, and businesses.
+                From indie projects to startup teams, discover scenarios where suparbase makes a difference.
+              </Text>
+            </MotionBox>
           </VStack>
 
           {/* Use Cases Grid */}
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 4, md: 6 }}>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 6, md: 8 }}>
             {useCases.map((useCase, index) => {
               const IconComponent = useCase.icon;
               return (
                 <MotionCard
                   key={useCase.title}
-                  bg="surface.800"
+                  bg="surface.800/80"
+                  backdropFilter="blur(10px)"
                   borderColor="surface.700"
                   borderWidth="1px"
                   borderRadius="2xl"
                   overflow="hidden"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  position="relative"
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  transition={{ duration: 0.5, delay: index * 0.1, type: "spring", stiffness: 100 }}
+                  _before={{
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '4px',
+                    bgGradient: `linear(to-r, transparent, ${useCase.color}.400, transparent)`,
+                    opacity: 0,
+                    transition: 'opacity 0.3s',
+                  }}
                   _hover={{
                     borderColor: `${useCase.color}.400`,
-                    transform: 'translateY(-4px)',
+                    transform: 'translateY(-8px) scale(1.02)',
+                    boxShadow: `0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px ${useCase.color}.400/20`,
+                    _before: {
+                      opacity: 1,
+                    },
                   }}
                 >
-                  <CardBody p={{ base: 4, md: 8 }}>
-                    <VStack align="start" spacing={{ base: 4, md: 6 }}>
+                  {/* Gradient overlay on hover */}
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    bgGradient={`linear(to-br, ${useCase.color}.500/5, transparent)`}
+                    opacity={0}
+                    transition="opacity 0.3s"
+                    _groupHover={{ opacity: 1 }}
+                    pointerEvents="none"
+                  />
+                  
+                  <CardBody p={{ base: 6, md: 8 }} position="relative" zIndex={1}>
+                    <VStack align="start" spacing={{ base: 5, md: 7 }}>
                       {/* Icon and Title */}
-                      <HStack spacing={{ base: 3, md: 4 }}>
+                      <HStack spacing={{ base: 4, md: 5 }} w="full">
                         <Box
-                          p={{ base: 2, md: 3 }}
-                          bg={`${useCase.color}.400/10`}
-                          borderRadius="xl"
+                          position="relative"
+                          p={{ base: 3, md: 4 }}
+                          bgGradient={`linear(to-br, ${useCase.color}.400/15, ${useCase.color}.500/5)`}
+                          borderRadius="2xl"
                           color={`${useCase.color}.400`}
                           flexShrink={0}
+                          borderWidth="1px"
+                          borderColor={`${useCase.color}.400/20`}
+                          _hover={{
+                            transform: 'rotate(5deg) scale(1.1)',
+                            borderColor: `${useCase.color}.400/40`,
+                            boxShadow: `0 8px 24px ${useCase.color}.400/20`,
+                          }}
+                          transition="all 0.3s"
                         >
-                          <IconComponent />
+                          <Box position="absolute" inset={0} borderRadius="2xl" bg={`${useCase.color}.400/10`} filter="blur(8px)" />
+                          <Box position="relative" zIndex={1}>
+                            <IconComponent />
+                          </Box>
                         </Box>
-                        <VStack align="start" spacing={0} flex={1}>
-                          <Heading size="lg" color="white" fontSize={{ base: 'md', md: 'lg' }}>
+                        <VStack align="start" spacing={1} flex={1}>
+                          <Heading size="lg" color="white" fontSize={{ base: 'xl', md: '2xl' }} fontWeight="700">
                             {useCase.title}
                           </Heading>
-                          <Badge colorScheme={useCase.color} variant="subtle" fontSize="xs">
-                            {useCase.title === 'Indie Developers' && 'Most Popular'}
-                            {useCase.title === 'Free Tier Users' && 'Common Use Case'}
-                          </Badge>
+                          {(useCase.title === 'Indie Developers' || useCase.title === 'Free Tier Users') && (
+                            <Badge 
+                              colorScheme={useCase.color} 
+                              variant="solid" 
+                              fontSize="xs"
+                              px={2}
+                              py={1}
+                              borderRadius="full"
+                              fontWeight="700"
+                              textTransform="uppercase"
+                              letterSpacing="0.05em"
+                            >
+                              {useCase.title === 'Indie Developers' && 'Most Popular'}
+                              {useCase.title === 'Free Tier Users' && 'Common Use Case'}
+                            </Badge>
+                          )}
                         </VStack>
                       </HStack>
 
                       {/* Problem */}
-                      <Box>
+                      <Box
+                        p={4}
+                        bg="red.500/5"
+                        borderRadius="xl"
+                        borderLeft="3px solid"
+                        borderColor="red.400/50"
+                        w="full"
+                        position="relative"
+                        overflow="hidden"
+                        _before={{
+                          content: '""',
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: '3px',
+                          bgGradient: 'linear(to-b, red.400, transparent)',
+                          opacity: 0.3,
+                        }}
+                      >
                         <Text
                           fontSize="xs"
                           fontWeight="700"
                           color="red.400"
-                          letterSpacing="0.05em"
+                          letterSpacing="0.1em"
                           textTransform="uppercase"
-                          mb={2}
+                          mb={3}
                         >
                           The Problem
                         </Text>
-                        <Text color="surface.300" fontSize="sm" lineHeight="1.6">
+                        <Text color="surface.300" fontSize={{ base: 'sm', md: 'md' }} lineHeight="1.7">
                           {useCase.problem}
                         </Text>
                       </Box>
 
                       {/* Solution */}
-                      <Box>
+                      <Box
+                        p={4}
+                        bg="teal.500/5"
+                        borderRadius="xl"
+                        borderLeft="3px solid"
+                        borderColor="teal.400/50"
+                        w="full"
+                        position="relative"
+                        overflow="hidden"
+                        _before={{
+                          content: '""',
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: '3px',
+                          bgGradient: 'linear(to-b, teal.400, transparent)',
+                          opacity: 0.3,
+                        }}
+                      >
                         <Text
                           fontSize="xs"
                           fontWeight="700"
                           color="teal.400"
-                          letterSpacing="0.05em"
+                          letterSpacing="0.1em"
                           textTransform="uppercase"
-                          mb={2}
+                          mb={3}
                         >
                           The Solution
                         </Text>
-                        <Text color="surface.300" fontSize="sm" lineHeight="1.6">
+                        <Text color="surface.300" fontSize={{ base: 'sm', md: 'md' }} lineHeight="1.7">
                           {useCase.solution}
                         </Text>
                       </Box>
@@ -300,24 +462,50 @@ export default function UseCasesPageClient() {
 
                       {/* Scenario */}
                       <Box
-                        p={4}
-                        bg="surface.900"
+                        p={5}
+                        bgGradient="linear(to-br, surface.900, surface.800)"
                         borderRadius="xl"
                         borderWidth="1px"
-                        borderColor="surface.800"
+                        borderColor="surface.700"
                         w="full"
+                        position="relative"
+                        overflow="hidden"
+                        _before={{
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: '2px',
+                          bgGradient: `linear(to-r, transparent, ${useCase.color}.400/30, transparent)`,
+                        }}
                       >
-                        <Text
-                          fontSize="xs"
-                          fontWeight="700"
-                          color="surface.500"
-                          letterSpacing="0.05em"
-                          textTransform="uppercase"
-                          mb={2}
+                        <HStack spacing={2} mb={3}>
+                          <Box color={`${useCase.color}.400`} fontSize="sm">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                          </Box>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="700"
+                            color={`${useCase.color}.400`}
+                            letterSpacing="0.1em"
+                            textTransform="uppercase"
+                          >
+                            Real Scenario
+                          </Text>
+                        </HStack>
+                        <Text 
+                          color="surface.300" 
+                          fontSize={{ base: 'sm', md: 'md' }} 
+                          lineHeight="1.7" 
+                          fontStyle="italic"
+                          position="relative"
+                          pl={4}
+                          borderLeft="2px solid"
+                          borderColor={`${useCase.color}.400/30`}
                         >
-                          Real Scenario
-                        </Text>
-                        <Text color="surface.300" fontSize="sm" lineHeight="1.6" fontStyle="italic">
                           &quot;{useCase.scenario}&quot;
                         </Text>
                       </Box>
@@ -330,23 +518,45 @@ export default function UseCasesPageClient() {
 
           {/* CTA Section */}
           <MotionBox
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.6, type: "spring" }}
           >
             <Card
-              bgGradient="linear(to-r, teal.500/10, brand.500/10)"
-              borderColor="teal.400/20"
-              borderWidth="1px"
+              bgGradient="linear(to-br, teal.500/10, purple.500/10, teal.500/5)"
+              borderColor="teal.400/30"
+              borderWidth="2px"
               borderRadius="2xl"
+              position="relative"
+              overflow="hidden"
+              _before={{
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                bgGradient: 'linear(to-r, teal.400, purple.400, teal.400)',
+              }}
             >
-              <CardBody p={{ base: 6, md: 8 }}>
-                <VStack spacing={6} align="center" textAlign="center">
-                  <Heading size="lg" color="white">
+              <Box
+                position="absolute"
+                top="-50%"
+                right="-50%"
+                w="400px"
+                h="400px"
+                bgGradient="radial(circle, teal.400/10, transparent)"
+                borderRadius="full"
+                filter="blur(60px)"
+                pointerEvents="none"
+              />
+              <CardBody p={{ base: 8, md: 12 }} position="relative" zIndex={1}>
+                <VStack spacing={8} align="center" textAlign="center">
+                  <Heading size="lg" color="white" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="700">
                     Ready to solve your database sync challenges?
                   </Heading>
-                  <Text color="surface.400" fontSize="md" maxW="2xl">
+                  <Text color="surface.400" fontSize={{ base: 'md', md: 'lg' }} maxW="3xl" lineHeight="1.7">
                     Join developers who are saving hours every week with automated database synchronization.
                   </Text>
                   <HStack spacing={4} flexWrap="wrap" justify="center">
@@ -354,7 +564,17 @@ export default function UseCasesPageClient() {
                       colorScheme="teal"
                       size="lg"
                       onClick={() => router.push('/signup')}
-                      minH="48px"
+                      minH="52px"
+                      px={8}
+                      fontSize="md"
+                      fontWeight="600"
+                      borderRadius="xl"
+                      bgGradient="linear(to-r, teal.400, teal.500)"
+                      _hover={{
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 10px 30px rgba(62, 207, 142, 0.4)',
+                      }}
+                      transition="all 0.3s"
                     >
                       Get Started Free
                     </Button>
@@ -362,7 +582,19 @@ export default function UseCasesPageClient() {
                       variant="outline"
                       size="lg"
                       onClick={() => router.push('/how-it-works')}
-                      minH="48px"
+                      minH="52px"
+                      px={8}
+                      fontSize="md"
+                      fontWeight="600"
+                      borderRadius="xl"
+                      borderColor="teal.400/40"
+                      color="teal.400"
+                      _hover={{
+                        borderColor: 'teal.400',
+                        bg: 'teal.400/10',
+                        transform: 'translateY(-2px)',
+                      }}
+                      transition="all 0.3s"
                     >
                       Learn How It Works
                     </Button>

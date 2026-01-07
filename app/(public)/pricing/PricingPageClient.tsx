@@ -347,7 +347,7 @@ export default function PricingPageClient() {
               maxW="2xl"
               lineHeight="1.6"
             >
-              suparbase is in beta — enjoy full access to all features while we perfect the product.
+              suparbase is in beta - enjoy full access to all features while we perfect the product.
               <br />
               <Text as="span" color="teal.400" fontWeight="500">No credit card required.</Text>
             </Text>

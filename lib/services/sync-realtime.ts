@@ -1246,7 +1246,7 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
         if (result.skippedReasons.noChanges > 0) skipBreakdown.push(`${result.skippedReasons.noChanges} no changes`);
         if (result.skippedReasons.noId > 0) skipBreakdown.push(`${result.skippedReasons.noId} missing id`);
         
-        onLog('info', `✅ Completed: ${tableName} — ${result.inserted} inserted, ${result.updated} updated, ${result.skipped} skipped`);
+        onLog('info', `✅ Completed: ${tableName} - ${result.inserted} inserted, ${result.updated} updated, ${result.skipped} skipped`);
         
         // Log skip breakdown if there were skips
         if (result.skipped > 0 && skipBreakdown.length > 0) {
