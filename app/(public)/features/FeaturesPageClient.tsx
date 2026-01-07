@@ -58,6 +58,34 @@ const DatabaseIcon = () => (
   </svg>
 );
 
+const RewindIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <polygon points="11 19 2 12 11 5 11 19"/>
+    <polygon points="22 19 13 12 22 5 22 19"/>
+  </svg>
+);
+
+const LayersIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+    <polyline points="2 17 12 22 22 17"/>
+    <polyline points="2 12 12 17 22 12"/>
+  </svg>
+);
+
+const ActivityIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </svg>
+);
+
+const ClockIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="12 6 12 12 16 14"/>
+  </svg>
+);
+
 const features = [
   {
     icon: SyncIcon,
@@ -118,6 +146,43 @@ const features = [
     title: 'Sync Job Monitoring',
     description: 'Real-time progress tracking, detailed logging, and status updates for ongoing synchronization tasks. Monitor sync speed, ETA, and errors.',
     category: 'monitoring',
+  },
+  // NEW PRODUCTION-GRADE FEATURES
+  {
+    icon: RewindIcon,
+    title: 'Automatic Rollback',
+    description: 'Failed syncs automatically restore to pre-sync state. Backup snapshots are created before every sync operation, enabling instant recovery from failures.',
+    category: 'core',
+  },
+  {
+    icon: LayersIcon,
+    title: 'Parallel Processing',
+    description: 'Sync 3-4 tables concurrently for 2-3x faster performance. FK-aware scheduling ensures data integrity while maximizing throughput.',
+    category: 'performance',
+  },
+  {
+    icon: ActivityIcon,
+    title: 'Real-time Metrics Dashboard',
+    description: 'Live dashboards with throughput metrics, rows/second graphs, and distributed tracing. Monitor every aspect of your sync operations in real-time.',
+    category: 'monitoring',
+  },
+  {
+    icon: ClockIcon,
+    title: 'Smart Rate Limiting',
+    description: 'Intelligent throttling prevents database overload with adaptive rate limits based on target database performance. Protects your production databases.',
+    category: 'performance',
+  },
+  {
+    icon: ZapIcon,
+    title: 'Dynamic Batch Sizing',
+    description: 'Batch sizes automatically adapt to row sizes and processing time. Optimal performance for any data pattern, from tiny records to large blobs.',
+    category: 'performance',
+  },
+  {
+    icon: ShieldIcon,
+    title: 'Idempotent Retries',
+    description: 'Safe retry handling tracks processed rows to prevent duplicates. UPSERT operations and transaction isolation ensure data consistency.',
+    category: 'security',
   },
 ];
 

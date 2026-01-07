@@ -233,6 +233,44 @@ const practices = [
         dont: 'Single backup point'
       }
     ]
+  },
+  {
+    category: 'Rollback Protection',
+    icon: <WarningIcon />,
+    color: 'orange',
+    tips: [
+      {
+        title: 'Understand automatic rollback',
+        description: 'suparbase creates backup snapshots before every sync. If sync fails, it can restore automatically.',
+        do: 'Let rollback complete before retrying',
+        dont: 'Interrupt rollback mid-process'
+      },
+      {
+        title: 'Monitor rollback storage',
+        description: 'Backup snapshots are stored for 7 days. Monitor storage usage for large databases.',
+        do: 'Check storage usage weekly',
+        dont: 'Ignore storage limit warnings'
+      }
+    ]
+  },
+  {
+    category: 'Monitoring',
+    icon: <RocketIcon />,
+    color: 'cyan',
+    tips: [
+      {
+        title: 'Use the metrics dashboard',
+        description: 'Monitor real-time throughput, rows/second, and table progress during syncs.',
+        do: 'Watch for rate limiting indicators',
+        dont: 'Ignore slow performance warnings'
+      },
+      {
+        title: 'Review sync traces',
+        description: 'Use distributed tracing to identify bottlenecks and optimize slow syncs.',
+        do: 'Analyze traces for slow operations',
+        dont: 'Skip trace analysis for failed syncs'
+      }
+    ]
   }
 ];
 
@@ -344,7 +382,7 @@ export default function BestPracticesPageClient() {
                                   color="red.400"
                                   textTransform="uppercase"
                                 >
-                                  Don't
+                                  Don&apos;t
                                 </Text>
                               </HStack>
                               <Text color="surface.300" fontSize="xs" lineHeight="1.5">

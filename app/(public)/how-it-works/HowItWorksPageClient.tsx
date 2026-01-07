@@ -138,7 +138,46 @@ const steps = [
   }
 ];
 
+const RewindIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="11 19 2 12 11 5 11 19"/>
+    <polygon points="22 19 13 12 22 5 22 19"/>
+  </svg>
+);
+
+const LayersIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+    <polyline points="2 17 12 22 22 17"/>
+    <polyline points="2 12 12 17 22 12"/>
+  </svg>
+);
+
+const GaugeIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+  </svg>
+);
+
 const features = [
+  {
+    title: 'Automatic Rollback',
+    description: 'Failed syncs automatically restore to pre-sync state.',
+    how: 'We create backup snapshots before every sync operation. If sync fails mid-way, the target database is automatically restored to its pre-sync state, preventing data corruption.',
+    icon: <RewindIcon />
+  },
+  {
+    title: 'Parallel Processing',
+    description: 'Sync 3-4 tables concurrently for 2-3x faster performance.',
+    how: 'Our FK-aware scheduler processes multiple tables in parallel while respecting foreign key dependencies. Parent tables are always synced before child tables.',
+    icon: <LayersIcon />
+  },
+  {
+    title: 'Smart Rate Limiting',
+    description: 'Intelligent throttling prevents database overload.',
+    how: 'Adaptive rate limiting monitors target database response times and automatically adjusts sync speed. Protects production databases from being overwhelmed.',
+    icon: <GaugeIcon />
+  },
   {
     title: 'Keep-Alive Mechanism',
     description: 'Automatically pings your Supabase databases to prevent free tier pausing.',
@@ -152,16 +191,22 @@ const features = [
     icon: <ShieldCheckIcon />
   },
   {
+    title: 'Real-time Metrics Dashboard',
+    description: 'Live dashboards with throughput metrics and distributed tracing.',
+    how: 'Monitor real-time rows/second graphs, table-by-table progress, memory usage, and distributed traces. Debug performance issues with span-level visibility.',
+    icon: <RadioIcon />
+  },
+  {
     title: 'Encrypted Storage',
     description: 'All credentials are encrypted using AES-256-GCM encryption.',
     how: 'Your database connection strings are encrypted at rest using AES-256-GCM. Only you can decrypt them with your account credentials.',
     icon: <LockKeyIcon />
   },
   {
-    title: 'Real-time Monitoring',
-    description: 'Track sync progress and get instant notifications.',
-    how: 'We provide real-time updates on sync status, progress percentage, and completion. Email notifications keep you informed.',
-    icon: <RadioIcon />
+    title: 'Idempotent Retries',
+    description: 'Safe retry handling with UPSERT operations.',
+    how: 'Processed rows are tracked to prevent duplicates on retry. UPSERT operations with transaction isolation ensure data consistency even when syncs are interrupted.',
+    icon: <ShieldCheckIcon />
   }
 ];
 

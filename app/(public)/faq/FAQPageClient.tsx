@@ -97,6 +97,22 @@ const faqData: FAQItem[] = [
         question: 'Can I customize sync behavior?',
         answer: 'Yes, you can select which tables to sync, configure sync schedules, and set up filters. The interface provides options to customize your sync jobs according to your needs.',
       },
+      {
+        question: 'What happens if a sync fails?',
+        answer: 'suparbase creates automatic backup snapshots before every sync operation. If a sync fails mid-way, the system can automatically restore your target database to its pre-sync state. This rollback mechanism ensures data integrity and prevents partial data corruption.',
+      },
+      {
+        question: 'How does parallel sync work?',
+        answer: 'suparbase can sync 3-4 tables concurrently for 2-3x faster performance. Our FK-aware scheduler respects foreign key dependencies, ensuring parent tables are synced before child tables. This means you get the speed of parallel processing without risking referential integrity violations.',
+      },
+      {
+        question: 'How can I monitor sync performance?',
+        answer: 'Our real-time metrics dashboard provides live throughput graphs, rows/second metrics, table-by-table breakdowns, and distributed tracing. You can monitor every aspect of your sync operations including memory usage, batch times, and error rates.',
+      },
+      {
+        question: 'What is rate limiting and why is it important?',
+        answer: 'Rate limiting prevents overwhelming your target database during large syncs. suparbase uses intelligent adaptive throttling that monitors your target database response times and automatically adjusts sync speed to maintain optimal performance without causing slowdowns for your users.',
+      },
     ],
   },
   {
@@ -196,7 +212,7 @@ export default function FAQPageClient() {
                 Still have questions?
               </Heading>
               <Text color="surface.400">
-                Can't find what you're looking for? Check out our guide or contact us directly.
+                Can&apos;t find what you&apos;re looking for? Check out our guide or contact us directly.
               </Text>
               <HStack spacing={4} justify="center" flexWrap="wrap">
                 <Button

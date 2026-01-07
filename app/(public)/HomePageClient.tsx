@@ -480,7 +480,7 @@ export default function HomePageClient() {
               textAlign="center"
               w="full"
             >
-              Zero-drift synchronization for Supabase. Built for teams that move fast without breaking things.
+              Production-grade synchronization for Supabase with automatic rollback, parallel processing, and real-time monitoring.
             </Text>
           </MotionVStack>
 
@@ -616,7 +616,7 @@ export default function HomePageClient() {
                       <VStack align="start" spacing={3} w="full">
                         <Heading size="md" color="white" fontWeight="700" fontFamily="'Outfit', sans-serif" lineHeight="1.3">One-Click Sync</Heading>
                         <Text color="surface.400" fontSize="sm" lineHeight="1.7" maxW="md" textAlign="left">
-                          Effortless data migration between environments. Push local changes to staging or production with a single click. No more manual SQL exports or fragile migration scripts.
+                          Effortless data migration between environments with automatic rollback protection. Push local changes to staging or production with a single click. Parallel table processing for 2-3x faster syncs.
                         </Text>
                       </VStack>
                     </VStack>
@@ -752,7 +752,7 @@ export default function HomePageClient() {
                       <VStack align="start" spacing={3} w="full">
                         <Heading size="md" color="white" fontWeight="700" fontFamily="'Outfit', sans-serif" lineHeight="1.3">Schema Guard</Heading>
                         <Text color="surface.400" fontSize="sm" lineHeight="1.7" textAlign="left">
-                          Automated validation checks before every sync. We detect destructive changes and potential data loss before they happen, keeping your production safe.
+                          Automated validation checks before every sync. Backup snapshots created automatically with instant rollback on failure. Real-time metrics dashboard monitors every sync.
                         </Text>
                       </VStack>
                     </VStack>
@@ -841,7 +841,7 @@ export default function HomePageClient() {
                     <VStack align="start" spacing={2.5} w="full">
                       <Heading size="md" color="white" fontWeight="700" fontFamily="'Outfit', sans-serif" lineHeight="1.3">Idempotent SQL</Heading>
                       <Text color="surface.400" fontSize="sm" lineHeight="1.6" textAlign="left">
-                        Safe, repeatable migrations generated automatically. Our SQL handles &quot;already exists&quot; errors gracefully and ensures consistency.
+                        Safe, repeatable migrations with idempotent retries. UPSERT operations ensure consistency with transaction isolation. Smart rate limiting prevents database overload.
                       </Text>
                     </VStack>
                   </CardBody>
@@ -912,7 +912,8 @@ export default function HomePageClient() {
           animate={{ opacity: 0.8, rotate: -90 }}
           transition={{ duration: 1, delay: 1 }}
         >
-          // AES-256-GCM ENCRYPTED
+          {/* AES-256-GCM ENCRYPTED */}
+          AES-256-GCM
         </MotionText>
       </Box>
       <Box position="absolute" bottom="20%" right="5%" display={{ base: 'none', lg: 'block' }}>

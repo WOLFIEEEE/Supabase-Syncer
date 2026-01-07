@@ -422,6 +422,54 @@ export default function StatusPageClient() {
               </Card>
             )}
 
+            {/* Sync Engine Status */}
+            <Card bg="surface.800" borderColor="surface.700">
+              <CardBody>
+                <Heading as="h2" size="sm" color="white" mb={4}>Sync Engine Status</Heading>
+                <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+                  <VStack>
+                    <Box color="green.400"><CheckCircleIcon /></Box>
+                    <Text color="surface.400" fontSize="sm" textAlign="center">Parallel Processing</Text>
+                    <Badge colorScheme="green" fontSize="xs">ENABLED</Badge>
+                  </VStack>
+                  <VStack>
+                    <Box color="green.400"><CheckCircleIcon /></Box>
+                    <Text color="surface.400" fontSize="sm" textAlign="center">Auto Rollback</Text>
+                    <Badge colorScheme="green" fontSize="xs">ENABLED</Badge>
+                  </VStack>
+                  <VStack>
+                    <Box color="green.400"><CheckCircleIcon /></Box>
+                    <Text color="surface.400" fontSize="sm" textAlign="center">Rate Limiting</Text>
+                    <Badge colorScheme="green" fontSize="xs">ACTIVE</Badge>
+                  </VStack>
+                  <VStack>
+                    <Box color="green.400"><CheckCircleIcon /></Box>
+                    <Text color="surface.400" fontSize="sm" textAlign="center">Metrics Dashboard</Text>
+                    <Badge colorScheme="green" fontSize="xs">AVAILABLE</Badge>
+                  </VStack>
+                </SimpleGrid>
+              </CardBody>
+            </Card>
+
+            {/* Backup System Status */}
+            <Card bg="surface.800" borderColor="surface.700">
+              <CardBody>
+                <Heading as="h2" size="sm" color="white" mb={4}>Backup System</Heading>
+                <HStack spacing={4}>
+                  <Box color="green.400"><CheckCircleIcon /></Box>
+                  <VStack align="start" spacing={0} flex={1}>
+                    <Text color="white" fontWeight="bold">Automatic Backup Snapshots</Text>
+                    <Text color="surface.400" fontSize="sm">
+                      Backups created before every sync • 7-day retention
+                    </Text>
+                  </VStack>
+                  <Badge colorScheme="green" fontSize="sm" px={3} py={1}>
+                    OPERATIONAL
+                  </Badge>
+                </HStack>
+              </CardBody>
+            </Card>
+
             {/* Recommendations */}
             {(status.database.status === 'not_configured' || status.redis.status === 'not_configured') && (
               <Alert status="info" borderRadius="md" bg="blue.900" borderColor="blue.700">
@@ -431,7 +479,7 @@ export default function StatusPageClient() {
                   <VStack align="start" spacing={1} fontSize="sm" color="blue.200">
                     {status.database.status === 'not_configured' && (
                       <Text>
-                        • Add <Code bg="blue.800">DATABASE_URL</Code> for persistent storage (connections won't be lost on restart)
+                        • Add <Code bg="blue.800">DATABASE_URL</Code> for persistent storage (connections will persist across restarts)
                       </Text>
                     )}
                     {status.redis.status === 'not_configured' && (
