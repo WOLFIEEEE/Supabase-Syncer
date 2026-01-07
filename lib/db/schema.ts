@@ -9,6 +9,7 @@ export const logLevelEnum = pgEnum('log_level', ['info', 'warn', 'error']);
 // Connections table - stores encrypted database credentials
 export const connections = pgTable('connections', {
   id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull(), // References auth.users(id) - enforced by Supabase RLS
   name: varchar('name', { length: 255 }).notNull(),
   encryptedUrl: text('encrypted_url').notNull(),
   environment: environmentEnum('environment').notNull(),
@@ -22,6 +23,7 @@ export const connections = pgTable('connections', {
 // Sync jobs table - stores sync job records
 export const syncJobs = pgTable('sync_jobs', {
   id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull(), // References auth.users(id) - enforced by Supabase RLS
   sourceConnectionId: uuid('source_connection_id').references(() => connections.id).notNull(),
   targetConnectionId: uuid('target_connection_id').references(() => connections.id).notNull(),
   direction: syncDirectionEnum('direction').notNull().default('one_way'),

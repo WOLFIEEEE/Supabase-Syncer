@@ -4,7 +4,8 @@ import { executeSync, updateSyncJobStatus, addSyncLog } from '@/lib/services/syn
 import { decrypt } from '@/lib/services/encryption';
 import { db } from '@/lib/db/client';
 import { connections } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
+import { logger } from '@/lib/services/logger';
 import type { SyncJobData, SyncProgress } from '@/types';
 
 // Track cancelled jobs
@@ -28,27 +29,34 @@ function isJobCancelled(jobId: string): boolean {
  * Process a sync job
  */
 async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
-  const { jobId, sourceConnectionId, targetConnectionId, direction, tablesConfig, checkpoint } = job.data;
-  
-  console.log(`[Sync Worker] Starting job ${jobId}`);
-  
+  const { jobId, userId, sourceConnectionId, targetConnectionId, direction, tablesConfig, checkpoint } = job.data;
+
+  const jobLogger = logger.child({ jobId, userId });
+  jobLogger.info('Starting sync job', { sourceConnectionId, targetConnectionId, direction });
+
   try {
     // Update job status to running
     await updateSyncJobStatus(jobId, 'running');
     await addSyncLog(jobId, 'info', 'Job started by worker');
-    
-    // Get connection details
+
+    // Get connection details (filtered by user ID for security)
     const [sourceConnection, targetConnection] = await Promise.all([
       db.query.connections.findFirst({
-        where: eq(connections.id, sourceConnectionId),
+        where: and(
+          eq(connections.id, sourceConnectionId),
+          eq(connections.userId, userId)
+        ),
       }),
       db.query.connections.findFirst({
-        where: eq(connections.id, targetConnectionId),
+        where: and(
+          eq(connections.id, targetConnectionId),
+          eq(connections.userId, userId)
+        ),
       }),
     ]);
-    
+
     if (!sourceConnection || !targetConnection) {
-      throw new Error('Source or target connection not found');
+      throw new Error('Source or target connection not found or access denied');
     }
     
     // Decrypt database URLs
@@ -73,7 +81,7 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
       },
       onLog: async (level, message, metadata) => {
         await addSyncLog(jobId, level, message, metadata);
-        console.log(`[Sync Worker] [${level.toUpperCase()}] ${message}`);
+        jobLogger[level](message, metadata);
       },
       shouldCancel: () => isJobCancelled(jobId),
     });
@@ -104,11 +112,11 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
     
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[Sync Worker] Job ${jobId} failed:`, message);
-    
+    jobLogger.error('Sync job failed', error);
+
     await updateSyncJobStatus(jobId, 'failed');
     await addSyncLog(jobId, 'error', `Job failed: ${message}`);
-    
+
     throw error;
   }
 }
@@ -118,20 +126,20 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
  */
 export function startSyncWorker(): void {
   const worker = createSyncWorker(processSyncJob);
-  
+
   worker.on('completed', (job) => {
-    console.log(`[Sync Worker] Job ${job.id} completed`);
+    logger.info('Sync job completed', { jobId: job.id });
   });
-  
+
   worker.on('failed', (job, err) => {
-    console.error(`[Sync Worker] Job ${job?.id} failed:`, err.message);
+    logger.error('Sync job failed', err, { jobId: job?.id });
   });
-  
+
   worker.on('error', (err) => {
-    console.error('[Sync Worker] Worker error:', err.message);
+    logger.error('Sync worker error', err);
   });
-  
-  console.log('[Sync Worker] Worker started and listening for jobs');
+
+  logger.info('Sync worker started and listening for jobs');
 }
 
 // Export for programmatic use

@@ -233,6 +233,7 @@ export interface TableConfig {
 
 export interface SyncJobData {
   jobId: string;
+  userId: string; // User ID for security filtering
   sourceConnectionId: string;
   targetConnectionId: string;
   tablesConfig: TableConfig[];

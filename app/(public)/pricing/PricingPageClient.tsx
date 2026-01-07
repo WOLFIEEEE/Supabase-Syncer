@@ -13,58 +13,58 @@ import {
   Card,
   CardBody,
   Badge,
-  Divider,
   SimpleGrid,
   List,
   ListItem,
-  ListIcon,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Accordion,
   AccordionItem,
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
-  Icon,
   Flex,
-  useColorModeValue,
 } from '@chakra-ui/react';
+import { motion } from 'framer-motion';
+
+const MotionBox = motion.create(Box);
+const MotionVStack = motion.create(VStack);
 
 const CheckIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
     <polyline points="20 6 9 17 4 12"/>
   </svg>
 );
 
 const ShieldIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="m9 12 2 2 4-4"/>
   </svg>
 );
 
 const ZapIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
   </svg>
 );
 
-const UsersIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+const ChartIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M3 3v18h18"/>
+    <path d="M18 17V9"/>
+    <path d="M13 17V5"/>
+    <path d="M8 17v-3"/>
+  </svg>
+);
+
+const StarIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
   </svg>
 );
 
 interface PricingTier {
   id: string;
   name: string;
-  displayName: string;
   price: number;
   priceYearly?: number;
   description: string;
@@ -76,86 +76,57 @@ interface PricingTier {
     syncsPerMonth: string;
     dataTransfer: string;
     teamMembers: string;
-    support: string;
   };
   isPopular?: boolean;
   isBeta?: boolean;
   comingSoon?: boolean;
+  ctaText?: string;
 }
 
 const pricingTiers: PricingTier[] = [
   {
     id: 'beta',
-    name: 'beta',
-    displayName: 'Beta Plan',
+    name: 'Beta Access',
     price: 0,
-    description: 'Full access during beta testing',
-    badge: 'FREE',
-    badgeColor: 'green',
+    description: 'Full access during beta testing period',
+    badge: 'CURRENT',
+    badgeColor: 'teal',
     isBeta: true,
+    ctaText: 'Get Started Free',
     features: [
-      'Unlimited database connections',
-      'Unlimited sync jobs',
-      'Unlimited data transfer',
+      '25 database connections',
+      '100 sync jobs per month',
+      '10 GB data transfer',
       'Schema synchronization',
-      'Data sync (one-way & two-way)',
-      'Automatic rollback protection',
-      'Real-time sync monitoring',
+      'One-way & two-way sync',
+      'Real-time monitoring',
       'Keep-alive service',
-      'Migration script generation',
-      'Schema validation',
-      'Encrypted credential storage',
-      '10/10 Security Score',
+      'Migration generation',
+      'Encrypted storage',
       'Email support',
     ],
     limits: {
-      connections: 'Unlimited',
-      syncsPerMonth: 'Unlimited',
-      dataTransfer: 'Unlimited',
+      connections: '25',
+      syncsPerMonth: '100',
+      dataTransfer: '10 GB',
       teamMembers: '1',
-      support: 'Email',
-    },
-  },
-  {
-    id: 'free',
-    name: 'free',
-    displayName: 'Free',
-    price: 0,
-    description: 'Perfect for getting started',
-    comingSoon: true,
-    features: [
-      '3 database connections',
-      '5 sync jobs per month',
-      '500 MB data transfer/month',
-      'Schema synchronization',
-      'Data sync (one-way)',
-      'Basic monitoring',
-      'Community support',
-    ],
-    limits: {
-      connections: '3',
-      syncsPerMonth: '5',
-      dataTransfer: '500 MB',
-      teamMembers: '1',
-      support: 'Community',
     },
   },
   {
     id: 'starter',
-    name: 'starter',
-    displayName: 'Starter',
-    price: 9,
-    priceYearly: 90,
-    description: 'For small projects',
+    name: 'Starter',
+    price: 12,
+    priceYearly: 120,
+    description: 'For individual developers',
     comingSoon: true,
     features: [
       '10 database connections',
       '50 sync jobs per month',
-      '5 GB data transfer/month',
+      '5 GB data transfer',
       'Schema synchronization',
-      'Data sync (one-way & two-way)',
-      'Scheduled syncs',
-      'Real-time monitoring',
+      'One-way & two-way sync',
+      'Basic monitoring',
+      'Keep-alive service',
       'Email support',
     ],
     limits: {
@@ -163,570 +134,707 @@ const pricingTiers: PricingTier[] = [
       syncsPerMonth: '50',
       dataTransfer: '5 GB',
       teamMembers: '1',
-      support: 'Email',
     },
   },
   {
     id: 'pro',
-    name: 'pro',
-    displayName: 'Pro',
-    price: 29,
-    priceYearly: 290,
-    description: 'For growing teams',
+    name: 'Pro',
+    price: 39,
+    priceYearly: 390,
+    description: 'For growing projects',
     badge: 'POPULAR',
     badgeColor: 'purple',
     isPopular: true,
     comingSoon: true,
     features: [
-      'Unlimited connections',
+      '50 database connections',
       '500 sync jobs per month',
-      '50 GB data transfer/month',
+      '50 GB data transfer',
       'All sync features',
-      'Advanced scheduling (cron)',
+      'Advanced scheduling',
       'API access',
       'Webhooks',
-      'Advanced monitoring & analytics',
-      'Priority email support',
-      '10/10 Security Score',
+      'Priority support',
+      'Advanced analytics',
     ],
     limits: {
-      connections: 'Unlimited',
+      connections: '50',
       syncsPerMonth: '500',
       dataTransfer: '50 GB',
       teamMembers: '3',
-      support: 'Priority Email',
     },
   },
   {
     id: 'team',
-    name: 'team',
-    displayName: 'Team',
+    name: 'Team',
     price: 99,
     priceYearly: 990,
     description: 'For teams and agencies',
     comingSoon: true,
     features: [
-      'Everything in Pro',
-      'Unlimited sync jobs',
-      'Unlimited data transfer',
+      '200 database connections',
+      '2,000 sync jobs per month',
+      '200 GB data transfer',
       'Team collaboration',
-      'Role-based access control',
+      'Role-based access',
       'Shared workspaces',
-      'Activity logs',
-      'Advanced security (SSO ready)',
+      'Activity audit logs',
       'Dedicated support',
+      'SSO ready',
     ],
     limits: {
-      connections: 'Unlimited',
-      syncsPerMonth: 'Unlimited',
-      dataTransfer: 'Unlimited',
+      connections: '200',
+      syncsPerMonth: '2,000',
+      dataTransfer: '200 GB',
       teamMembers: '10',
-      support: 'Dedicated',
     },
   },
   {
     id: 'enterprise',
-    name: 'enterprise',
-    displayName: 'Enterprise',
+    name: 'Enterprise',
     price: 0,
-    description: 'Custom solutions',
+    description: 'Custom solutions for large organizations',
     comingSoon: true,
+    ctaText: 'Contact Sales',
     features: [
-      'Everything in Team',
-      'Custom limits',
-      'SSO/SAML',
+      'Custom connection limits',
+      'Custom sync limits',
+      'Custom data transfer',
+      'SSO/SAML integration',
       'Dedicated infrastructure',
       'SLA guarantee',
       'Custom integrations',
-      'On-premise deployment',
+      'On-premise option',
       '24/7 phone support',
-      'Account manager',
+      'Dedicated account manager',
     ],
     limits: {
       connections: 'Custom',
       syncsPerMonth: 'Custom',
       dataTransfer: 'Custom',
-      teamMembers: 'Unlimited',
-      support: '24/7 Phone',
+      teamMembers: 'Custom',
     },
   },
 ];
 
-const valuePropositions = [
+const valueProps = [
   {
     icon: ShieldIcon,
-    title: '10/10 Security Score',
-    description: 'Enterprise-grade security with CSRF protection, rate limiting, and encrypted storage',
+    title: 'Enterprise Security',
+    description: 'AES-256 encryption, CSRF protection, rate limiting, and comprehensive audit logs.',
   },
   {
     icon: ZapIcon,
-    title: 'Production-Grade Reliability',
-    description: 'Automatic rollback, transaction isolation, and idempotency guarantees',
+    title: 'Production Ready',
+    description: 'Automatic rollback, transaction isolation, and idempotency guarantees built-in.',
   },
   {
-    icon: UsersIcon,
-    title: 'Real-Time Monitoring',
-    description: 'Live sync dashboards with metrics, alerts, and comprehensive logging',
+    icon: ChartIcon,
+    title: 'Real-Time Insights',
+    description: 'Live dashboards, detailed metrics, and comprehensive sync monitoring.',
   },
 ];
 
 const faqItems = [
   {
-    question: 'When will pricing change?',
-    answer: 'We will notify all beta users at least 30 days before any pricing changes. Beta users will receive special early adopter benefits including grandfathered pricing.',
+    question: 'What happens when beta ends?',
+    answer: 'Beta users will receive 30+ days notice before any pricing changes. Early adopters get special benefits including discounted rates and grandfathered pricing options.',
   },
   {
-    question: 'What happens to beta users?',
-    answer: 'Beta users will receive: 50% off first year of any paid plan, grandfathered pricing option, priority support, and feature request priority. We value our early adopters!',
+    question: 'Can I change my plan later?',
+    answer: 'Yes! Upgrade or downgrade anytime. Changes take effect immediately with prorated billing for upgrades.',
   },
   {
-    question: 'Can I upgrade or downgrade my plan?',
-    answer: 'Yes! You can upgrade or downgrade at any time. Changes take effect immediately, and we prorate charges for upgrades.',
+    question: 'What counts as a sync job?',
+    answer: 'Each time you initiate a sync operation between databases counts as one sync job, regardless of the number of tables or rows synced.',
   },
   {
-    question: 'What\'s included in each plan?',
-    answer: 'All plans include schema sync, data sync, encrypted storage, and basic monitoring. Higher tiers add scheduling, API access, team features, and priority support.',
+    question: 'How is data transfer calculated?',
+    answer: 'Data transfer is the total amount of data moved between your databases during sync operations. This includes both reads from source and writes to target.',
   },
   {
     question: 'Do you offer refunds?',
     answer: 'Yes, we offer a 30-day money-back guarantee for all paid plans. No questions asked.',
   },
   {
-    question: 'Is there a free tier after beta?',
-    answer: 'Yes! We plan to offer a free tier with 3 connections and 5 syncs per month. Perfect for small projects and testing.',
-  },
-  {
-    question: 'What payment methods do you accept?',
-    answer: 'We accept all major credit cards, debit cards, and ACH transfers. Enterprise customers can also pay via invoice.',
-  },
-  {
-    question: 'Can I use suparbase for production databases?',
-    answer: 'Absolutely! suparbase is production-ready with automatic rollback, transaction isolation, and comprehensive safety features. Many users sync production databases daily.',
+    question: 'Is suparbase safe for production?',
+    answer: 'Absolutely! suparbase includes automatic rollback, transaction isolation, dry-run previews, and comprehensive safety features designed for production use.',
   },
 ];
 
 export default function PricingPageClient() {
   const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const cardBg = useColorModeValue('surface.800', 'surface.900');
-  const borderColor = useColorModeValue('surface.700', 'surface.600');
 
   return (
-    <Box minH="100vh" bg="surface.900">
-      <Container maxW="7xl" py={{ base: 8, md: 12 }}>
-        <VStack spacing={12} align="stretch">
-          {/* Header */}
-          <VStack spacing={4} align="center" textAlign="center">
-            <Heading
-              size={{ base: 'xl', md: '2xl' }}
-              fontFamily="mono"
-              bgGradient="linear(to-r, brand.300, brand.500)"
-              bgClip="text"
-            >
-              Simple, Transparent Pricing
-            </Heading>
-            <Text color="surface.400" fontSize={{ base: 'md', md: 'lg' }} maxW="2xl">
-              suparbase is currently in <strong>beta testing phase</strong> and is <strong>completely free</strong> to use.
-              <br />
-              Preview our future pricing tiers below.
-            </Text>
-          </VStack>
+    <Box position="relative" bg="rgba(9, 9, 11, 1)" overflow="hidden" minH="100vh">
+      {/* Subtle Grid Background */}
+      <Box
+        position="absolute"
+        inset={0}
+        style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0)`,
+          backgroundSize: '40px 40px'
+        }}
+        pointerEvents="none"
+        zIndex={0}
+      />
 
-          {/* Beta Notice */}
-          <Box
-            bg="brand.500"
-            bgGradient="linear(to-r, brand.500, brand.600)"
-            p={6}
-            borderRadius="xl"
+      {/* Gradient Overlay */}
+      <Box
+        position="absolute"
+        top={0}
+        left="50%"
+        transform="translateX(-50%)"
+        w="150%"
+        h="600px"
+        bgGradient="radial(ellipse at 50% 0%, rgba(62, 207, 142, 0.08) 0%, transparent 60%)"
+        pointerEvents="none"
+        zIndex={0}
+      />
+
+      <Container maxW="6xl" py={{ base: 12, md: 20 }} px={{ base: 4, sm: 6, md: 8 }} position="relative" zIndex={1}>
+        <VStack spacing={{ base: 12, md: 16 }} align="stretch">
+
+          {/* Hero Header */}
+          <MotionVStack
+            spacing={6}
+            align="center"
             textAlign="center"
-            borderWidth="1px"
-            borderColor="brand.400"
-            position="relative"
-            overflow="hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <HStack
+              px={4}
+              py={1.5}
+              bg="rgba(255,255,255,0.03)"
+              borderRadius="full"
+              border="1px solid"
+              borderColor="rgba(255,255,255,0.1)"
+              spacing={2}
+            >
+              <Box w={1.5} h={1.5} borderRadius="full" bg="teal.400" />
+              <Text fontSize="xs" fontWeight="600" color="surface.300" letterSpacing="0.05em">
+                SIMPLE PRICING
+              </Text>
+            </HStack>
+
+            <Heading
+              as="h1"
+              fontSize={{ base: '3xl', md: '5xl', lg: '6xl' }}
+              fontWeight="700"
+              lineHeight="1.1"
+              letterSpacing="-0.02em"
+              color="white"
+            >
+              One plan,{' '}
+              <Box
+                as="span"
+                color="transparent"
+                sx={{
+                  WebkitTextStroke: { base: '1.5px #3ECF8E', md: '2px #3ECF8E' },
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
+                full access
+              </Box>
+            </Heading>
+
+            <Text
+              fontSize={{ base: 'md', md: 'xl' }}
+              color="surface.400"
+              maxW="2xl"
+              lineHeight="1.6"
+            >
+              suparbase is in beta — enjoy full access to all features while we perfect the product.
+              <br />
+              <Text as="span" color="teal.400" fontWeight="500">No credit card required.</Text>
+            </Text>
+          </MotionVStack>
+
+          {/* Beta Banner */}
+          <MotionBox
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
             <Box
-              position="absolute"
-              top={0}
-              left={0}
-              right={0}
-              bottom={0}
-              bgGradient="linear(to-br, brand.400/20, transparent)"
-              pointerEvents="none"
-            />
-            <VStack spacing={3} position="relative">
-              <Badge colorScheme="white" fontSize="md" px={3} py={1} borderRadius="full">
-                BETA TESTING PHASE
-              </Badge>
-              <Heading size="lg" color="white">
-                Free During Beta
-              </Heading>
-              <Text color="white" fontSize="md" maxW="2xl">
-                We're currently in beta testing and all features are available at no cost. 
-                Help us improve suparbase by using it and sharing your feedback!
-              </Text>
-            </VStack>
-          </Box>
+              position="relative"
+              overflow="hidden"
+              borderRadius="2xl"
+              border="1px solid"
+              borderColor="teal.500/30"
+              bg="rgba(62, 207, 142, 0.05)"
+              p={{ base: 6, md: 8 }}
+            >
+              <Box
+                position="absolute"
+                top={0}
+                right={0}
+                w="300px"
+                h="300px"
+                bgGradient="radial(circle at 100% 0%, rgba(62, 207, 142, 0.15) 0%, transparent 70%)"
+                pointerEvents="none"
+              />
+              <HStack spacing={{ base: 4, md: 6 }} align="start" flexWrap="wrap">
+                <Box
+                  p={3}
+                  borderRadius="xl"
+                  bg="teal.500/10"
+                  border="1px solid"
+                  borderColor="teal.500/20"
+                >
+                  <Box color="teal.400">
+                    <StarIcon />
+                  </Box>
+                </Box>
+                <VStack align="start" spacing={2} flex={1} minW="200px">
+                  <HStack spacing={3}>
+                    <Heading size="md" color="white">Beta Access</Heading>
+                    <Badge colorScheme="teal" fontSize="xs" px={2} py={0.5} borderRadius="full">
+                      FREE
+                    </Badge>
+                  </HStack>
+                  <Text color="surface.300" fontSize="sm" lineHeight="1.6">
+                    Get full access to all features during our beta period. Help shape the future of database synchronization
+                    and lock in early adopter benefits when we launch paid plans.
+                  </Text>
+                </VStack>
+                <Button
+                  colorScheme="teal"
+                  size="lg"
+                  onClick={() => router.push('/signup')}
+                  px={8}
+                  flexShrink={0}
+                >
+                  Start Free
+                </Button>
+              </HStack>
+            </Box>
+          </MotionBox>
 
           {/* Value Propositions */}
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-            {valuePropositions.map((prop, index) => {
+            {valueProps.map((prop, index) => {
               const IconComponent = prop.icon;
               return (
-                <Card key={index} bg={cardBg} borderColor={borderColor}>
-                  <CardBody>
-                    <VStack spacing={3} align="start">
-                      <Box color="brand.400">
-                        <IconComponent />
-                      </Box>
-                      <Heading size="sm" color="white">
-                        {prop.title}
-                      </Heading>
-                      <Text color="surface.400" fontSize="sm">
-                        {prop.description}
-                      </Text>
-                    </VStack>
-                  </CardBody>
-                </Card>
+                <MotionBox
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 * index }}
+                >
+                  <Card
+                    bg="rgba(255,255,255,0.02)"
+                    borderColor="rgba(255,255,255,0.06)"
+                    borderWidth="1px"
+                    borderRadius="xl"
+                    _hover={{ borderColor: 'rgba(255,255,255,0.1)', bg: 'rgba(255,255,255,0.03)' }}
+                    transition="all 0.2s"
+                  >
+                    <CardBody p={6}>
+                      <VStack spacing={4} align="start">
+                        <Box color="teal.400">
+                          <IconComponent />
+                        </Box>
+                        <Heading size="sm" color="white" fontWeight="600">
+                          {prop.title}
+                        </Heading>
+                        <Text color="surface.400" fontSize="sm" lineHeight="1.6">
+                          {prop.description}
+                        </Text>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+                </MotionBox>
               );
             })}
           </SimpleGrid>
 
-          <Divider borderColor={borderColor} />
-
-          {/* Billing Cycle Toggle */}
-          <Box display="flex" justifyContent="center">
+          {/* Billing Toggle */}
+          <Flex justify="center">
             <HStack
-              bg={cardBg}
+              bg="rgba(255,255,255,0.03)"
               p={1}
-              borderRadius="lg"
-              borderWidth="1px"
-              borderColor={borderColor}
+              borderRadius="xl"
+              border="1px solid"
+              borderColor="rgba(255,255,255,0.08)"
             >
               <Button
                 size="sm"
                 variant={billingCycle === 'monthly' ? 'solid' : 'ghost'}
-                colorScheme={billingCycle === 'monthly' ? 'brand' : 'gray'}
+                colorScheme={billingCycle === 'monthly' ? 'teal' : 'gray'}
                 onClick={() => setBillingCycle('monthly')}
+                borderRadius="lg"
+                px={6}
               >
                 Monthly
               </Button>
               <Button
                 size="sm"
                 variant={billingCycle === 'yearly' ? 'solid' : 'ghost'}
-                colorScheme={billingCycle === 'yearly' ? 'brand' : 'gray'}
+                colorScheme={billingCycle === 'yearly' ? 'teal' : 'gray'}
                 onClick={() => setBillingCycle('yearly')}
+                borderRadius="lg"
+                px={6}
               >
                 Yearly
-                <Badge ml={2} colorScheme="green" fontSize="xs">
-                  Save 17%
+                <Badge ml={2} colorScheme="green" fontSize="2xs" px={2} borderRadius="full">
+                  -17%
                 </Badge>
               </Button>
             </HStack>
-          </Box>
+          </Flex>
 
           {/* Pricing Cards */}
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-            {pricingTiers.map((tier) => {
+            {pricingTiers.slice(0, 4).map((tier, index) => {
               const displayPrice = billingCycle === 'yearly' && tier.priceYearly
-                ? tier.priceYearly
+                ? Math.round(tier.priceYearly / 12)
                 : tier.price;
-              const isBeta = tier.isBeta;
-              const isPopular = tier.isPopular;
-              const comingSoon = tier.comingSoon;
+              const isEnterprise = tier.id === 'enterprise';
 
               return (
-                <Card
+                <MotionBox
                   key={tier.id}
-                  bg={cardBg}
-                  borderColor={isPopular ? 'brand.500' : isBeta ? 'green.500' : borderColor}
-                  borderWidth={isPopular || isBeta ? '2px' : '1px'}
-                  position="relative"
-                  transform={isPopular ? 'scale(1.05)' : 'none'}
-                  transition="all 0.2s"
-                  _hover={{ transform: isPopular ? 'scale(1.07)' : 'scale(1.02)', shadow: 'xl' }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 * index }}
+                  gridColumn={tier.isBeta ? { lg: 'span 1' } : undefined}
                 >
-                  {isPopular && (
-                    <Badge
-                      position="absolute"
-                      top={-3}
-                      right={4}
-                      colorScheme="purple"
-                      fontSize="xs"
-                      px={2}
-                      py={1}
-                      borderRadius="full"
-                    >
-                      MOST POPULAR
-                    </Badge>
-                  )}
-                  <CardBody p={6}>
-                    <VStack spacing={4} align="stretch">
-                      <VStack spacing={2} align="start">
-                        <HStack spacing={3} w="full" justify="space-between">
-                          <Heading size="md" color="white">
-                            {tier.displayName}
+                  <Card
+                    h="full"
+                    bg={tier.isBeta ? 'rgba(62, 207, 142, 0.03)' : 'rgba(255,255,255,0.02)'}
+                    borderColor={tier.isPopular ? 'purple.500/50' : tier.isBeta ? 'teal.500/30' : 'rgba(255,255,255,0.06)'}
+                    borderWidth={tier.isPopular || tier.isBeta ? '2px' : '1px'}
+                    borderRadius="2xl"
+                    position="relative"
+                    overflow="hidden"
+                    transition="all 0.3s"
+                    _hover={{
+                      transform: 'translateY(-4px)',
+                      shadow: 'xl',
+                      borderColor: tier.isPopular ? 'purple.500' : tier.isBeta ? 'teal.500/50' : 'rgba(255,255,255,0.12)'
+                    }}
+                  >
+                    {tier.isPopular && (
+                      <Badge
+                        position="absolute"
+                        top={4}
+                        right={4}
+                        colorScheme="purple"
+                        fontSize="2xs"
+                        px={2}
+                        py={0.5}
+                        borderRadius="full"
+                      >
+                        MOST POPULAR
+                      </Badge>
+                    )}
+                    {tier.badge && !tier.isPopular && (
+                      <Badge
+                        position="absolute"
+                        top={4}
+                        right={4}
+                        colorScheme={tier.badgeColor}
+                        fontSize="2xs"
+                        px={2}
+                        py={0.5}
+                        borderRadius="full"
+                      >
+                        {tier.badge}
+                      </Badge>
+                    )}
+                    <CardBody p={6}>
+                      <VStack spacing={5} align="stretch" h="full">
+                        <VStack spacing={3} align="start">
+                          <Heading size="md" color="white" fontWeight="600">
+                            {tier.name}
                           </Heading>
-                          {tier.badge && (
-                            <Badge colorScheme={tier.badgeColor} fontSize="xs" px={2} py={1}>
-                              {tier.badge}
-                            </Badge>
-                          )}
+                          <HStack spacing={1} align="baseline">
+                            {tier.price === 0 && !isEnterprise ? (
+                              <Heading size="2xl" color="teal.400" fontWeight="700">
+                                Free
+                              </Heading>
+                            ) : isEnterprise ? (
+                              <Heading size="xl" color="white" fontWeight="700">
+                                Custom
+                              </Heading>
+                            ) : (
+                              <>
+                                <Heading size="2xl" color="white" fontWeight="700">
+                                  ${displayPrice}
+                                </Heading>
+                                <Text color="surface.500" fontSize="sm">/mo</Text>
+                              </>
+                            )}
+                          </HStack>
+                          <Text color="surface.400" fontSize="sm">
+                            {tier.description}
+                          </Text>
+                        </VStack>
+
+                        {/* Limits Summary */}
+                        <HStack
+                          spacing={4}
+                          py={3}
+                          px={3}
+                          bg="rgba(255,255,255,0.02)"
+                          borderRadius="lg"
+                          flexWrap="wrap"
+                        >
+                          <VStack spacing={0} align="start" flex={1} minW="80px">
+                            <Text color="teal.400" fontWeight="700" fontSize="sm">
+                              {tier.limits.connections}
+                            </Text>
+                            <Text color="surface.500" fontSize="2xs">connections</Text>
+                          </VStack>
+                          <VStack spacing={0} align="start" flex={1} minW="80px">
+                            <Text color="teal.400" fontWeight="700" fontSize="sm">
+                              {tier.limits.syncsPerMonth}
+                            </Text>
+                            <Text color="surface.500" fontSize="2xs">syncs/mo</Text>
+                          </VStack>
+                          <VStack spacing={0} align="start" flex={1} minW="80px">
+                            <Text color="teal.400" fontWeight="700" fontSize="sm">
+                              {tier.limits.dataTransfer}
+                            </Text>
+                            <Text color="surface.500" fontSize="2xs">transfer</Text>
+                          </VStack>
                         </HStack>
-                        <HStack spacing={2} align="baseline">
-                          <Heading size="2xl" color="brand.400">
-                            {displayPrice === 0 ? '$0' : `$${displayPrice}`}
-                          </Heading>
-                          {displayPrice > 0 && (
-                            <Text color="surface.400" fontSize="sm">
-                              /{billingCycle === 'yearly' ? 'year' : 'month'}
+
+                        {/* Features List */}
+                        <List spacing={2} flex={1}>
+                          {tier.features.slice(0, 7).map((feature, idx) => (
+                            <ListItem key={idx}>
+                              <HStack align="start" spacing={2}>
+                                <Box color="teal.400" mt={0.5} flexShrink={0}>
+                                  <CheckIcon />
+                                </Box>
+                                <Text color="surface.300" fontSize="sm">{feature}</Text>
+                              </HStack>
+                            </ListItem>
+                          ))}
+                          {tier.features.length > 7 && (
+                            <Text color="surface.500" fontSize="xs" pl={6}>
+                              +{tier.features.length - 7} more
                             </Text>
                           )}
-                        </HStack>
-                        <Text color="surface.400" fontSize="sm">
-                          {tier.description}
-                        </Text>
-                      </VStack>
+                        </List>
 
-                      <Divider borderColor={borderColor} />
-
-                      <List spacing={2} flex={1}>
-                        {tier.features.slice(0, 6).map((feature, index) => (
-                          <ListItem key={index} color="surface.300">
-                            <HStack align="start" spacing={2}>
-                              <ListIcon as={CheckIcon} color="brand.400" mt={0.5} />
-                              <Text fontSize="sm">{feature}</Text>
-                            </HStack>
-                          </ListItem>
-                        ))}
-                        {tier.features.length > 6 && (
-                          <Text color="surface.500" fontSize="xs" pl={6}>
-                            +{tier.features.length - 6} more features
-                          </Text>
+                        {/* CTA Button */}
+                        {tier.comingSoon ? (
+                          <Button
+                            size="lg"
+                            variant="outline"
+                            borderColor="rgba(255,255,255,0.1)"
+                            color="surface.400"
+                            width="full"
+                            isDisabled
+                            _hover={{ cursor: 'not-allowed' }}
+                          >
+                            Coming Soon
+                          </Button>
+                        ) : (
+                          <Button
+                            size="lg"
+                            colorScheme={tier.isBeta ? 'teal' : 'gray'}
+                            variant={tier.isBeta ? 'solid' : 'outline'}
+                            width="full"
+                            onClick={() => router.push('/signup')}
+                          >
+                            {tier.ctaText || 'Get Started'}
+                          </Button>
                         )}
-                      </List>
-
-                      {comingSoon ? (
-                        <Button
-                          size="lg"
-                          variant="outline"
-                          width="full"
-                          isDisabled
-                          _hover={{ cursor: 'not-allowed' }}
-                        >
-                          Coming Soon
-                        </Button>
-                      ) : (
-                        <Button
-                          size="lg"
-                          colorScheme={isPopular ? 'brand' : 'teal'}
-                          width="full"
-                          onClick={() => router.push('/signup')}
-                        >
-                          {isBeta ? 'Get Started Free' : 'Get Started'}
-                        </Button>
-                      )}
-
-                      {isBeta && (
-                        <Text color="surface.500" fontSize="xs" textAlign="center">
-                          No credit card required
-                        </Text>
-                      )}
-                    </VStack>
-                  </CardBody>
-                </Card>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+                </MotionBox>
               );
             })}
           </SimpleGrid>
 
-          {/* Feature Comparison Table */}
-          <Box>
-            <VStack spacing={4} align="stretch">
-              <Heading size="lg" color="white" textAlign="center">
-                Compare Plans
-              </Heading>
-              <Box overflowX="auto">
-                <Table variant="simple" size="sm">
-                  <Thead>
-                    <Tr>
-                      <Th color="surface.300">Feature</Th>
-                      {pricingTiers.map((tier) => (
-                        <Th key={tier.id} color="surface.300" textAlign="center">
-                          {tier.displayName}
-                        </Th>
-                      ))}
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    <Tr>
-                      <Td color="surface.400">Database Connections</Td>
-                      {pricingTiers.map((tier) => (
-                        <Td key={tier.id} textAlign="center" color="surface.300">
-                          {tier.limits.connections}
-                        </Td>
-                      ))}
-                    </Tr>
-                    <Tr>
-                      <Td color="surface.400">Sync Jobs / Month</Td>
-                      {pricingTiers.map((tier) => (
-                        <Td key={tier.id} textAlign="center" color="surface.300">
-                          {tier.limits.syncsPerMonth}
-                        </Td>
-                      ))}
-                    </Tr>
-                    <Tr>
-                      <Td color="surface.400">Data Transfer</Td>
-                      {pricingTiers.map((tier) => (
-                        <Td key={tier.id} textAlign="center" color="surface.300">
-                          {tier.limits.dataTransfer}
-                        </Td>
-                      ))}
-                    </Tr>
-                    <Tr>
-                      <Td color="surface.400">Team Members</Td>
-                      {pricingTiers.map((tier) => (
-                        <Td key={tier.id} textAlign="center" color="surface.300">
-                          {tier.limits.teamMembers}
-                        </Td>
-                      ))}
-                    </Tr>
-                    <Tr>
-                      <Td color="surface.400">Support</Td>
-                      {pricingTiers.map((tier) => (
-                        <Td key={tier.id} textAlign="center" color="surface.300">
-                          {tier.limits.support}
-                        </Td>
-                      ))}
-                    </Tr>
-                  </Tbody>
-                </Table>
-              </Box>
-            </VStack>
-          </Box>
-
-          {/* Beta Benefits */}
-          <Card bg={cardBg} borderColor="green.500" borderWidth="2px">
-            <CardBody p={8}>
-              <VStack spacing={4} align="start">
-                <HStack spacing={2}>
-                  <Badge colorScheme="green" fontSize="md" px={3} py={1}>
-                    BETA USER BENEFITS
-                  </Badge>
-                </HStack>
-                <Heading size="md" color="white">
-                  Special Perks for Early Adopters
-                </Heading>
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="full">
-                  <HStack align="start" spacing={3}>
-                    <Box color="green.400" mt={1}>
-                      <CheckIcon />
-                    </Box>
-                    <VStack align="start" spacing={1}>
-                      <Text color="white" fontWeight="bold" fontSize="sm">
-                        50% Off First Year
-                      </Text>
-                      <Text color="surface.400" fontSize="sm">
-                        Get half off any paid plan for your first year
-                      </Text>
-                    </VStack>
-                  </HStack>
-                  <HStack align="start" spacing={3}>
-                    <Box color="green.400" mt={1}>
-                      <CheckIcon />
-                    </Box>
-                    <VStack align="start" spacing={1}>
-                      <Text color="white" fontWeight="bold" fontSize="sm">
-                        Grandfathered Pricing
-                      </Text>
-                      <Text color="surface.400" fontSize="sm">
-                        Lock in beta pricing when we launch paid plans
-                      </Text>
-                    </VStack>
-                  </HStack>
-                  <HStack align="start" spacing={3}>
-                    <Box color="green.400" mt={1}>
-                      <CheckIcon />
-                    </Box>
-                    <VStack align="start" spacing={1}>
-                      <Text color="white" fontWeight="bold" fontSize="sm">
-                        Priority Support
-                      </Text>
-                      <Text color="surface.400" fontSize="sm">
-                        Get faster response times and dedicated help
-                      </Text>
-                    </VStack>
-                  </HStack>
-                  <HStack align="start" spacing={3}>
-                    <Box color="green.400" mt={1}>
-                      <CheckIcon />
-                    </Box>
-                    <VStack align="start" spacing={1}>
-                      <Text color="white" fontWeight="bold" fontSize="sm">
-                        Feature Request Priority
-                      </Text>
-                      <Text color="surface.400" fontSize="sm">
-                        Your suggestions get prioritized in our roadmap
-                      </Text>
-                    </VStack>
-                  </HStack>
-                </SimpleGrid>
-              </VStack>
-            </CardBody>
-          </Card>
-
-          {/* FAQ Section */}
-          <Box>
-            <VStack spacing={6} align="stretch">
-              <Heading size="lg" color="white" textAlign="center">
-                Frequently Asked Questions
-              </Heading>
-              <Accordion allowToggle>
-                {faqItems.map((item, index) => (
-                  <AccordionItem key={index} borderColor={borderColor}>
-                    <AccordionButton _hover={{ bg: cardBg }}>
-                      <Box flex="1" textAlign="left" color="white" fontWeight="medium">
-                        {item.question}
-                      </Box>
-                      <AccordionIcon color="brand.400" />
-                    </AccordionButton>
-                    <AccordionPanel pb={4} color="surface.400">
-                      {item.answer}
-                    </AccordionPanel>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </VStack>
-          </Box>
-
-          {/* CTA Section */}
-          <Card bg={cardBg} borderColor="brand.500" borderWidth="2px">
-            <CardBody p={8} textAlign="center">
-              <VStack spacing={4}>
-                <Heading size="md" color="white">
-                  Ready to Get Started?
-                </Heading>
-                <Text color="surface.400" maxW="2xl">
-                  Join the beta and get full access to all features for free. 
-                  No credit card required. Start syncing your databases today!
-                </Text>
-                <HStack spacing={4} justify="center" flexWrap="wrap">
-                  <Button
-                    size="lg"
-                    colorScheme="brand"
-                    onClick={() => router.push('/signup')}
-                  >
-                    Start Free Beta
-                  </Button>
+          {/* Enterprise Card - Full Width */}
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Card
+              bg="rgba(255,255,255,0.02)"
+              borderColor="rgba(255,255,255,0.08)"
+              borderWidth="1px"
+              borderRadius="2xl"
+            >
+              <CardBody p={{ base: 6, md: 8 }}>
+                <Flex
+                  direction={{ base: 'column', md: 'row' }}
+                  justify="space-between"
+                  align={{ base: 'start', md: 'center' }}
+                  gap={6}
+                >
+                  <VStack align="start" spacing={2}>
+                    <HStack spacing={3}>
+                      <Heading size="lg" color="white">Enterprise</Heading>
+                      <Badge colorScheme="orange" fontSize="xs" px={2} borderRadius="full">COMING SOON</Badge>
+                    </HStack>
+                    <Text color="surface.400" maxW="xl">
+                      Need custom limits, SSO, dedicated infrastructure, or SLA guarantees?
+                      Contact us to discuss enterprise solutions tailored to your needs.
+                    </Text>
+                  </VStack>
                   <Button
                     size="lg"
                     variant="outline"
-                    onClick={() => router.push('/guide')}
+                    borderColor="rgba(255,255,255,0.2)"
+                    color="white"
+                    px={8}
+                    isDisabled
+                    _hover={{ borderColor: 'teal.500', bg: 'rgba(62, 207, 142, 0.1)' }}
                   >
-                    View Documentation
+                    Contact Sales
                   </Button>
-                </HStack>
-              </VStack>
-            </CardBody>
-          </Card>
+                </Flex>
+              </CardBody>
+            </Card>
+          </MotionBox>
+
+          {/* Early Adopter Benefits */}
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <Card
+              bg="rgba(147, 51, 234, 0.05)"
+              borderColor="purple.500/20"
+              borderWidth="1px"
+              borderRadius="2xl"
+              overflow="hidden"
+              position="relative"
+            >
+              <Box
+                position="absolute"
+                top={0}
+                left={0}
+                w="300px"
+                h="300px"
+                bgGradient="radial(circle at 0% 0%, rgba(147, 51, 234, 0.1) 0%, transparent 70%)"
+                pointerEvents="none"
+              />
+              <CardBody p={{ base: 6, md: 8 }} position="relative">
+                <VStack spacing={6} align="start">
+                  <HStack spacing={3}>
+                    <Badge colorScheme="purple" fontSize="sm" px={3} py={1} borderRadius="full">
+                      BETA PERKS
+                    </Badge>
+                  </HStack>
+                  <Heading size="md" color="white">
+                    Early Adopter Benefits
+                  </Heading>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="full">
+                    {[
+                      { title: '50% Off First Year', desc: 'Discount on any paid plan when we launch' },
+                      { title: 'Grandfathered Pricing', desc: 'Lock in beta pricing forever' },
+                      { title: 'Priority Support', desc: 'Faster response times and dedicated help' },
+                      { title: 'Feature Influence', desc: 'Your feedback shapes our roadmap' },
+                    ].map((benefit, idx) => (
+                      <HStack key={idx} align="start" spacing={3}>
+                        <Box color="purple.400" mt={1} flexShrink={0}>
+                          <CheckIcon />
+                        </Box>
+                        <VStack align="start" spacing={0}>
+                          <Text color="white" fontWeight="600" fontSize="sm">
+                            {benefit.title}
+                          </Text>
+                          <Text color="surface.400" fontSize="sm">
+                            {benefit.desc}
+                          </Text>
+                        </VStack>
+                      </HStack>
+                    ))}
+                  </SimpleGrid>
+                </VStack>
+              </CardBody>
+            </Card>
+          </MotionBox>
+
+          {/* FAQ Section */}
+          <VStack spacing={8} align="stretch">
+            <Heading size="lg" color="white" textAlign="center">
+              Frequently Asked Questions
+            </Heading>
+            <Accordion allowToggle>
+              {faqItems.map((item, index) => (
+                <AccordionItem
+                  key={index}
+                  borderColor="rgba(255,255,255,0.06)"
+                  borderTopWidth={index === 0 ? '1px' : '0'}
+                >
+                  <AccordionButton
+                    py={5}
+                    _hover={{ bg: 'rgba(255,255,255,0.02)' }}
+                  >
+                    <Box flex="1" textAlign="left" color="white" fontWeight="500">
+                      {item.question}
+                    </Box>
+                    <AccordionIcon color="teal.400" />
+                  </AccordionButton>
+                  <AccordionPanel pb={5} color="surface.400" lineHeight="1.7">
+                    {item.answer}
+                  </AccordionPanel>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </VStack>
+
+          {/* Final CTA */}
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <Card
+              bg="rgba(255,255,255,0.02)"
+              borderColor="teal.500/20"
+              borderWidth="1px"
+              borderRadius="2xl"
+            >
+              <CardBody p={{ base: 8, md: 12 }} textAlign="center">
+                <VStack spacing={6}>
+                  <Heading size="lg" color="white">
+                    Ready to sync your databases?
+                  </Heading>
+                  <Text color="surface.400" maxW="xl" fontSize="lg">
+                    Join the beta and experience production-grade database synchronization.
+                    No credit card required.
+                  </Text>
+                  <HStack spacing={4} flexWrap="wrap" justify="center">
+                    <Button
+                      size="lg"
+                      colorScheme="teal"
+                      onClick={() => router.push('/signup')}
+                      px={8}
+                    >
+                      Start Free Beta
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      borderColor="rgba(255,255,255,0.2)"
+                      color="white"
+                      onClick={() => router.push('/guide')}
+                      _hover={{ borderColor: 'teal.500', bg: 'rgba(62, 207, 142, 0.1)' }}
+                    >
+                      Read Documentation
+                    </Button>
+                  </HStack>
+                </VStack>
+              </CardBody>
+            </Card>
+          </MotionBox>
+
         </VStack>
       </Container>
     </Box>

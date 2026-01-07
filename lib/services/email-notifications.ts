@@ -1,9 +1,11 @@
 /**
  * Email Notification Service
  * Sends email notifications to users for important events
+ * Supports Resend (recommended), SendGrid, or logging
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { Resend } from 'resend';
 
 export type EmailNotificationType =
   | 'sync_started'
@@ -23,54 +25,89 @@ export interface EmailNotificationData {
 }
 
 /**
+ * Initialize email service client (Resend)
+ */
+function getEmailClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+  return new Resend(apiKey);
+}
+
+/**
  * Send email notification
- * Uses Supabase's built-in email service or logs for now
+ * Uses Resend if configured, otherwise logs to console
  */
 export async function sendEmailNotification(data: EmailNotificationData): Promise<boolean> {
   try {
     const supabase = await createClient();
-    
+
     // Check if user has email notifications enabled
     const { data: limits } = await supabase
       .from('usage_limits')
       .select('email_notifications_enabled')
       .eq('user_id', data.userId)
       .single();
-    
+
     if (limits && !(limits as any).email_notifications_enabled) {
       console.log(`Email notifications disabled for user ${data.userId}`);
       return false;
     }
-    
-    // Log the email notification
-    const { error: logError } = await (supabase as any)
-      .from('email_notifications')
-      .insert({
-        user_id: data.userId,
-        type: data.type,
-        subject: data.subject,
-        body: data.body,
-        status: 'sent',
-      });
-    
-    if (logError) {
-      console.error('Error logging email notification:', logError);
+
+    const resend = getEmailClient();
+    const fromEmail = process.env.EMAIL_FROM || 'noreply@suparbase.com';
+
+    if (resend) {
+      // Send actual email via Resend
+      try {
+        await resend.emails.send({
+          from: fromEmail,
+          to: data.userEmail,
+          subject: data.subject,
+          text: data.body,
+        });
+
+        console.log(`[Email Sent] ${data.type} to ${data.userEmail}: ${data.subject}`);
+
+        // Log success
+        await (supabase as any)
+          .from('email_notifications')
+          .insert({
+            user_id: data.userId,
+            type: data.type,
+            subject: data.subject,
+            body: data.body,
+            status: 'sent',
+          });
+
+        return true;
+      } catch (emailError) {
+        console.error('Error sending email via Resend:', emailError);
+        throw emailError;
+      }
+    } else {
+      // Fallback: Log to console (email service not configured)
+      console.log(`[Email Logged] ${data.type} to ${data.userEmail}: ${data.subject}`);
+      console.log(`Body: ${data.body}`);
+      console.warn('⚠️  Email service not configured. Set RESEND_API_KEY to send actual emails.');
+
+      // Log as "logged" status
+      await (supabase as any)
+        .from('email_notifications')
+        .insert({
+          user_id: data.userId,
+          type: data.type,
+          subject: data.subject,
+          body: data.body,
+          status: 'logged',
+        });
+
+      return true;
     }
-    
-    // Try to send via Supabase Auth email (if configured)
-    // Note: Supabase Auth has built-in email sending for auth events
-    // For custom emails, you might need to use a service like Resend, SendGrid, etc.
-    // For now, we'll log and the actual sending can be configured later
-    
-    console.log(`[Email Notification] ${data.type} to ${data.userEmail}: ${data.subject}`);
-    
-    // TODO: Integrate with actual email service (Resend, SendGrid, etc.)
-    // For now, this is a placeholder that logs the email
-    
-    return true;
   } catch (error) {
     console.error('Error sending email notification:', error);
-    
+
     // Log failure
     try {
       const supabase = await createClient();
@@ -87,7 +124,7 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
     } catch (logError) {
       console.error('Error logging failed email:', logError);
     }
-    
+
     return false;
   }
 }
