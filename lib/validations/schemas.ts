@@ -269,3 +269,225 @@ export function sanitizeTableNames(names: string[]): string[] {
     .filter((name): name is string => name !== null);
 }
 
+// ============================================
+// Explorer Schemas
+// ============================================
+
+export const ExplorerRowSchema = z.object({
+  // Row data can be any object with string keys
+  data: z.record(z.string(), z.unknown()),
+});
+
+export type ExplorerRow = z.infer<typeof ExplorerRowSchema>;
+
+export const ExplorerQuerySchema = z.object({
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const num = parseInt(val || '50', 10);
+      return Math.min(Math.max(1, num), 1000); // Between 1 and 1000
+    }),
+  offset: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const num = parseInt(val || '0', 10);
+      return Math.max(0, num);
+    }),
+  orderBy: z
+    .string()
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'Invalid column name')
+    .optional(),
+  orderDir: z
+    .enum(['asc', 'desc'])
+    .optional()
+    .default('asc'),
+  filters: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return {};
+      try {
+        return JSON.parse(val);
+      } catch {
+        return {};
+      }
+    }),
+});
+
+export type ExplorerQuery = z.infer<typeof ExplorerQuerySchema>;
+
+// ============================================
+// Session Schemas
+// ============================================
+
+export const SessionIdSchema = z.object({
+  id: z
+    .string()
+    .regex(uuidPattern, 'Invalid session ID format'),
+});
+
+export const SignOutAllSchema = z.object({
+  keepCurrentSession: z.boolean().optional().default(false),
+  currentSessionToken: z.string().optional(),
+});
+
+export type SignOutAllInput = z.infer<typeof SignOutAllSchema>;
+
+// ============================================
+// Security Schemas
+// ============================================
+
+export const SqlExecuteSchema = z.object({
+  sql: z
+    .string()
+    .min(1, 'SQL query is required')
+    .max(262144, 'SQL query too large (max 256KB)'), // 256KB limit
+  confirmationPhrase: z
+    .string()
+    .optional(),
+}).refine(
+  (data) => {
+    // Check for dangerous patterns
+    const dangerousPatterns = [
+      /;\s*DROP\s+/i,
+      /;\s*DELETE\s+FROM\s+/i,
+      /;\s*TRUNCATE\s+/i,
+      /;\s*ALTER\s+TABLE\s+/i,
+    ];
+    
+    return !dangerousPatterns.some(pattern => pattern.test(data.sql));
+  },
+  {
+    message: 'SQL contains potentially dangerous patterns. Use caution.',
+    path: ['sql'],
+  }
+);
+
+export type SqlExecuteInput = z.infer<typeof SqlExecuteSchema>;
+
+// ============================================
+// Request Body Structure Validation
+// ============================================
+
+/**
+ * Maximum allowed depth for nested objects
+ */
+const MAX_OBJECT_DEPTH = 10;
+
+/**
+ * Maximum allowed array length
+ */
+const MAX_ARRAY_LENGTH = 1000;
+
+/**
+ * Maximum allowed string length
+ */
+const MAX_STRING_LENGTH = 1000000; // 1MB
+
+/**
+ * Validate request body structure for security
+ * Checks for deeply nested objects, oversized arrays, etc.
+ */
+export function validateBodyStructure(
+  data: unknown,
+  depth = 0
+): { valid: boolean; error?: string } {
+  // Check depth
+  if (depth > MAX_OBJECT_DEPTH) {
+    return {
+      valid: false,
+      error: `Object nesting too deep (max ${MAX_OBJECT_DEPTH} levels)`,
+    };
+  }
+  
+  // Null/undefined are valid
+  if (data === null || data === undefined) {
+    return { valid: true };
+  }
+  
+  // Check arrays
+  if (Array.isArray(data)) {
+    if (data.length > MAX_ARRAY_LENGTH) {
+      return {
+        valid: false,
+        error: `Array too long (max ${MAX_ARRAY_LENGTH} items)`,
+      };
+    }
+    
+    // Validate each item
+    for (const item of data) {
+      const result = validateBodyStructure(item, depth + 1);
+      if (!result.valid) return result;
+    }
+    
+    return { valid: true };
+  }
+  
+  // Check strings
+  if (typeof data === 'string') {
+    if (data.length > MAX_STRING_LENGTH) {
+      return {
+        valid: false,
+        error: `String too long (max ${MAX_STRING_LENGTH} characters)`,
+      };
+    }
+    return { valid: true };
+  }
+  
+  // Check objects
+  if (typeof data === 'object') {
+    const keys = Object.keys(data);
+    
+    // Check number of keys
+    if (keys.length > MAX_ARRAY_LENGTH) {
+      return {
+        valid: false,
+        error: `Object has too many keys (max ${MAX_ARRAY_LENGTH})`,
+      };
+    }
+    
+    // Validate each value
+    for (const key of keys) {
+      // Validate key format (prevent prototype pollution)
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        return {
+          valid: false,
+          error: `Invalid object key: ${key}`,
+        };
+      }
+      
+      const result = validateBodyStructure((data as Record<string, unknown>)[key], depth + 1);
+      if (!result.valid) return result;
+    }
+    
+    return { valid: true };
+  }
+  
+  // Primitives are valid
+  return { valid: true };
+}
+
+/**
+ * Validate and parse request body with structure validation
+ */
+export function validateAndParseBody<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): { success: true; data: T } | { success: false; error: string } {
+  // First, validate structure
+  const structureResult = validateBodyStructure(data);
+  if (!structureResult.valid) {
+    return { success: false, error: structureResult.error || 'Invalid request body structure' };
+  }
+  
+  // Then validate with schema
+  const result = validateInput(schema, data);
+  if (!result.success) {
+    return { success: false, error: result.errors.join(', ') };
+  }
+  
+  return { success: true, data: result.data };
+}
+

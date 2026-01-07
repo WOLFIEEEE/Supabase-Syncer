@@ -12,7 +12,10 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "hash-password": "npx tsx scripts/generate-password-hash.ts"
+    "hash-password": "npx tsx scripts/generate-password-hash.ts",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix",
+    "security:check": "npm audit --json > audit-report.json && echo 'Report saved to audit-report.json'"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.8.2",
