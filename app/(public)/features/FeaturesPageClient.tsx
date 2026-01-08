@@ -9,12 +9,12 @@ import {
   VStack,
   HStack,
   Button,
-  Card,
-  CardBody,
-  SimpleGrid,
   Badge,
   Divider,
+  SimpleGrid,
 } from '@chakra-ui/react';
+import { motion } from 'framer-motion';
+import { ScrollReveal, GlassCard, FloatingCard } from '@/components/animations';
 
 const HomeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -147,7 +147,6 @@ const features = [
     description: 'Real-time progress tracking, detailed logging, and status updates for ongoing synchronization tasks. Monitor sync speed, ETA, and errors.',
     category: 'monitoring',
   },
-  // NEW PRODUCTION-GRADE FEATURES
   {
     icon: RewindIcon,
     title: 'Automatic Rollback',
@@ -186,6 +185,8 @@ const features = [
   },
 ];
 
+const MotionBox = motion(Box);
+
 export default function FeaturesPageClient() {
   const router = useRouter();
 
@@ -207,79 +208,121 @@ export default function FeaturesPageClient() {
   };
 
   return (
-    <Box minH="100vh" bg="rgba(9, 9, 11, 1)" position="relative" overflow="hidden">
+    <Box 
+      minH="100vh" 
+      bg="rgba(9, 9, 11, 1)" 
+      position="relative" 
+      overflow="hidden"
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
       />
       
-      {/* Background Effects */}
-      <Box
+      {/* Animated Gradient Backgrounds */}
+      <MotionBox
         position="absolute"
         top="10%"
         right="-5%"
-        w="500px"
-        h="500px"
-        bgGradient="radial(circle, rgba(62, 207, 142, 0.06) 0%, transparent 70%)"
+        w="600px"
+        h="600px"
+        bgGradient="radial(circle, rgba(62, 207, 142, 0.15) 0%, transparent 70%)"
         borderRadius="full"
-        filter="blur(60px)"
+        filter="blur(80px)"
         pointerEvents="none"
         zIndex={0}
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
       />
       
-      <Container maxW="7xl" py={{ base: 12, md: 16 }} px={{ base: 4, md: 6 }} position="relative" zIndex={1}>
-        <VStack spacing={12} align="stretch">
+      <MotionBox
+        position="absolute"
+        bottom="10%"
+        left="-5%"
+        w="500px"
+        h="500px"
+        bgGradient="radial(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)"
+        borderRadius="full"
+        filter="blur(80px)"
+        pointerEvents="none"
+        zIndex={0}
+        animate={{
+          scale: [1, 1.3, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 2,
+        }}
+      />
+      
+      <Container maxW="7xl" py={{ base: 12, md: 20 }} px={{ base: 4, md: 6 }} position="relative" zIndex={1}>
+        <VStack spacing={16} align="stretch">
           {/* Header */}
-          <VStack spacing={6} align="center" textAlign="center">
-            <Badge 
-              colorScheme="teal" 
-              px={4} 
-              py={2} 
-              borderRadius="full" 
-              fontSize="sm"
-              fontWeight="700"
-              letterSpacing="0.1em"
-              textTransform="uppercase"
-              bgGradient="linear(to-r, teal.500/20, teal.400/20)"
-              borderWidth="1px"
-              borderColor="teal.400/30"
-            >
-              COMPLETE FEATURE SET
-            </Badge>
-            <Heading 
-              as="h1" 
-              fontSize={{ base: '4xl', md: '6xl', lg: '7xl' }}
-              fontWeight="800"
-              color="white"
-              fontFamily="'Outfit', sans-serif"
-              letterSpacing="-0.03em"
-              lineHeight="1.1"
-            >
-              <Text
-                as="span"
-                bgGradient="linear(to-r, teal.400, teal.300, purple.400)"
-                bgClip="text"
-                sx={{
-                  WebkitTextFillColor: 'transparent',
-                  WebkitBackgroundClip: 'text',
-                }}
+          <ScrollReveal direction="fade" delay={0.2}>
+            <VStack spacing={6} align="center" textAlign="center">
+              <FloatingCard intensity={8} duration={4}>
+                <Badge 
+                  colorScheme="teal" 
+                  px={4} 
+                  py={2} 
+                  borderRadius="full" 
+                  fontSize="sm"
+                  fontWeight="700"
+                  letterSpacing="0.1em"
+                  textTransform="uppercase"
+                  bgGradient="linear(to-r, teal.500/20, teal.400/20)"
+                  borderWidth="1px"
+                  borderColor="teal.400/30"
+                  backdropFilter="blur(10px)"
+                >
+                  COMPLETE FEATURE SET
+                </Badge>
+              </FloatingCard>
+              <Heading 
+                as="h1" 
+                fontSize={{ base: '4xl', md: '6xl', lg: '7xl' }}
+                fontWeight="800"
+                color="white"
+                fontFamily="mono"
+                letterSpacing="-0.03em"
+                lineHeight="1.1"
               >
-                Features
+                <Text
+                  as="span"
+                  bgGradient="linear(to-r, teal.400, teal.300, purple.400)"
+                  bgClip="text"
+                  sx={{
+                    WebkitTextFillColor: 'transparent',
+                    WebkitBackgroundClip: 'text',
+                  }}
+                >
+                  Features
+                </Text>
+              </Heading>
+              <Text 
+                color="surface.400" 
+                fontSize={{ base: 'lg', md: 'xl' }} 
+                maxW="3xl"
+                lineHeight="1.7"
+              >
+                Everything you need to synchronize and manage your Supabase databases
               </Text>
-            </Heading>
-            <Text 
-              color="surface.400" 
-              fontSize={{ base: 'lg', md: 'xl' }} 
-              maxW="3xl"
-              lineHeight="1.7"
-            >
-              Everything you need to synchronize and manage your Supabase databases
-            </Text>
-          </VStack>
+            </VStack>
+          </ScrollReveal>
 
           <Divider borderColor="surface.700" opacity={0.3} />
 
-          {/* Features Grid */}
+          {/* Features Grid with Glassmorphism */}
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={{ base: 6, md: 8 }}>
             {features.map((feature, index) => {
               const categoryColor = feature.category === 'core'
@@ -291,186 +334,222 @@ export default function FeaturesPageClient() {
                 : 'blue';
               
               return (
-                <Card 
-                  key={feature.title} 
-                  bg="surface.800/80"
-                  backdropFilter="blur(10px)"
-                  borderColor="surface.700"
-                  borderWidth="1px"
-                  h="100%"
-                  borderRadius="2xl"
-                  overflow="hidden"
-                  position="relative"
-                  transition="all 0.3s"
-                  _before={{
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '3px',
-                    bgGradient: `linear(to-r, transparent, ${categoryColor}.400, transparent)`,
-                    opacity: 0,
-                    transition: 'opacity 0.3s',
-                  }}
-                  _hover={{
-                    borderColor: `${categoryColor}.400`,
-                    transform: 'translateY(-6px)',
-                    boxShadow: `0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px ${categoryColor}.400/15`,
-                    _before: {
-                      opacity: 1,
-                    },
-                  }}
+                <ScrollReveal
+                  key={feature.title}
+                  delay={index * 0.1}
+                  direction="up"
                 >
-                  <CardBody p={6}>
-                    <VStack spacing={5} align="start" h="100%">
-                      <HStack spacing={4} w="full">
-                        <Box 
-                          color={`${categoryColor}.400`}
-                          p={3}
-                          bgGradient={`linear(to-br, ${categoryColor}.400/15, ${categoryColor}.500/5)`}
-                          borderRadius="xl"
-                          borderWidth="1px"
-                          borderColor={`${categoryColor}.400/20`}
-                          _hover={{
-                            transform: 'rotate(5deg) scale(1.1)',
-                            borderColor: `${categoryColor}.400/40`,
-                          }}
-                          transition="all 0.3s"
-                        >
-                          <feature.icon />
-                        </Box>
-                        <Badge
-                          colorScheme={categoryColor}
-                          fontSize="xs"
-                          px={3}
-                          py={1}
-                          borderRadius="full"
-                          fontWeight="700"
-                          textTransform="uppercase"
-                          letterSpacing="0.05em"
-                        >
-                          {feature.category}
-                        </Badge>
-                      </HStack>
-                      <VStack spacing={3} align="start" flex={1}>
-                        <Heading as="h3" size="md" color="white" fontSize={{ base: 'lg', md: 'xl' }} fontWeight="700">
-                          {feature.title}
-                        </Heading>
-                        <Text color="surface.400" fontSize={{ base: 'sm', md: 'md' }} lineHeight="1.7" flex={1}>
-                          {feature.description}
-                        </Text>
+                  <FloatingCard intensity={5 + (index % 3) * 2} duration={3 + (index % 2)}>
+                    <GlassCard
+                      p={6}
+                      h="100%"
+                      position="relative"
+                      overflow="hidden"
+                      _before={{
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        bgGradient: `linear(to-r, transparent, ${categoryColor}.400, transparent)`,
+                        opacity: 0.6,
+                      }}
+                    >
+                      <VStack spacing={5} align="start" h="100%">
+                        <HStack spacing={4} w="full">
+                          <motion.div
+                            whileHover={{ 
+                              rotate: [0, -10, 10, -10, 0],
+                              scale: 1.1,
+                            }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            <Box 
+                              color={`${categoryColor}.400`}
+                              p={3}
+                              bgGradient={`linear(to-br, ${categoryColor}.400/20, ${categoryColor}.500/10)`}
+                              borderRadius="xl"
+                              borderWidth="1px"
+                              borderColor={`${categoryColor}.400/30`}
+                              backdropFilter="blur(10px)"
+                            >
+                              <feature.icon />
+                            </Box>
+                          </motion.div>
+                          <Badge
+                            colorScheme={categoryColor}
+                            fontSize="xs"
+                            px={3}
+                            py={1}
+                            borderRadius="full"
+                            fontWeight="700"
+                            textTransform="uppercase"
+                            letterSpacing="0.05em"
+                            bgGradient={`linear(to-r, ${categoryColor}.500/20, ${categoryColor}.400/20)`}
+                            borderWidth="1px"
+                            borderColor={`${categoryColor}.400/30`}
+                            backdropFilter="blur(10px)"
+                          >
+                            {feature.category}
+                          </Badge>
+                        </HStack>
+                        <VStack spacing={3} align="start" flex={1}>
+                          <Heading 
+                            as="h3" 
+                            size="md" 
+                            color="white" 
+                            fontSize={{ base: 'lg', md: 'xl' }} 
+                            fontWeight="700"
+                          >
+                            {feature.title}
+                          </Heading>
+                          <Text 
+                            color="surface.300" 
+                            fontSize={{ base: 'sm', md: 'md' }} 
+                            lineHeight="1.7" 
+                            flex={1}
+                          >
+                            {feature.description}
+                          </Text>
+                        </VStack>
                       </VStack>
-                    </VStack>
-                  </CardBody>
-                </Card>
+                    </GlassCard>
+                  </FloatingCard>
+                </ScrollReveal>
               );
             })}
           </SimpleGrid>
 
-          {/* CTA Section */}
-          <Card 
-            bgGradient="linear(to-br, teal.500/10, purple.500/10, teal.500/5)"
-            borderColor="teal.400/30"
-            borderWidth="2px"
-            borderRadius="2xl"
-            position="relative"
-            overflow="hidden"
-            _before={{
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '4px',
-              bgGradient: 'linear(to-r, teal.400, purple.400, teal.400)',
-            }}
-          >
-            <Box
-              position="absolute"
-              top="-50%"
-              right="-50%"
-              w="400px"
-              h="400px"
-              bgGradient="radial(circle, teal.400/10, transparent)"
-              borderRadius="full"
-              filter="blur(60px)"
-              pointerEvents="none"
-            />
-            <CardBody p={{ base: 8, md: 12 }} textAlign="center" position="relative" zIndex={1}>
-              <VStack spacing={6}>
-                <Heading as="h2" size="lg" color="white" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="700">
+          {/* CTA Section with Glassmorphism */}
+          <ScrollReveal direction="up" delay={0.3}>
+            <GlassCard
+              p={{ base: 8, md: 12 }}
+              position="relative"
+              overflow="hidden"
+              bgGradient="linear(to-br, teal.500/10, purple.500/10, teal.500/5)"
+              borderColor="teal.400/30"
+              borderWidth="2px"
+              _before={{
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                bgGradient: 'linear(to-r, teal.400, purple.400, teal.400)',
+              }}
+            >
+              <MotionBox
+                position="absolute"
+                top="-50%"
+                right="-50%"
+                w="400px"
+                h="400px"
+                bgGradient="radial(circle, teal.400/10, transparent)"
+                borderRadius="full"
+                filter="blur(60px)"
+                pointerEvents="none"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.5, 0.3],
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+              <VStack spacing={6} textAlign="center" position="relative" zIndex={1}>
+                <Heading 
+                  as="h2" 
+                  size="lg" 
+                  color="white" 
+                  fontSize={{ base: '2xl', md: '3xl' }} 
+                  fontWeight="700"
+                >
                   Ready to Get Started?
                 </Heading>
-                <Text color="surface.400" maxW="2xl" fontSize={{ base: 'md', md: 'lg' }} lineHeight="1.7">
+                <Text 
+                  color="surface.300" 
+                  maxW="2xl" 
+                  fontSize={{ base: 'md', md: 'lg' }} 
+                  lineHeight="1.7"
+                >
                   Start synchronizing your databases today. No credit card required.
                 </Text>
                 <HStack spacing={4} justify="center" flexWrap="wrap">
-                  <Button
-                    size="lg"
-                    colorScheme="teal"
-                    onClick={() => router.push('/signup')}
-                    minH="52px"
-                    px={8}
-                    fontSize="md"
-                    fontWeight="600"
-                    borderRadius="xl"
-                    bgGradient="linear(to-r, teal.400, teal.500)"
-                    _hover={{
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 10px 30px rgba(62, 207, 142, 0.4)',
-                    }}
-                    transition="all 0.3s"
-                  >
-                    Get Started
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={() => router.push('/getting-started')}
-                    minH="52px"
-                    px={8}
-                    fontSize="md"
-                    fontWeight="600"
-                    borderRadius="xl"
-                    borderColor="teal.400/40"
-                    color="teal.400"
-                    _hover={{
-                      borderColor: 'teal.400',
-                      bg: 'teal.400/10',
-                      transform: 'translateY(-2px)',
-                    }}
-                    transition="all 0.3s"
-                  >
-                    Quick Start
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={() => router.push('/use-cases')}
-                    minH="52px"
-                    px={8}
-                    fontSize="md"
-                    fontWeight="600"
-                    borderRadius="xl"
-                    borderColor="teal.400/40"
-                    color="teal.400"
-                    _hover={{
-                      borderColor: 'teal.400',
-                      bg: 'teal.400/10',
-                      transform: 'translateY(-2px)',
-                    }}
-                    transition="all 0.3s"
-                  >
-                    See Use Cases
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      size="lg"
+                      colorScheme="teal"
+                      onClick={() => router.push('/signup')}
+                      minH="52px"
+                      px={8}
+                      fontSize="md"
+                      fontWeight="600"
+                      borderRadius="xl"
+                      bgGradient="linear(to-r, teal.400, teal.500)"
+                      _hover={{
+                        boxShadow: '0 10px 30px rgba(62, 207, 142, 0.4)',
+                      }}
+                      transition="all 0.3s"
+                    >
+                      Get Started
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={() => router.push('/getting-started')}
+                      minH="52px"
+                      px={8}
+                      fontSize="md"
+                      fontWeight="600"
+                      borderRadius="xl"
+                      borderColor="teal.400/40"
+                      color="teal.400"
+                      backdropFilter="blur(10px)"
+                      bg="rgba(255, 255, 255, 0.05)"
+                      _hover={{
+                        borderColor: 'teal.400',
+                        bg: 'teal.400/10',
+                      }}
+                      transition="all 0.3s"
+                    >
+                      Quick Start
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={() => router.push('/use-cases')}
+                      minH="52px"
+                      px={8}
+                      fontSize="md"
+                      fontWeight="600"
+                      borderRadius="xl"
+                      borderColor="teal.400/40"
+                      color="teal.400"
+                      backdropFilter="blur(10px)"
+                      bg="rgba(255, 255, 255, 0.05)"
+                      _hover={{
+                        borderColor: 'teal.400',
+                        bg: 'teal.400/10',
+                      }}
+                      transition="all 0.3s"
+                    >
+                      See Use Cases
+                    </Button>
+                  </motion.div>
                 </HStack>
               </VStack>
-            </CardBody>
-          </Card>
+            </GlassCard>
+          </ScrollReveal>
         </VStack>
       </Container>
     </Box>
   );
 }
-
