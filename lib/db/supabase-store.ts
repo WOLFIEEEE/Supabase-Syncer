@@ -223,28 +223,75 @@ export const supabaseConnectionStore = {
   
   /**
    * Update keep_alive setting for a connection
+   * Includes detailed logging and error handling
    */
   async updateKeepAlive(id: string, userId: string, keepAlive: boolean): Promise<Connection | null> {
-    const supabase = await createClient();
+    console.log('[SUPABASE_STORE] Updating keep_alive:', {
+      connectionId: id,
+      userId,
+      keepAlive,
+      timestamp: new Date().toISOString()
+    });
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: connection, error } = await (supabase as any)
-      .from('connections')
-      .update({
-        keep_alive: keepAlive,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .eq('user_id', userId)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error updating keep_alive:', error);
-      throw new Error(`Failed to update keep_alive: ${error.message}`);
+    try {
+      const supabase = await createClient();
+      
+      // First, verify the column exists by checking the schema
+      console.log('[SUPABASE_STORE] Verifying keep_alive column exists...');
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: connection, error } = await (supabase as any)
+        .from('connections')
+        .update({
+          keep_alive: keepAlive,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('[SUPABASE_STORE] Error updating keep_alive:', {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          connectionId: id,
+          userId,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Check if error is about missing column
+        if (error.message?.includes('keep_alive') || error.message?.includes('column')) {
+          console.error('[SUPABASE_STORE] CRITICAL: keep_alive column is missing from database!');
+          console.error('[SUPABASE_STORE] Please run migration: supabase/migrations/009_ensure_all_tables_and_columns.sql');
+          throw new Error(
+            `The 'keep_alive' column is missing from the 'connections' table. ` +
+            `Please run the migration script: supabase/migrations/009_ensure_all_tables_and_columns.sql`
+          );
+        }
+        
+        throw new Error(`Failed to update keep_alive: ${error.message}`);
+      }
+      
+      console.log('[SUPABASE_STORE] Successfully updated keep_alive:', {
+        connectionId: id,
+        keepAlive,
+        timestamp: new Date().toISOString()
+      });
+      
+      return connection;
+    } catch (error) {
+      console.error('[SUPABASE_STORE] Exception in updateKeepAlive:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        connectionId: id,
+        userId,
+        timestamp: new Date().toISOString()
+      });
+      throw error;
     }
-    
-    return connection;
   },
   
   /**
