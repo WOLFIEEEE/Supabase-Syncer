@@ -1,151 +1,248 @@
-/**
- * Sync Operations Documentation
- */
+'use client';
 
-export const metadata = {
-  title: 'Sync Operations - Supabase Syncer Documentation',
-  description: 'Database synchronization features and workflows'
-};
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  VStack,
+  HStack,
+  Card,
+  CardBody,
+  Code,
+  Badge,
+  Icon,
+  Divider,
+  Alert,
+  AlertIcon,
+  UnorderedList,
+  ListItem,
+  OrderedList,
+} from '@chakra-ui/react';
+import { SyncIcon } from '@/components/docs/DocsIcons';
 
 export default function SyncDocsPage() {
   return (
-    <div className="bg-white rounded-lg shadow-md p-8">
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">Sync Operations</h1>
-      
-      <div className="prose max-w-none">
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Overview</h2>
-          <p className="text-gray-700 mb-4">
-            Supabase Syncer enables bidirectional synchronization between PostgreSQL databases. 
-            Supports one-way and two-way sync with conflict resolution strategies.
-          </p>
-        </section>
+    <Box minH="100vh">
+      <Container maxW="4xl" py={{ base: 8, md: 12 }} px={{ base: 4, md: 6 }}>
+        <VStack spacing={8} align="stretch">
+          {/* Header */}
+          <VStack spacing={4} align="start">
+            <HStack spacing={3}>
+              <Icon as={SyncIcon} w={8} h={8} color="teal.400" />
+              <Badge colorScheme="teal" px={3} py={1} borderRadius="full" fontSize="sm" fontWeight="600">
+                SYNC OPERATIONS
+              </Badge>
+            </HStack>
+            <Heading
+              as="h1"
+              fontSize={{ base: '3xl', md: '4xl' }}
+              fontWeight="700"
+              color="white"
+              fontFamily="'Outfit', sans-serif"
+              letterSpacing="-0.02em"
+            >
+              Sync Operations
+            </Heading>
+            <Text fontSize="lg" color="surface.400" lineHeight="1.6">
+              Supabase Syncer enables bidirectional synchronization between PostgreSQL databases. Supports one-way and two-way sync with conflict resolution strategies.
+            </Text>
+          </VStack>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Sync Types</h2>
-          
-          <div className="space-y-4">
-            <div className="border-l-4 border-blue-500 pl-4">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">One-Way Sync</h3>
-              <p className="text-gray-700 mb-2">
-                Data flows from source to target only. Source database is the authoritative source.
-              </p>
-              <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                <li>Source → Target (only)</li>
-                <li>UPSERT operations (INSERT or UPDATE)</li>
-                <li>No data loss from target</li>
-                <li>Best for: Production → Staging, Master → Replica</li>
-              </ul>
-            </div>
+          {/* Overview */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Overview
+              </Heading>
+              <Text color="surface.300" fontSize="sm" lineHeight="1.6">
+                Supabase Syncer enables bidirectional synchronization between PostgreSQL databases. Supports one-way and two-way sync with conflict resolution strategies.
+              </Text>
+            </CardBody>
+          </Card>
 
-            <div className="border-l-4 border-green-500 pl-4">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Two-Way Sync</h3>
-              <p className="text-gray-700 mb-2">
-                Data flows bidirectionally. Changes in either database are synced to the other.
-              </p>
-              <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                <li>Source ↔ Target</li>
-                <li>Requires conflict resolution strategy</li>
-                <li>Best for: Multi-region deployments, Active-Active setups</li>
-              </ul>
-            </div>
-          </div>
-        </section>
+          {/* Sync Types */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={6} color="white" fontWeight="600">
+                Sync Types
+              </Heading>
+              <VStack spacing={6} align="stretch">
+                <Box borderLeft="4px" borderLeftColor="blue.500" pl={4}>
+                  <Heading as="h3" size="sm" mb={2} color="white" fontWeight="600">
+                    One-Way Sync
+                  </Heading>
+                  <Text color="surface.300" fontSize="sm" mb={3} lineHeight="1.6">
+                    Data flows from source to target only. Source database is the authoritative source.
+                  </Text>
+                  <UnorderedList spacing={1} color="surface.300" fontSize="sm" pl={4}>
+                    <ListItem>Source → Target (only)</ListItem>
+                    <ListItem>UPSERT operations (INSERT or UPDATE)</ListItem>
+                    <ListItem>No data loss from target</ListItem>
+                    <ListItem>Best for: Production → Staging, Master → Replica</ListItem>
+                  </UnorderedList>
+                </Box>
+                <Divider borderColor="surface.700" />
+                <Box borderLeft="4px" borderLeftColor="green.500" pl={4}>
+                  <Heading as="h3" size="sm" mb={2} color="white" fontWeight="600">
+                    Two-Way Sync
+                  </Heading>
+                  <Text color="surface.300" fontSize="sm" mb={3} lineHeight="1.6">
+                    Data flows bidirectionally. Changes in either database are synced to the other.
+                  </Text>
+                  <UnorderedList spacing={1} color="surface.300" fontSize="sm" pl={4}>
+                    <ListItem>Source ↔ Target</ListItem>
+                    <ListItem>Requires conflict resolution strategy</ListItem>
+                    <ListItem>Best for: Multi-region deployments, Active-Active setups</ListItem>
+                  </UnorderedList>
+                </Box>
+              </VStack>
+            </CardBody>
+          </Card>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Sync Workflow</h2>
-          
-          <div className="bg-gray-50 p-4 rounded border border-gray-200 mb-4">
-            <ol className="list-decimal list-inside text-gray-700 space-y-2 text-sm">
-              <li><strong>Create Sync Job:</strong> Define source, target, tables, and direction</li>
-              <li><strong>Validate Schema:</strong> Check compatibility between databases</li>
-              <li><strong>Generate Migration (if needed):</strong> Auto-fix schema differences</li>
-              <li><strong>Dry Run (optional):</strong> Preview changes without executing</li>
-              <li><strong>Start Sync:</strong> Begin synchronization process</li>
-              <li><strong>Monitor Progress:</strong> Track real-time metrics and logs</li>
-              <li><strong>Review Results:</strong> Check completion status and any errors</li>
-            </ol>
-          </div>
-        </section>
+          {/* Sync Workflow */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Sync Workflow
+              </Heading>
+              <Box bg="surface.900" borderRadius="md" p={4} borderColor="surface.700" borderWidth="1px">
+                <OrderedList spacing={2} color="surface.300" fontSize="sm" pl={4}>
+                  <ListItem><strong>Create Sync Job:</strong> Define source, target, tables, and direction</ListItem>
+                  <ListItem><strong>Validate Schema:</strong> Check compatibility between databases</ListItem>
+                  <ListItem><strong>Generate Migration (if needed):</strong> Auto-fix schema differences</ListItem>
+                  <ListItem><strong>Dry Run (optional):</strong> Preview changes without executing</ListItem>
+                  <ListItem><strong>Start Sync:</strong> Begin synchronization process</ListItem>
+                  <ListItem><strong>Monitor Progress:</strong> Track real-time metrics and logs</ListItem>
+                  <ListItem><strong>Review Results:</strong> Check completion status and any errors</ListItem>
+                </OrderedList>
+              </Box>
+            </CardBody>
+          </Card>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Conflict Resolution</h2>
-          
-          <div className="space-y-3">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">source_wins</h3>
-              <p className="text-gray-700 text-sm">Source database values take precedence</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">target_wins</h3>
-              <p className="text-gray-700 text-sm">Target database values take precedence</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">merge</h3>
-              <p className="text-gray-700 text-sm">Attempts to merge changes intelligently</p>
-            </div>
-          </div>
-        </section>
+          {/* Conflict Resolution */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={6} color="white" fontWeight="600">
+                Conflict Resolution
+              </Heading>
+              <VStack spacing={3} align="stretch">
+                {[
+                  { strategy: 'source_wins', desc: 'Source database values take precedence' },
+                  { strategy: 'target_wins', desc: 'Target database values take precedence' },
+                  { strategy: 'merge', desc: 'Attempts to merge changes intelligently' },
+                ].map((item, index) => (
+                  <Box key={item.strategy}>
+                    <HStack spacing={3}>
+                      <Code colorScheme="blue" fontSize="xs" px={2} py={1} borderRadius="md">
+                        {item.strategy}
+                      </Code>
+                      <Text fontSize="sm" color="surface.400">
+                        {item.desc}
+                      </Text>
+                    </HStack>
+                    {index < 2 && <Divider borderColor="surface.700" mt={3} />}
+                  </Box>
+                ))}
+              </VStack>
+            </CardBody>
+          </Card>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Schema Validation</h2>
-          <p className="text-gray-700 mb-4">
-            Before syncing, the system validates schema compatibility:
-          </p>
-          <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li>Table existence in both databases</li>
-            <li>Column types and constraints</li>
-            <li>Primary keys and indexes</li>
-            <li>Foreign key relationships</li>
-            <li>ENUM types</li>
-          </ul>
-          <p className="text-gray-700 mt-4">
-            If differences are found, the system can generate migration scripts to fix them.
-          </p>
-        </section>
+          {/* Schema Validation */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Schema Validation
+              </Heading>
+              <Text color="surface.300" fontSize="sm" mb={4} lineHeight="1.6">
+                Before syncing, the system validates schema compatibility:
+              </Text>
+              <UnorderedList spacing={2} color="surface.300" fontSize="sm" pl={4} mb={4}>
+                <ListItem>Table existence in both databases</ListItem>
+                <ListItem>Column types and constraints</ListItem>
+                <ListItem>Primary keys and indexes</ListItem>
+                <ListItem>Foreign key relationships</ListItem>
+                <ListItem>ENUM types</ListItem>
+              </UnorderedList>
+              <Text color="surface.300" fontSize="sm" lineHeight="1.6">
+                If differences are found, the system can generate migration scripts to fix them.
+              </Text>
+            </CardBody>
+          </Card>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Sync Status</h2>
-          <div className="space-y-2">
-            <div><code className="bg-gray-100 px-2 py-1 rounded text-sm">pending</code> - Created but not started</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded text-sm">running</code> - Currently executing</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded text-sm">completed</code> - Finished successfully</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded text-sm">failed</code> - Encountered an error</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded text-sm">paused</code> - Temporarily stopped</div>
-          </div>
-        </section>
+          {/* Sync Status */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Sync Status
+              </Heading>
+              <VStack spacing={2} align="stretch">
+                {[
+                  { status: 'pending', desc: 'Created but not started' },
+                  { status: 'running', desc: 'Currently executing' },
+                  { status: 'completed', desc: 'Finished successfully' },
+                  { status: 'failed', desc: 'Encountered an error' },
+                  { status: 'paused', desc: 'Temporarily stopped' },
+                ].map((item) => (
+                  <HStack key={item.status} spacing={3}>
+                    <Code colorScheme="blue" fontSize="xs" px={2} py={1} borderRadius="md">
+                      {item.status}
+                    </Code>
+                    <Text fontSize="sm" color="surface.400">
+                      - {item.desc}
+                    </Text>
+                  </HStack>
+                ))}
+              </VStack>
+            </CardBody>
+          </Card>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Production Safeguards</h2>
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded">
-            <p className="text-yellow-800 mb-2">
-              <strong>Important:</strong> When syncing to production databases:
-            </p>
-            <ul className="list-disc list-inside text-yellow-800 text-sm space-y-1">
-              <li>Extra confirmation required</li>
-              <li>Dry-run preview available</li>
-              <li>Breaking change warnings displayed</li>
-              <li>All operations logged for audit</li>
-            </ul>
-          </div>
-        </section>
+          {/* Production Safeguards */}
+          <Alert status="warning" bg="yellow.500/10" borderColor="yellow.500/30" borderWidth="1px" borderRadius="lg">
+            <AlertIcon color="yellow.400" />
+            <VStack align="start" spacing={3} flex={1}>
+              <Heading as="h3" size="sm" color="white" fontWeight="600">
+                Production Safeguards
+              </Heading>
+              <Text fontSize="sm" color="surface.300" fontWeight="600">
+                Important: When syncing to production databases:
+              </Text>
+              <UnorderedList spacing={1} color="surface.300" fontSize="sm" pl={4}>
+                <ListItem>Extra confirmation required</ListItem>
+                <ListItem>Dry-run preview available</ListItem>
+                <ListItem>Breaking change warnings displayed</ListItem>
+                <ListItem>All operations logged for audit</ListItem>
+              </UnorderedList>
+            </VStack>
+          </Alert>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">API Endpoints</h2>
-          <div className="space-y-2 text-sm">
-            <div><code className="bg-gray-100 px-2 py-1 rounded">POST /api/sync</code> - Create sync job</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded">GET /api/sync</code> - List sync jobs</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded">GET /api/sync/[id]</code> - Get sync details</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded">POST /api/sync/[id]/start</code> - Start sync</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded">POST /api/sync/[id]/pause</code> - Pause sync</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded">POST /api/sync/[id]/stop</code> - Stop sync</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded">GET /api/sync/[id]/metrics</code> - Get metrics</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded">POST /api/sync/validate</code> - Validate schema</div>
-            <div><code className="bg-gray-100 px-2 py-1 rounded">POST /api/sync/generate-migration</code> - Generate migration</div>
-          </div>
-        </section>
-      </div>
-    </div>
+          {/* API Endpoints */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                API Endpoints
+              </Heading>
+              <VStack spacing={2} align="stretch">
+                {[
+                  'POST /api/sync - Create sync job',
+                  'GET /api/sync - List sync jobs',
+                  'GET /api/sync/[id] - Get sync details',
+                  'POST /api/sync/[id]/start - Start sync',
+                  'POST /api/sync/[id]/pause - Pause sync',
+                  'POST /api/sync/[id]/stop - Stop sync',
+                  'GET /api/sync/[id]/metrics - Get metrics',
+                  'POST /api/sync/validate - Validate schema',
+                  'POST /api/sync/generate-migration - Generate migration',
+                ].map((endpoint) => (
+                  <Code key={endpoint} colorScheme="green" fontSize="xs" px={2} py={1} borderRadius="md" display="block">
+                    {endpoint}
+                  </Code>
+                ))}
+              </VStack>
+            </CardBody>
+          </Card>
+        </VStack>
+      </Container>
+    </Box>
   );
 }
-

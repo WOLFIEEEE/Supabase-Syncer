@@ -1,53 +1,121 @@
-/**
- * Authentication Documentation
- */
+'use client';
 
-export const metadata = {
-  title: 'Authentication - Supabase Syncer Documentation',
-  description: 'Authentication and security documentation'
-};
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  VStack,
+  HStack,
+  Card,
+  CardBody,
+  Code,
+  Badge,
+  Icon,
+  Divider,
+  Alert,
+  AlertIcon,
+  OrderedList,
+  ListItem,
+} from '@chakra-ui/react';
+import { AuthIcon } from '@/components/docs/DocsIcons';
 
 export default function AuthenticationDocsPage() {
   return (
-    <div className="bg-white rounded-lg shadow-md p-8">
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">Authentication</h1>
-      
-      <div className="prose max-w-none">
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Overview</h2>
-          <p className="text-gray-700 mb-4">
-            Supabase Syncer uses Supabase Auth for authentication. All API endpoints 
-            (except public health/status endpoints) require authentication.
-          </p>
-        </section>
+    <Box minH="100vh">
+      <Container maxW="4xl" py={{ base: 8, md: 12 }} px={{ base: 4, md: 6 }}>
+        <VStack spacing={8} align="stretch">
+          {/* Header */}
+          <VStack spacing={4} align="start">
+            <HStack spacing={3}>
+              <Icon as={AuthIcon} w={8} h={8} color="red.400" />
+              <Badge colorScheme="red" px={3} py={1} borderRadius="full" fontSize="sm" fontWeight="600">
+                AUTHENTICATION
+              </Badge>
+            </HStack>
+            <Heading
+              as="h1"
+              fontSize={{ base: '3xl', md: '4xl' }}
+              fontWeight="700"
+              color="white"
+              fontFamily="'Outfit', sans-serif"
+              letterSpacing="-0.02em"
+            >
+              Authentication
+            </Heading>
+            <Text fontSize="lg" color="surface.400" lineHeight="1.6">
+              Supabase Syncer uses Supabase Auth for authentication. All API endpoints (except public health/status endpoints) require authentication.
+            </Text>
+          </VStack>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Authentication Methods</h2>
-          
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">1. Session Cookies (Browser)</h3>
-              <p className="text-gray-700 mb-2">
-                When using the web interface, authentication is handled automatically via session cookies.
-              </p>
-            </div>
+          {/* Overview */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Overview
+              </Heading>
+              <Text color="surface.300" fontSize="sm" lineHeight="1.6">
+                Supabase Syncer uses Supabase Auth for authentication. All API endpoints (except public health/status endpoints) require authentication.
+              </Text>
+            </CardBody>
+          </Card>
 
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">2. Bearer Token (API)</h3>
-              <p className="text-gray-700 mb-2">
-                For API requests, include the access token in the Authorization header:
-              </p>
-              <pre className="bg-gray-50 p-4 rounded border border-gray-200"><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
-            </div>
-          </div>
-        </section>
+          {/* Authentication Methods */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={6} color="white" fontWeight="600">
+                Authentication Methods
+              </Heading>
+              <VStack spacing={6} align="stretch">
+                <Box>
+                  <HStack spacing={2} mb={3}>
+                    <Badge colorScheme="blue" borderRadius="full" px={2} py={0.5} fontSize="xs">
+                      1
+                    </Badge>
+                    <Heading as="h3" size="sm" color="white" fontWeight="600">
+                      Session Cookies (Browser)
+                    </Heading>
+                  </HStack>
+                  <Text color="surface.300" fontSize="sm" pl={8} lineHeight="1.6">
+                    When using the web interface, authentication is handled automatically via session cookies.
+                  </Text>
+                </Box>
+                <Divider borderColor="surface.700" />
+                <Box>
+                  <HStack spacing={2} mb={3}>
+                    <Badge colorScheme="blue" borderRadius="full" px={2} py={0.5} fontSize="xs">
+                      2
+                    </Badge>
+                    <Heading as="h3" size="sm" color="white" fontWeight="600">
+                      Bearer Token (API)
+                    </Heading>
+                  </HStack>
+                  <Text color="surface.300" fontSize="sm" mb={3} pl={8} lineHeight="1.6">
+                    For API requests, include the access token in the Authorization header:
+                  </Text>
+                  <Box bg="surface.900" borderRadius="md" p={3} borderColor="surface.700" borderWidth="1px" ml={8}>
+                    <Code colorScheme="blue" fontSize="sm">
+                      Authorization: Bearer {'<access_token>'}
+                    </Code>
+                  </Box>
+                </Box>
+              </VStack>
+            </CardBody>
+          </Card>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Getting an Access Token</h2>
-          
-          <div className="bg-gray-50 p-4 rounded border border-gray-200 mb-4">
-            <h3 className="font-semibold mb-2">Using Supabase Client</h3>
-            <pre className="bg-white p-3 rounded overflow-x-auto"><code>{`import { createClient } from '@supabase/supabase-js';
+          {/* Getting Access Token */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Getting an Access Token
+              </Heading>
+              <Box mb={4}>
+                <Heading as="h3" size="xs" mb={3} color="white" fontWeight="600" textTransform="uppercase" letterSpacing="0.05em">
+                  Using Supabase Client
+                </Heading>
+                <Box bg="surface.900" borderRadius="md" p={4} borderColor="surface.700" borderWidth="1px" overflowX="auto">
+                  <Code colorScheme="blue" display="block" whiteSpace="pre" fontSize="xs">
+                    {`import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(url, key);
 const { data: { session } } = await supabase.auth.signInWithPassword({
@@ -55,88 +123,135 @@ const { data: { session } } = await supabase.auth.signInWithPassword({
   password: 'password'
 });
 
-const accessToken = session?.access_token;`}</code></pre>
-          </div>
-        </section>
+const accessToken = session?.access_token;`}
+                  </Code>
+                </Box>
+              </Box>
+            </CardBody>
+          </Card>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Session Management</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Get Active Sessions</h3>
-              <code className="block bg-gray-50 p-2 rounded text-sm mb-2">GET /api/sessions</code>
-              <p className="text-gray-700 text-sm">Returns all active sessions for the authenticated user.</p>
-            </div>
+          {/* Session Management */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={6} color="white" fontWeight="600">
+                Session Management
+              </Heading>
+              <VStack spacing={4} align="stretch">
+                {[
+                  { endpoint: 'GET /api/sessions', desc: 'Returns all active sessions for the authenticated user.' },
+                  { endpoint: 'DELETE /api/sessions', desc: 'Invalidates all sessions for the user.' },
+                  { endpoint: 'DELETE /api/sessions/[id]', desc: 'Invalidates a specific session.' },
+                ].map((item, index) => (
+                  <Box key={item.endpoint}>
+                    <HStack spacing={3} mb={2}>
+                      <Code colorScheme="green" fontSize="xs" px={2} py={1} borderRadius="md">
+                        {item.endpoint}
+                      </Code>
+                    </HStack>
+                    <Text fontSize="sm" color="surface.400" pl={2}>
+                      {item.desc}
+                    </Text>
+                    {index < 2 && <Divider borderColor="surface.700" mt={4} />}
+                  </Box>
+                ))}
+              </VStack>
+            </CardBody>
+          </Card>
 
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Sign Out from All Devices</h3>
-              <code className="block bg-gray-50 p-2 rounded text-sm mb-2">DELETE /api/sessions</code>
-              <p className="text-gray-700 text-sm">Invalidates all sessions for the user.</p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Sign Out from Specific Session</h3>
-              <code className="block bg-gray-50 p-2 rounded text-sm mb-2">DELETE /api/sessions/[id]</code>
-              <p className="text-gray-700 text-sm">Invalidates a specific session.</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">CSRF Protection</h2>
-          <p className="text-gray-700 mb-4">
-            All state-changing operations (POST, PUT, DELETE) require CSRF protection.
-          </p>
-          
-          <div className="bg-gray-50 p-4 rounded border border-gray-200">
-            <h3 className="font-semibold mb-2">Getting a CSRF Token</h3>
-            <pre className="bg-white p-3 rounded mb-2"><code>GET /api/csrf</code></pre>
-            <p className="text-gray-700 text-sm mb-2">Returns a CSRF token that must be included in subsequent requests.</p>
-            <pre className="bg-white p-3 rounded overflow-x-auto"><code>{`{
+          {/* CSRF Protection */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                CSRF Protection
+              </Heading>
+              <Text color="surface.300" fontSize="sm" mb={4} lineHeight="1.6">
+                All state-changing operations (POST, PUT, DELETE) require CSRF protection.
+              </Text>
+              <VStack spacing={4} align="stretch">
+                <Box>
+                  <Heading as="h3" size="xs" mb={3} color="white" fontWeight="600" textTransform="uppercase" letterSpacing="0.05em">
+                    Getting a CSRF Token
+                  </Heading>
+                  <Box bg="surface.900" borderRadius="md" p={3} borderColor="surface.700" borderWidth="1px" mb={3}>
+                    <Code colorScheme="green" fontSize="sm">
+                      GET /api/csrf
+                    </Code>
+                  </Box>
+                  <Text color="surface.300" fontSize="sm" mb={3} lineHeight="1.6">
+                    Returns a CSRF token that must be included in subsequent requests.
+                  </Text>
+                  <Box bg="surface.900" borderRadius="md" p={4} borderColor="surface.700" borderWidth="1px" overflowX="auto">
+                    <Code colorScheme="blue" display="block" whiteSpace="pre" fontSize="xs">
+                      {`{
   "csrfToken": "token_value"
-}`}</code></pre>
-          </div>
+}`}
+                    </Code>
+                  </Box>
+                </Box>
+                <Divider borderColor="surface.700" />
+                <Box>
+                  <Heading as="h3" size="xs" mb={3} color="white" fontWeight="600" textTransform="uppercase" letterSpacing="0.05em">
+                    Including CSRF Token
+                  </Heading>
+                  <Box bg="surface.900" borderRadius="md" p={3} borderColor="surface.700" borderWidth="1px">
+                    <Code colorScheme="blue" fontSize="sm">
+                      X-CSRF-Token: {'<csrf_token>'}
+                    </Code>
+                  </Box>
+                </Box>
+              </VStack>
+            </CardBody>
+          </Card>
 
-          <div className="bg-gray-50 p-4 rounded border border-gray-200 mt-4">
-            <h3 className="font-semibold mb-2">Including CSRF Token</h3>
-            <pre className="bg-white p-3 rounded overflow-x-auto"><code>{`X-CSRF-Token: &lt;csrf_token&gt;`}</code></pre>
-          </div>
-        </section>
+          {/* Admin Authentication */}
+          <Card bg="surface.800" borderColor="red.500/30" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Admin Authentication
+              </Heading>
+              <Text color="surface.300" fontSize="sm" mb={4} lineHeight="1.6">
+                Admin endpoints require additional authentication. Only users with the exact admin email address can access admin features.
+              </Text>
+              <Alert status="error" bg="red.500/10" borderColor="red.500/30" borderWidth="1px" borderRadius="md">
+                <AlertIcon color="red.400" />
+                <VStack align="start" spacing={1} flex={1}>
+                  <Text fontSize="sm" color="red.300" fontWeight="600">
+                    Security: Admin email is configured via <Code fontSize="xs" colorScheme="red">ADMIN_EMAIL</Code> environment variable.
+                  </Text>
+                  <Text fontSize="xs" color="red.300/80">
+                    Default: <Code fontSize="xs" colorScheme="red">kgpkhushwant1@gmail.com</Code>
+                  </Text>
+                </VStack>
+              </Alert>
+            </CardBody>
+          </Card>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Admin Authentication</h2>
-          <p className="text-gray-700 mb-4">
-            Admin endpoints require additional authentication. Only users with the exact 
-            admin email address can access admin features.
-          </p>
-          <div className="bg-red-50 border border-red-200 p-4 rounded">
-            <p className="text-red-800">
-              <strong>Security:</strong> Admin email is configured via <code>ADMIN_EMAIL</code> 
-              environment variable. Default: <code>kgpkhushwant1@gmail.com</code>
-            </p>
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Error Responses</h2>
-          <div className="space-y-2">
-            <div>
-              <code className="bg-gray-100 px-2 py-1 rounded text-sm">401 Unauthorized</code>
-              <span className="ml-2 text-gray-700">Authentication required or invalid token</span>
-            </div>
-            <div>
-              <code className="bg-gray-100 px-2 py-1 rounded text-sm">403 Forbidden</code>
-              <span className="ml-2 text-gray-700">Valid authentication but insufficient permissions</span>
-            </div>
-            <div>
-              <code className="bg-gray-100 px-2 py-1 rounded text-sm">429 Too Many Requests</code>
-              <span className="ml-2 text-gray-700">Rate limit exceeded</span>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
+          {/* Error Responses */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Error Responses
+              </Heading>
+              <VStack spacing={3} align="stretch">
+                {[
+                  { code: '401 Unauthorized', desc: 'Authentication required or invalid token' },
+                  { code: '403 Forbidden', desc: 'Valid authentication but insufficient permissions' },
+                  { code: '429 Too Many Requests', desc: 'Rate limit exceeded' },
+                ].map((item) => (
+                  <HStack key={item.code} spacing={3}>
+                    <Code colorScheme="red" fontSize="xs" px={2} py={1} borderRadius="md">
+                      {item.code}
+                    </Code>
+                    <Text fontSize="sm" color="surface.400">
+                      {item.desc}
+                    </Text>
+                  </HStack>
+                ))}
+              </VStack>
+            </CardBody>
+          </Card>
+        </VStack>
+      </Container>
+    </Box>
   );
 }
-
