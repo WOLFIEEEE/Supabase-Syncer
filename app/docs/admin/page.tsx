@@ -194,24 +194,123 @@ export default function AdminDocsPage() {
               <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
                 Admin Routes
               </Heading>
-              <VStack spacing={2} align="stretch">
+              <Text color="surface.300" fontSize="sm" mb={4} lineHeight="1.6">
+                The admin panel includes the following pages, all accessible via the sidebar navigation:
+              </Text>
+              <VStack spacing={3} align="stretch">
                 {[
-                  { route: '/admin', desc: 'Main dashboard' },
-                  { route: '/admin/users', desc: 'User management' },
-                  { route: '/admin/sync-jobs', desc: 'Sync job management' },
-                  { route: '/admin/security', desc: 'Security monitoring' },
-                  { route: '/admin/analytics', desc: 'Analytics dashboard' },
-                  { route: '/admin/system-health', desc: 'System health' },
-                  { route: '/admin/audit-log', desc: 'Audit logs' },
+                  { route: '/admin', desc: 'Main dashboard with real-time metrics, charts, and system overview' },
+                  { route: '/admin/users', desc: 'User management with search, filters, and export capabilities' },
+                  { route: '/admin/sync-jobs', desc: 'Sync job management with bulk operations and real-time progress' },
+                  { route: '/admin/security', desc: 'Security monitoring with event timeline and threat detection' },
+                  { route: '/admin/analytics', desc: 'Analytics dashboard with charts and time-series visualizations' },
+                  { route: '/admin/system-health', desc: 'System health monitoring with service status indicators' },
+                  { route: '/admin/audit-log', desc: 'Comprehensive audit trail of all admin actions and events' },
                 ].map((item) => (
-                  <HStack key={item.route} spacing={3}>
-                    <Code colorScheme="blue" fontSize="xs" px={2} py={1} borderRadius="md">
-                      {item.route}
-                    </Code>
-                    <Text fontSize="sm" color="surface.400">
-                      - {item.desc}
+                  <Box key={item.route} p={3} bg="surface.900" borderRadius="md" borderColor="surface.700" borderWidth="1px">
+                    <HStack spacing={3} mb={1}>
+                      <Code colorScheme="blue" fontSize="xs" px={2} py={1} borderRadius="md">
+                        {item.route}
+                      </Code>
+                    </HStack>
+                    <Text fontSize="sm" color="surface.400" mt={1}>
+                      {item.desc}
                     </Text>
-                  </HStack>
+                  </Box>
+                ))}
+              </VStack>
+            </CardBody>
+          </Card>
+
+          {/* New Features */}
+          <Card bg="surface.800" borderColor="brand.400/30" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Enhanced Features
+              </Heading>
+              <VStack spacing={4} align="stretch">
+                <Box>
+                  <Heading as="h3" size="sm" mb={2} color="white" fontWeight="600">
+                    Navigation & Layout
+                  </Heading>
+                  <UnorderedList spacing={1} color="surface.300" fontSize="sm" pl={4}>
+                    <ListItem>Collapsible sidebar with navigation links</ListItem>
+                    <ListItem>Responsive design with mobile hamburger menu</ListItem>
+                    <ListItem>Active route highlighting</ListItem>
+                    <ListItem>User profile section with logout</ListItem>
+                    <ListItem>Top header with page title and quick actions</ListItem>
+                  </UnorderedList>
+                </Box>
+                <Divider borderColor="surface.700" />
+                <Box>
+                  <Heading as="h3" size="sm" mb={2} color="white" fontWeight="600">
+                    Data Visualization
+                  </Heading>
+                  <UnorderedList spacing={1} color="surface.300" fontSize="sm" pl={4}>
+                    <ListItem>Interactive charts using Recharts library</ListItem>
+                    <ListItem>Line charts for time-series data</ListItem>
+                    <ListItem>Bar charts for categorical data</ListItem>
+                    <ListItem>Metric cards with trend indicators</ListItem>
+                    <ListItem>Real-time data updates via polling</ListItem>
+                  </UnorderedList>
+                </Box>
+                <Divider borderColor="surface.700" />
+                <Box>
+                  <Heading as="h3" size="sm" mb={2} color="white" fontWeight="600">
+                    Management Features
+                  </Heading>
+                  <UnorderedList spacing={1} color="surface.300" fontSize="sm" pl={4}>
+                    <ListItem>User management with search and pagination</ListItem>
+                    <ListItem>Sync job management with bulk operations</ListItem>
+                    <ListItem>Security event monitoring with filtering</ListItem>
+                    <ListItem>Analytics dashboard with date range selection</ListItem>
+                    <ListItem>System health monitoring</ListItem>
+                    <ListItem>Comprehensive audit log</ListItem>
+                  </UnorderedList>
+                </Box>
+                <Divider borderColor="surface.700" />
+                <Box>
+                  <Heading as="h3" size="sm" mb={2} color="white" fontWeight="600">
+                    Export & Bulk Operations
+                  </Heading>
+                  <UnorderedList spacing={1} color="surface.300" fontSize="sm" pl={4}>
+                    <ListItem>CSV export for all data tables</ListItem>
+                    <ListItem>JSON export for analytics data</ListItem>
+                    <ListItem>Bulk selection and actions for sync jobs</ListItem>
+                    <ListItem>Filtered exports with applied filters</ListItem>
+                  </UnorderedList>
+                </Box>
+              </VStack>
+            </CardBody>
+          </Card>
+
+          {/* API Endpoints */}
+          <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+            <CardBody p={6}>
+              <Heading as="h2" size="md" mb={4} color="white" fontWeight="600">
+                Admin API Endpoints
+              </Heading>
+              <VStack spacing={3} align="stretch">
+                {[
+                  { method: 'GET', route: '/api/admin/users', desc: 'List all users with search and pagination' },
+                  { method: 'GET', route: '/api/admin/sync-jobs', desc: 'List all sync jobs with filters' },
+                  { method: 'GET', route: '/api/admin/analytics', desc: 'Get analytics data (user-growth, sync-performance, api-usage, etc.)' },
+                  { method: 'GET', route: '/api/admin/security-events', desc: 'Get security events with filters' },
+                  { method: 'POST', route: '/api/admin/export', desc: 'Export data in CSV or JSON format' },
+                ].map((item) => (
+                  <Box key={item.route} p={3} bg="surface.900" borderRadius="md" borderColor="surface.700" borderWidth="1px">
+                    <HStack spacing={3} mb={1}>
+                      <Badge colorScheme={item.method === 'GET' ? 'blue' : 'green'} fontSize="xs">
+                        {item.method}
+                      </Badge>
+                      <Code colorScheme="blue" fontSize="xs" px={2} py={1} borderRadius="md">
+                        {item.route}
+                      </Code>
+                    </HStack>
+                    <Text fontSize="sm" color="surface.400" mt={1}>
+                      {item.desc}
+                    </Text>
+                  </Box>
                 ))}
               </VStack>
             </CardBody>

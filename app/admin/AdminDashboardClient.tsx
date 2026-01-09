@@ -20,6 +20,9 @@ import {
   Flex,
   Divider,
 } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import LineChart from '@/components/admin/charts/LineChart';
+import MetricCard from '@/components/admin/charts/MetricCard';
 
 interface AdminDashboardProps {
   userStats: any;
@@ -40,6 +43,31 @@ export default function AdminDashboardClient({
   adminUser,
   requestId,
 }: AdminDashboardProps) {
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await fetch('/api/admin/analytics?days=30');
+        const result = await response.json();
+        if (result.success) {
+          setAnalytics(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch analytics:', error);
+      }
+    };
+
+    fetchAnalytics();
+    const interval = setInterval(() => {
+      setRefreshing(true);
+      fetchAnalytics().finally(() => setRefreshing(false));
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Box minH="100vh" bg="rgba(9, 9, 11, 1)">
       <Container maxW="7xl" py={{ base: 8, md: 12 }} px={{ base: 4, md: 6 }}>
@@ -211,6 +239,37 @@ export default function AdminDashboardClient({
                 </CardBody>
               </Card>
             </Box>
+          )}
+
+          {/* Analytics Charts */}
+          {analytics && (
+            <>
+              {analytics.userGrowth && (
+                <Box>
+                  <Heading as="h2" size="lg" mb={4} color="white">
+                    User Growth Trend
+                  </Heading>
+                  <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+                    <CardBody>
+                      <LineChart data={analytics.userGrowth.data} color="#3182ce" height={300} />
+                    </CardBody>
+                  </Card>
+                </Box>
+              )}
+
+              {analytics.syncPerformance && (
+                <Box>
+                  <Heading as="h2" size="lg" mb={4} color="white">
+                    Sync Performance Trend
+                  </Heading>
+                  <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+                    <CardBody>
+                      <LineChart data={analytics.syncPerformance.data} color="#38a169" height={300} />
+                    </CardBody>
+                  </Card>
+                </Box>
+              )}
+            </>
           )}
 
           {/* System Status */}

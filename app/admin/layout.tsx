@@ -134,7 +134,7 @@ export default async function AdminLayout({
   }
   
   return (
-    <AdminLayoutClient>
+    <AdminLayoutClient adminUser={adminUser}>
       {children}
     </AdminLayoutClient>
   );
