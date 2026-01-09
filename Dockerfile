@@ -1,6 +1,7 @@
 # =========================================
 # Supabase Syncer - Production Dockerfile
 # Optimized for Coolify deployment
+# Main Domain: suparbase.com
 # =========================================
 
 # Stage 1: Dependencies
@@ -24,6 +25,7 @@ COPY . .
 
 # Set build-time environment variables
 # These are needed for Next.js to build properly
+# NOTE: NEXT_PUBLIC_APP_URL should be set to https://suparbase.com for production
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG NEXT_PUBLIC_APP_URL

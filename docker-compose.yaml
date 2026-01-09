@@ -1,6 +1,7 @@
 # =========================================
 # Supabase Syncer - Docker Compose
 # For local development and production
+# Main Domain: suparbase.com
 # =========================================
 # 
 # Services:
@@ -13,7 +14,8 @@
 # Usage:
 #   1. Copy .env.example to .env
 #   2. Fill in your Supabase credentials
-#   3. Run: docker-compose up -d
+#   3. Set NEXT_PUBLIC_APP_URL=https://suparbase.com for production
+#   4. Run: docker-compose up -d
 # =========================================
 
 version: '3.8'
@@ -57,8 +59,10 @@ services:
       # Required: Encryption key for database URLs
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       
-      # Optional: App URL (for OAuth callbacks)
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      # Required: App URL (for OAuth callbacks and email links)
+      # Production: https://suparbase.com
+      # Development: http://localhost:3000
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://suparbase.com}
       
       # Optional: External PostgreSQL for persistent storage
       - DATABASE_URL=${DATABASE_URL:-}

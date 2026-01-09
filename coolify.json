@@ -1,8 +1,9 @@
 {
     "name": "supabase-syncer",
-    "description": "Database synchronization and keep-alive tool for Supabase",
+    "description": "Database synchronization and keep-alive tool for Supabase - suparbase.com",
     "type": "docker-compose",
     "dockerCompose": "./docker-compose.yaml",
+    "domain": "suparbase.com",
     "services": {
         "app": {
             "name": "Supabase Syncer",
@@ -13,13 +14,15 @@
                 "path": "/api/status",
                 "interval": 30,
                 "timeout": 10,
-                "retries": 3
+                "retries": 3,
+                "startPeriod": 40
             },
             "environment": {
                 "NODE_ENV": "production",
                 "PORT": "3000",
                 "HOSTNAME": "0.0.0.0",
-                "REDIS_URL": "redis://redis:6379"
+                "REDIS_URL": "redis://redis:6379",
+                "NEXT_PUBLIC_APP_URL": "https://suparbase.com"
             }
         },
         "redis": {
