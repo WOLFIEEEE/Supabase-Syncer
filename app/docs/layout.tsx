@@ -4,12 +4,10 @@
  * Provides consistent navigation and layout for all documentation pages
  */
 
-import Link from 'next/link';
+'use client';
 
-export const metadata = {
-  title: 'Documentation - Supabase Syncer',
-  description: 'Developer documentation for Supabase Syncer'
-};
+import Link from 'next/link';
+import { Box, Flex, VStack, Heading, List, ListItem } from '@chakra-ui/react';
 
 export default function DocsLayout({
   children
@@ -29,35 +27,52 @@ export default function DocsLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-8 py-8">
+    <Box minH="100vh" bg="surface.900" color="white">
+      <Box maxW="7xl" mx="auto" px={{ base: 4, sm: 6, lg: 8 }}>
+        <Flex direction={{ base: 'column', lg: 'row' }} gap={8} py={8}>
           {/* Sidebar Navigation */}
-          <aside className="lg:w-64 flex-shrink-0">
-            <nav className="bg-white rounded-lg shadow-md p-4 sticky top-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Documentation</h2>
-              <ul className="space-y-2">
+          <Box w={{ base: '100%', lg: '64' }} flexShrink={0}>
+            <Box
+              bg="surface.800"
+              borderRadius="lg"
+              boxShadow="md"
+              p={4}
+              position="sticky"
+              top={8}
+            >
+              <Heading as="h2" size="md" mb={4} color="white">
+                Documentation
+              </Heading>
+              <VStack align="stretch" spacing={2}>
                 {navItems.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+                  <Link key={item.href} href={item.href}>
+                    <Box
+                      px={3}
+                      py={2}
+                      borderRadius="md"
+                      fontSize="sm"
+                      color="gray.300"
+                      _hover={{
+                        bg: 'surface.700',
+                        color: 'brand.400'
+                      }}
+                      transition="all 0.2s"
                     >
                       {item.label}
-                    </Link>
-                  </li>
+                    </Box>
+                  </Link>
                 ))}
-              </ul>
-            </nav>
-          </aside>
+              </VStack>
+            </Box>
+          </Box>
 
           {/* Main Content */}
-          <main className="flex-1 min-w-0">
+          <Box flex={1} minW={0}>
             {children}
-          </main>
-        </div>
-      </div>
-    </div>
+          </Box>
+        </Flex>
+      </Box>
+    </Box>
   );
 }
 

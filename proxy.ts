@@ -1,3 +1,17 @@
+/**
+ * Next.js 16 Proxy Configuration
+ * 
+ * IMPORTANT: In Next.js 16, `middleware.ts` is DEPRECATED and replaced by `proxy.ts`
+ * This file handles all request proxying, authentication, and security headers.
+ * 
+ * Key differences from middleware.ts:
+ * - Must use `export default function proxy(request: NextRequest)`
+ * - Runs on Node.js runtime (more predictable)
+ * - Better reflects network boundary functionality
+ * 
+ * @see NEXTJS_16_DOCUMENTATION.md for complete migration guide
+ */
+
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import { validateBodySize, createBodySizeLimitResponse, getLimitTypeForPath } from '@/lib/middleware/body-size-limit';

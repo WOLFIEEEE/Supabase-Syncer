@@ -4,12 +4,10 @@
  * Main documentation page with navigation to all documentation sections
  */
 
-import Link from 'next/link';
+'use client';
 
-export const metadata = {
-  title: 'Developer Documentation - Supabase Syncer',
-  description: 'Complete developer documentation for Supabase Syncer API and features'
-};
+import Link from 'next/link';
+import { Box, Container, Heading, Text, SimpleGrid, VStack, HStack, UnorderedList, ListItem } from '@chakra-ui/react';
 
 export default function DocsPage() {
   const docSections = [
