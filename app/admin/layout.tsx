@@ -59,7 +59,8 @@ export default async function AdminLayout({
         timestamp: new Date().toISOString()
       });
       
-      await logSecurityEvent({
+      // Non-blocking log - don't await to prevent timeouts
+      logSecurityEvent({
         eventType: 'permission_denied',
         severity: 'critical',
         userId: adminUser.id,
@@ -72,7 +73,7 @@ export default async function AdminLayout({
           requestId
         },
         requestId
-      });
+      }).catch(err => console.error('[ADMIN_LAYOUT] Failed to log security event:', err));
       
       redirect('/login?error=admin_required');
     }
@@ -86,7 +87,8 @@ export default async function AdminLayout({
       timestamp: new Date().toISOString()
     });
     
-    await logSecurityEvent({
+    // Non-blocking log - don't await to prevent timeouts
+    logSecurityEvent({
       eventType: 'auth_success',
       severity: 'low',
       userId: adminUser.id,
@@ -101,7 +103,7 @@ export default async function AdminLayout({
         duration: layoutLoadDuration
       },
       requestId
-    });
+    }).catch(err => console.error('[ADMIN_LAYOUT] Failed to log security event:', err));
     
   } catch (error) {
     const layoutLoadDuration = Date.now() - layoutLoadStart;
@@ -113,7 +115,8 @@ export default async function AdminLayout({
       timestamp: new Date().toISOString()
     });
     
-    await logSecurityEvent({
+    // Non-blocking log - don't await to prevent timeouts
+    logSecurityEvent({
       eventType: 'permission_denied',
       severity: 'high',
       endpoint: '/admin',
@@ -125,7 +128,7 @@ export default async function AdminLayout({
         duration: layoutLoadDuration
       },
       requestId
-    });
+    }).catch(err => console.error('[ADMIN_LAYOUT] Failed to log security event:', err));
     
     redirect('/login?error=admin_required');
   }

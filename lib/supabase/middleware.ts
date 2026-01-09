@@ -59,6 +59,7 @@ export async function updateSession(request: NextRequest) {
     '/',
     '/guide',
     '/status',
+    '/docs', // Documentation is public
   ];
 
   const isPublicRoute = publicRoutes.some(
@@ -68,7 +69,11 @@ export async function updateSession(request: NextRequest) {
   // Allow public API routes
   const isPublicApiRoute = 
     request.nextUrl.pathname.startsWith('/api/auth') ||
-    request.nextUrl.pathname === '/api/status';
+    request.nextUrl.pathname === '/api/status' ||
+    request.nextUrl.pathname === '/api/health' ||
+    request.nextUrl.pathname === '/api/version' ||
+    request.nextUrl.pathname === '/api/features' ||
+    request.nextUrl.pathname === '/api/docs';
 
   // Allow static files
   const isStaticFile =

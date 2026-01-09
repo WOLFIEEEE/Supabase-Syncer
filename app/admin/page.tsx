@@ -43,8 +43,8 @@ export default async function AdminDashboard() {
       timestamp: new Date().toISOString()
     });
     
-    // Log successful admin page access
-    await logSecurityEvent({
+    // Non-blocking log - don't await to prevent timeouts
+    logSecurityEvent({
       eventType: 'auth_success',
       severity: 'low',
       userId: adminUser.id,
@@ -58,7 +58,7 @@ export default async function AdminDashboard() {
         requestId
       },
       requestId
-    });
+    }).catch(err => console.error('[ADMIN_PAGE] Failed to log security event:', err));
     
     // Double-check email match (extra security layer)
     if (adminUser.email !== ADMIN_EMAIL) {
@@ -69,7 +69,8 @@ export default async function AdminDashboard() {
         timestamp: new Date().toISOString()
       });
       
-      await logSecurityEvent({
+      // Non-blocking log - don't await to prevent timeouts
+      logSecurityEvent({
         eventType: 'permission_denied',
         severity: 'critical',
         userId: adminUser.id,
@@ -82,7 +83,7 @@ export default async function AdminDashboard() {
           requestId
         },
         requestId
-      });
+      }).catch(err => console.error('[ADMIN_PAGE] Failed to log security event:', err));
       
       throw new Error('Access denied: Email does not match admin requirements');
     }
@@ -95,7 +96,8 @@ export default async function AdminDashboard() {
       timestamp: new Date().toISOString()
     });
     
-    await logSecurityEvent({
+    // Non-blocking log - don't await to prevent timeouts
+    logSecurityEvent({
       eventType: 'permission_denied',
       severity: 'high',
       endpoint: '/admin',
@@ -106,7 +108,7 @@ export default async function AdminDashboard() {
         requestId
       },
       requestId
-    });
+    }).catch(err => console.error('[ADMIN_PAGE] Failed to log security event:', err));
     
     throw error;
   }

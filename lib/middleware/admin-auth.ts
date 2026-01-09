@@ -121,7 +121,8 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
         timestamp: new Date().toISOString()
       });
       
-      await logSecurityEvent({
+      // Non-blocking log - don't await to prevent timeouts
+      logSecurityEvent({
         eventType: 'auth_failed',
         severity: 'medium',
         ipAddress: getClientIP(request),
@@ -135,7 +136,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
           requestId
         },
         requestId
-      });
+      }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
       
       return {
         isAdmin: false,
@@ -150,7 +151,8 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
         timestamp: new Date().toISOString()
       });
       
-      await logSecurityEvent({
+      // Non-blocking log - don't await to prevent timeouts
+      logSecurityEvent({
         eventType: 'auth_failed',
         severity: 'medium',
         ipAddress: getClientIP(request),
@@ -162,7 +164,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
           requestId
         },
         requestId
-      });
+      }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
       
       return {
         isAdmin: false,
@@ -190,8 +192,8 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
         timestamp: new Date().toISOString()
       });
       
-      // Log unauthorized admin access attempt
-      await logSecurityEvent({
+      // Non-blocking log - don't await to prevent timeouts
+      logSecurityEvent({
         eventType: 'permission_denied',
         severity: 'high',
         userId: user.id,
@@ -207,7 +209,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
           requestId
         },
         requestId
-      });
+      }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
       
       return {
         isAdmin: false,
@@ -224,7 +226,8 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
       timestamp: new Date().toISOString()
     });
     
-    await logSecurityEvent({
+    // Non-blocking log - don't await to prevent timeouts
+    logSecurityEvent({
       eventType: 'auth_success',
       severity: 'low',
       userId: user.id,
@@ -239,7 +242,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
         duration
       },
       requestId
-    });
+    }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
     
     return {
       isAdmin: true,
@@ -259,7 +262,8 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
       timestamp: new Date().toISOString()
     });
     
-    await logSecurityEvent({
+    // Non-blocking log - don't await to prevent timeouts
+    logSecurityEvent({
       eventType: 'api_error',
       severity: 'high',
       ipAddress: getClientIP(request),
@@ -273,7 +277,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
         duration
       },
       requestId
-    });
+    }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
     
     return {
       isAdmin: false,
