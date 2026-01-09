@@ -7,7 +7,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Box, Container, Heading, Text, SimpleGrid, VStack, HStack, UnorderedList, ListItem } from '@chakra-ui/react';
+import { Box, Container, Heading, Text, SimpleGrid, VStack, HStack, UnorderedList, ListItem, Flex } from '@chakra-ui/react';
 
 export default function DocsPage() {
   const docSections = [
@@ -16,124 +16,181 @@ export default function DocsPage() {
       description: 'Quick start guide and installation instructions',
       href: '/docs/getting-started',
       icon: '🚀',
-      color: 'bg-blue-500'
+      color: 'blue.500'
     },
     {
       title: 'API Reference',
       description: 'Complete API endpoint documentation with examples',
       href: '/docs/api',
       icon: '📡',
-      color: 'bg-green-500'
+      color: 'green.500'
     },
     {
       title: 'Database Schema',
       description: 'Database tables, relationships, and migrations',
       href: '/docs/database',
       icon: '🗄️',
-      color: 'bg-purple-500'
+      color: 'purple.500'
     },
     {
       title: 'Authentication',
       description: 'Auth flow, sessions, and security features',
       href: '/docs/authentication',
       icon: '🔐',
-      color: 'bg-red-500'
+      color: 'red.500'
     },
     {
       title: 'Admin Features',
       description: 'Admin dashboard, logging, and monitoring',
       href: '/docs/admin',
       icon: '👨‍💼',
-      color: 'bg-orange-500'
+      color: 'orange.500'
     },
     {
       title: 'Architecture',
       description: 'System architecture and design patterns',
       href: '/docs/architecture',
       icon: '🏗️',
-      color: 'bg-indigo-500'
+      color: 'indigo.500'
     },
     {
       title: 'Sync Operations',
       description: 'Database synchronization features and workflows',
       href: '/docs/sync',
       icon: '🔄',
-      color: 'bg-teal-500'
+      color: 'teal.500'
     },
     {
       title: 'Security',
       description: 'Security features, encryption, and best practices',
       href: '/docs/security',
       icon: '🛡️',
-      color: 'bg-pink-500'
+      color: 'pink.500'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <Box>
+      <Container maxW="7xl" py={12}>
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <VStack spacing={4} mb={12} textAlign="center">
+          <Heading as="h1" size="2xl" color="white">
             Developer Documentation
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          </Heading>
+          <Text fontSize="xl" color="gray.300" maxW="3xl">
             Complete guide to Supabase Syncer API, features, and architecture.
             Everything you need to integrate and extend the platform.
-          </p>
-        </div>
+          </Text>
+        </VStack>
 
         {/* Documentation Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mb={12}>
           {docSections.map((section) => (
-            <Link
-              key={section.href}
-              href={section.href}
-              className="group block bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-200 p-6 border border-gray-200 hover:border-gray-300"
-            >
-              <div className="flex items-start space-x-4">
-                <div className={`${section.color} text-white rounded-lg p-3 text-2xl flex-shrink-0`}>
-                  {section.icon}
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                    {section.title}
-                  </h2>
-                  <p className="text-gray-600 text-sm">
-                    {section.description}
-                  </p>
-                </div>
-              </div>
+            <Link key={section.href} href={section.href}>
+              <Box
+                bg="surface.800"
+                borderRadius="lg"
+                boxShadow="md"
+                p={6}
+                border="1px solid"
+                borderColor="surface.700"
+                _hover={{
+                  boxShadow: 'xl',
+                  borderColor: 'surface.600',
+                  transform: 'translateY(-2px)',
+                  transition: 'all 0.2s'
+                }}
+                transition="all 0.2s"
+              >
+                <Flex align="start" gap={4}>
+                  <Box
+                    bg={section.color}
+                    color="white"
+                    borderRadius="lg"
+                    p={3}
+                    fontSize="2xl"
+                    flexShrink={0}
+                  >
+                    {section.icon}
+                  </Box>
+                  <Box flex={1}>
+                    <Heading as="h2" size="md" mb={2} color="white" _groupHover={{ color: 'brand.400' }}>
+                      {section.title}
+                    </Heading>
+                    <Text fontSize="sm" color="gray.400">
+                      {section.description}
+                    </Text>
+                  </Box>
+                </Flex>
+              </Box>
             </Link>
           ))}
-        </div>
+        </SimpleGrid>
 
         {/* Quick Links */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Quick Links</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="font-medium text-gray-900 mb-2">API Endpoints</h3>
-              <ul className="space-y-1 text-sm text-gray-600">
-                <li><Link href="/docs/api#health" className="hover:text-blue-600">Health Check</Link></li>
-                <li><Link href="/docs/api#connections" className="hover:text-blue-600">Connections API</Link></li>
-                <li><Link href="/docs/api#sync" className="hover:text-blue-600">Sync Operations</Link></li>
-                <li><Link href="/docs/api#explorer" className="hover:text-blue-600">Data Explorer</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900 mb-2">Resources</h3>
-              <ul className="space-y-1 text-sm text-gray-600">
-                <li><a href="/api/docs" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">API JSON Schema</a></li>
-                <li><a href="https://github.com/WOLFIEEEE/Supabase-Syncer" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">GitHub Repository</a></li>
-                <li><Link href="/docs/database#migrations" className="hover:text-blue-600">Database Migrations</Link></li>
-                <li><Link href="/docs/security#encryption" className="hover:text-blue-600">Encryption Guide</Link></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        <Box bg="surface.800" borderRadius="lg" boxShadow="md" p={6} border="1px solid" borderColor="surface.700">
+          <Heading as="h2" size="lg" mb={4} color="white">
+            Quick Links
+          </Heading>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <Box>
+              <Heading as="h3" size="sm" mb={2} color="white" fontWeight="medium">
+                API Endpoints
+              </Heading>
+              <UnorderedList spacing={1} fontSize="sm" color="gray.300">
+                <ListItem>
+                  <Link href="/docs/api#health" style={{ color: 'inherit' }}>
+                    <Text as="span" _hover={{ color: 'brand.400' }}>Health Check</Text>
+                  </Link>
+                </ListItem>
+                <ListItem>
+                  <Link href="/docs/api#connections" style={{ color: 'inherit' }}>
+                    <Text as="span" _hover={{ color: 'brand.400' }}>Connections API</Text>
+                  </Link>
+                </ListItem>
+                <ListItem>
+                  <Link href="/docs/api#sync" style={{ color: 'inherit' }}>
+                    <Text as="span" _hover={{ color: 'brand.400' }}>Sync Operations</Text>
+                  </Link>
+                </ListItem>
+                <ListItem>
+                  <Link href="/docs/api#explorer" style={{ color: 'inherit' }}>
+                    <Text as="span" _hover={{ color: 'brand.400' }}>Data Explorer</Text>
+                  </Link>
+                </ListItem>
+              </UnorderedList>
+            </Box>
+            <Box>
+              <Heading as="h3" size="sm" mb={2} color="white" fontWeight="medium">
+                Resources
+              </Heading>
+              <UnorderedList spacing={1} fontSize="sm" color="gray.300">
+                <ListItem>
+                  <a href="/api/docs" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
+                    <Text as="span" _hover={{ color: 'brand.400' }}>API JSON Schema</Text>
+                  </a>
+                </ListItem>
+                <ListItem>
+                  <a href="https://github.com/WOLFIEEEE/Supabase-Syncer" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
+                    <Text as="span" _hover={{ color: 'brand.400' }}>GitHub Repository</Text>
+                  </a>
+                </ListItem>
+                <ListItem>
+                  <Link href="/docs/database#migrations" style={{ color: 'inherit' }}>
+                    <Text as="span" _hover={{ color: 'brand.400' }}>Database Migrations</Text>
+                  </Link>
+                </ListItem>
+                <ListItem>
+                  <Link href="/docs/security#encryption" style={{ color: 'inherit' }}>
+                    <Text as="span" _hover={{ color: 'brand.400' }}>Encryption Guide</Text>
+                  </Link>
+                </ListItem>
+              </UnorderedList>
+            </Box>
+          </SimpleGrid>
+        </Box>
+      </Container>
+    </Box>
   );
 }
 
