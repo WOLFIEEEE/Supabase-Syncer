@@ -8,9 +8,9 @@
  */
 
 import { requireAdminAccess, ADMIN_EMAIL } from '@/lib/middleware/admin-auth';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { logSecurityEvent } from '@/lib/services/security-logger';
+import AdminLayoutClient from './AdminLayoutClient';
 
 export const metadata = {
   title: 'Admin Dashboard - Supabase Syncer',
@@ -134,89 +134,9 @@ export default async function AdminLayout({
   }
   
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-4 border-b border-gray-800">
-          <h1 className="text-xl font-bold">Admin Dashboard</h1>
-          <div className="mt-2 px-2 py-1 bg-red-600 text-xs rounded">
-            ADMIN ACCESS
-          </div>
-        </div>
-        
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          <Link 
-            href="/admin" 
-            className="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          >
-            📊 Dashboard
-          </Link>
-          
-          <Link 
-            href="/admin/users" 
-            className="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          >
-            👥 Users
-          </Link>
-          
-          <Link 
-            href="/admin/sync-jobs" 
-            className="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          >
-            🔄 Sync Jobs
-          </Link>
-          
-          <Link 
-            href="/admin/security" 
-            className="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          >
-            🔒 Security
-          </Link>
-          
-          <Link 
-            href="/admin/analytics" 
-            className="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          >
-            📈 Analytics
-          </Link>
-          
-          <Link 
-            href="/admin/system-health" 
-            className="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          >
-            🏥 System Health
-          </Link>
-          
-          <Link 
-            href="/admin/audit-log" 
-            className="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          >
-            📝 Audit Log
-          </Link>
-          
-          <div className="pt-4 mt-4 border-t border-gray-800">
-            <Link 
-              href="/dashboard" 
-              className="block px-4 py-2 rounded hover:bg-gray-800 transition text-gray-400"
-            >
-              ← Back to App
-            </Link>
-          </div>
-        </nav>
-        
-        <div className="p-4 border-t border-gray-800 text-xs text-gray-400">
-          <p>Supabase Syncer Admin</p>
-          <p>v1.0.0</p>
-        </div>
-      </aside>
-      
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          {children}
-        </div>
-      </main>
-    </div>
+    <AdminLayoutClient>
+      {children}
+    </AdminLayoutClient>
   );
 }
 
