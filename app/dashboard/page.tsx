@@ -121,7 +121,10 @@ interface Connection {
   id: string;
   name: string;
   environment: 'production' | 'development';
+  keepAlive?: boolean;
+  lastPingedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 interface SyncJob {
@@ -456,6 +459,166 @@ export default function DashboardPage() {
               Manage Connections
             </Button>
           </Flex>
+
+          <Divider borderColor="surface.700" />
+
+          {/* All Databases */}
+          <Box>
+            <Heading size={{ base: 'sm', md: 'md' }} color="white" mb={{ base: 3, md: 4 }}>
+              All Databases
+            </Heading>
+
+            {isLoading ? (
+              <Flex justify="center" py={8}>
+                <Spinner size="lg" color="brand.400" />
+              </Flex>
+            ) : connections.length === 0 ? (
+              <Card bg="surface.800" borderColor="surface.700">
+                <CardBody>
+                  <VStack spacing={4} py={{ base: 6, md: 8 }}>
+                    <Box color="surface.500">
+                      <DatabaseIcon />
+                    </Box>
+                    <Text color="surface.400" fontSize={{ base: 'sm', md: 'md' }}>No databases yet</Text>
+                    <Button
+                      size="sm"
+                      leftIcon={<PlusIcon />}
+                      colorScheme="cyan"
+                      onClick={() => router.push('/connections')}
+                    >
+                      Add your first database
+                    </Button>
+                  </VStack>
+                </CardBody>
+              </Card>
+            ) : (
+              <VStack spacing={{ base: 2, md: 3 }} align="stretch">
+                {connections.map((connection, index) => {
+                  const formatLastPinged = (lastPingedAt: string | null | undefined) => {
+                    if (!lastPingedAt) return 'Never';
+                    const date = new Date(lastPingedAt);
+                    const now = new Date();
+                    const diffMs = now.getTime() - date.getTime();
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const diffHours = Math.floor(diffMs / 3600000);
+                    const diffDays = Math.floor(diffMs / 86400000);
+
+                    if (diffMins < 1) return 'Just now';
+                    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+                    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+                    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+                    return date.toLocaleDateString();
+                  };
+
+                  const getLastPingedColor = (lastPingedAt: string | null | undefined, keepAlive: boolean | undefined) => {
+                    if (!keepAlive) return 'surface.500';
+                    if (!lastPingedAt) return 'yellow.400';
+                    const date = new Date(lastPingedAt);
+                    const now = new Date();
+                    const diffMs = now.getTime() - date.getTime();
+                    const diffHours = diffMs / 3600000;
+                    if (diffHours < 1) return 'green.400';
+                    if (diffHours < 24) return 'yellow.400';
+                    return 'red.400';
+                  };
+
+                  return (
+                    <MotionCard
+                      key={connection.id}
+                      bg="surface.800"
+                      borderColor="surface.700"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                      cursor="pointer"
+                      onClick={() => router.push(`/explorer/${connection.id}`)}
+                      _hover={{ borderColor: 'brand.500', transform: 'translateY(-2px)' }}
+                      style={{ transition: 'all 0.2s' }}
+                    >
+                      <CardBody p={{ base: 3, md: 4 }}>
+                        <Flex 
+                          justify="space-between" 
+                          align={{ base: 'flex-start', md: 'center' }}
+                          direction={{ base: 'column', md: 'row' }}
+                          gap={{ base: 3, md: 0 }}
+                        >
+                          <HStack spacing={{ base: 2, md: 4 }} flex={1} minW={0}>
+                            <Box color="brand.400" flexShrink={0}>
+                              <DatabaseIcon />
+                            </Box>
+                            <VStack align="start" spacing={1} minW={0} flex={1}>
+                              <HStack spacing={2} maxW="100%">
+                                <Text 
+                                  color="white" 
+                                  fontWeight="semibold" 
+                                  fontSize={{ base: 'sm', md: 'md' }}
+                                  isTruncated
+                                >
+                                  {connection.name}
+                                </Text>
+                                <Badge 
+                                  colorScheme={connection.environment === 'production' ? 'red' : 'blue'}
+                                  fontSize="xs"
+                                >
+                                  {connection.environment}
+                                </Badge>
+                                {connection.keepAlive && (
+                                  <Badge 
+                                    colorScheme="green"
+                                    variant="subtle"
+                                    fontSize="xs"
+                                  >
+                                    Keep-Alive
+                                  </Badge>
+                                )}
+                              </HStack>
+                              <HStack spacing={4} flexWrap="wrap">
+                                <Text color="surface.500" fontSize={{ base: 'xs', md: 'sm' }}>
+                                  Created: {new Date(connection.createdAt).toLocaleDateString()}
+                                </Text>
+                                {connection.updatedAt && (
+                                  <Text color="surface.500" fontSize={{ base: 'xs', md: 'sm' }}>
+                                    Updated: {new Date(connection.updatedAt).toLocaleDateString()}
+                                  </Text>
+                                )}
+                              </HStack>
+                            </VStack>
+                          </HStack>
+                          <VStack 
+                            align={{ base: 'flex-start', md: 'flex-end' }} 
+                            spacing={1}
+                            minW={{ base: '100%', md: 'auto' }}
+                          >
+                            <HStack spacing={2}>
+                              <Text 
+                                color={getLastPingedColor(connection.lastPingedAt, connection.keepAlive)}
+                                fontSize={{ base: 'xs', md: 'sm' }}
+                                fontWeight="medium"
+                              >
+                                Last Pinged:
+                              </Text>
+                              <Text 
+                                color={getLastPingedColor(connection.lastPingedAt, connection.keepAlive)}
+                                fontSize={{ base: 'xs', md: 'sm' }}
+                                fontWeight="semibold"
+                              >
+                                {formatLastPinged(connection.lastPingedAt)}
+                              </Text>
+                            </HStack>
+                            {connection.keepAlive && !connection.lastPingedAt && (
+                              <Text color="yellow.400" fontSize="xs">
+                                Keep-alive enabled, waiting for first ping
+                              </Text>
+                            )}
+                          </VStack>
+                        </Flex>
+                      </CardBody>
+                    </MotionCard>
+                  );
+                })}
+              </VStack>
+            )}
+          </Box>
 
           <Divider borderColor="surface.700" />
 

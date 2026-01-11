@@ -37,6 +37,8 @@ export async function GET() {
       id: conn.id,
       name: conn.name,
       environment: conn.environment,
+      keepAlive: conn.keep_alive,
+      lastPingedAt: conn.last_pinged_at,
       createdAt: conn.created_at,
       updatedAt: conn.updated_at,
     }));
