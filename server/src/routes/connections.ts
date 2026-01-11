@@ -202,7 +202,8 @@ export async function connectionRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest<{ Params: ConnectionParams; Body: { encryptedUrl?: string } }>, reply: FastifyReply) => {
       const { id } = request.params;
       const { encryptedUrl } = request.body;
-      const userId = request.userId;
+      const userId = request.userId!;
+      const startTime = Date.now();
       
       logger.debug({ userId, connectionId: id }, 'Keep-alive ping');
       
@@ -216,22 +217,32 @@ export async function connectionRoutes(fastify: FastifyInstance) {
       try {
         const databaseUrl = decrypt(encryptedUrl);
         const result = await testConnection(databaseUrl);
+        const duration = Date.now() - startTime;
+        
+        // TODO: Update last_pinged_at in Supabase if needed
+        // This could be done via a Supabase client service
         
         return reply.send({
           success: result.success,
           data: {
             alive: result.success,
+            duration: `${duration}ms`,
+            version: result.success ? result.version : undefined,
+            tableCount: result.success ? result.tableCount : undefined,
+            error: result.success ? undefined : result.error,
             timestamp: new Date().toISOString(),
           },
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Keep-alive failed';
+        const duration = Date.now() - startTime;
         logger.warn({ error, userId, connectionId: id }, 'Keep-alive failed');
         
         return reply.send({
           success: false,
           data: {
             alive: false,
+            duration: `${duration}ms`,
             error: message,
             timestamp: new Date().toISOString(),
           },

@@ -1,13 +1,16 @@
 /**
- * GET /api/sync/[id]
+ * GET /api/sync/[id]/stream
  * 
- * Get sync job status.
+ * SSE stream for sync progress.
  * Proxies to backend.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase/server';
-import { createProxyGET } from '@/lib/utils/proxy-handler';
+import { createProxyStream } from '@/lib/utils/proxy-handler';
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 600; // 10 minutes for streaming
 
 export async function GET(
   request: NextRequest,
@@ -24,10 +27,8 @@ export async function GET(
   
   const { id } = await params;
   
-  const proxyHandler = createProxyGET((req) => {
-    const url = new URL(req.url);
-    return `/api/sync/${id}${url.search}`;
-  });
+  const proxyHandler = createProxyStream((req) => `/api/sync/${id}/stream`);
   
   return proxyHandler(request);
 }
+

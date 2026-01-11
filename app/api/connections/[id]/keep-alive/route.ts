@@ -8,7 +8,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase/server';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
-import { pingDatabase } from '@/lib/services/keep-alive';
 
 /**
  * GET /api/connections/[id]/keep-alive
@@ -113,7 +112,8 @@ export async function PUT(
 /**
  * POST /api/connections/[id]/keep-alive
  * 
- * Manually ping the database
+ * Manually ping the database.
+ * Proxies to backend.
  */
 export async function POST(
   request: NextRequest,
@@ -131,6 +131,7 @@ export async function POST(
     
     const { id } = await params;
     
+    // Get connection from Supabase
     const connection = await supabaseConnectionStore.getById(id, user.id);
     
     if (!connection) {
@@ -140,26 +141,19 @@ export async function POST(
       );
     }
     
-    // Ping the database
-    const result = await pingDatabase(
-      connection.id,
-      connection.name,
-      connection.encrypted_url
-    );
+    // Forward to backend with encrypted URL
+    const { createProxyPOST } = await import('@/lib/utils/proxy-handler');
+    const proxyHandler = createProxyPOST((req) => `/api/connections/${id}/keep-alive`);
     
-    if (result.success) {
-      // Update last_pinged_at timestamp
-      await supabaseConnectionStore.updateLastPinged(connection.id);
-    }
-    
-    return NextResponse.json({
-      success: result.success,
-      duration: result.duration,
-      error: result.error,
-      message: result.success 
-        ? `Database pinged successfully (${result.duration}ms)`
-        : `Ping failed: ${result.error}`,
+    const modifiedRequest = new NextRequest(request.url, {
+      method: 'POST',
+      headers: request.headers,
+      body: JSON.stringify({
+        encryptedUrl: connection.encrypted_url,
+      }),
     });
+    
+    return proxyHandler(modifiedRequest);
     
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

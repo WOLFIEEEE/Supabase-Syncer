@@ -9,6 +9,7 @@ import { createSyncWorker, closeQueues } from './client.js';
 import { createDrizzleClient, type DrizzleConnection } from '../services/drizzle-factory.js';
 import { decrypt } from '../services/encryption.js';
 import { logger, createJobLogger } from '../utils/logger.js';
+import { updateSyncJob, addSyncLog } from '../services/supabase-client.js';
 import type { SyncJobData, SyncProgress, SyncCheckpoint } from '../types/index.js';
 
 // Track cancelled jobs
@@ -76,6 +77,8 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
     };
     
     await job.updateProgress(progress);
+    // Also persist to database
+    await updateSyncJob(jobId, userId, { progress });
     
     // Process each table
     const processedTables = checkpoint?.processedTables || [];
@@ -100,13 +103,23 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
           processedTables,
         };
         await job.updateData({ ...job.data, checkpoint: newCheckpoint });
+        await updateSyncJob(jobId, userId, {
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          checkpoint: newCheckpoint,
+          progress,
+        });
+        await addSyncLog(jobId, 'warn', 'Sync job cancelled by user');
         return;
       }
       
       progress.currentTable = tableName;
       await job.updateProgress(progress);
+      // Persist progress to database
+      await updateSyncJob(jobId, userId, { progress });
       
       jobLogger.info({ tableName, index: i + 1, total: enabledTables.length }, 'Processing table');
+      await addSyncLog(jobId, 'info', `Processing table: ${tableName}`);
       
       try {
         // Get row count for progress tracking
@@ -198,6 +211,8 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
           progress.skippedRows += tableSkipped;
           
           await job.updateProgress(progress);
+          // Persist progress to database every batch
+          await updateSyncJob(jobId, userId, { progress });
           
           // Reset counters
           tableInserted = 0;
@@ -212,6 +227,13 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
         processedTables.push(tableName);
         progress.completedTables++;
         
+        await updateSyncJob(jobId, userId, { progress });
+        await addSyncLog(jobId, 'info', `Completed table: ${tableName}`, {
+          inserted: progress.insertedRows,
+          updated: progress.updatedRows,
+          skipped: progress.skippedRows,
+        });
+        
         jobLogger.info({
           tableName,
           inserted: progress.insertedRows,
@@ -222,10 +244,25 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
       } catch (tableError) {
         jobLogger.error({ tableName, error: tableError }, 'Error processing table');
         progress.errors++;
+        await addSyncLog(jobId, 'error', `Error processing table ${tableName}: ${tableError instanceof Error ? tableError.message : 'Unknown error'}`);
+        await updateSyncJob(jobId, userId, { progress });
       }
     }
     
     // Job completed
+    await updateSyncJob(jobId, userId, {
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+      progress,
+    });
+    await addSyncLog(jobId, 'info', 'Sync job completed', {
+      tablesProcessed: progress.completedTables,
+      rowsInserted: progress.insertedRows,
+      rowsUpdated: progress.updatedRows,
+      rowsSkipped: progress.skippedRows,
+      errors: progress.errors,
+    });
+    
     jobLogger.info({
       tablesProcessed: progress.completedTables,
       rowsInserted: progress.insertedRows,
@@ -239,6 +276,12 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
     
   } catch (error) {
     jobLogger.error({ error }, 'Sync job failed');
+    await updateSyncJob(jobId, userId, {
+      status: 'failed',
+      completed_at: new Date().toISOString(),
+      progress,
+    });
+    await addSyncLog(jobId, 'error', `Sync job failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     throw error;
   } finally {
     if (sourceConn) await sourceConn.close();
