@@ -24,7 +24,7 @@ import {
   updateSyncJob,
   addSyncLog,
 } from '../services/supabase-client.js';
-import { decrypt } from '../services/encryption.js';
+// import { decrypt } from '../services/encryption.js'; // For future use
 import type { TableConfig, SyncJobData } from '../types/index.js';
 
 // Request body types
@@ -556,9 +556,9 @@ export async function syncRoutes(fastify: FastifyInstance) {
           targetEncUrl = targetConn.encrypted_url;
         }
         
-        // Decrypt URLs
-        const sourceUrl = decrypt(sourceEncUrl);
-        const targetUrl = decrypt(targetEncUrl);
+        // Decrypt URLs (for future schema validation implementation)
+        // const sourceUrl = decrypt(sourceEncUrl);
+        // const targetUrl = decrypt(targetEncUrl);
         
         // TODO: Implement actual schema validation using schema-validator service
         // For now, return a placeholder response
@@ -634,9 +634,9 @@ export async function syncRoutes(fastify: FastifyInstance) {
           targetEncUrl = targetConn.encrypted_url;
         }
         
-        // Decrypt URLs
-        const sourceUrl = decrypt(sourceEncUrl);
-        const targetUrl = decrypt(targetEncUrl);
+        // Decrypt URLs (for future migration generation implementation)
+        // const sourceUrl = decrypt(sourceEncUrl);
+        // const targetUrl = decrypt(targetEncUrl);
         
         // TODO: Implement actual migration generation using schema-migration-generator service
         // For now, return a placeholder response

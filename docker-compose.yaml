@@ -48,8 +48,8 @@ services:
       dockerfile: Dockerfile
     container_name: supabase-syncer-backend
     restart: unless-stopped
-    expose:
-      - "3001"
+    ports:
+      - "3001:3001"
     depends_on:
       redis:
         condition: service_healthy

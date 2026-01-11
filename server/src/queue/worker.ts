@@ -40,6 +40,7 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
   
   let sourceConn: DrizzleConnection | null = null;
   let targetConn: DrizzleConnection | null = null;
+  let progress: SyncProgress | null = null;
   
   try {
     // Get connection URLs - these should be passed in the job data
@@ -64,7 +65,7 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
     
     // Initialize progress
     const enabledTables = tablesConfig?.filter(t => t.enabled) || [];
-    const progress: SyncProgress = {
+    progress = {
       totalTables: enabledTables.length,
       completedTables: 0,
       currentTable: null,
@@ -279,7 +280,7 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
     await updateSyncJob(jobId, userId, {
       status: 'failed',
       completed_at: new Date().toISOString(),
-      progress,
+      progress: progress || null,
     });
     await addSyncLog(jobId, 'error', `Sync job failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     throw error;
