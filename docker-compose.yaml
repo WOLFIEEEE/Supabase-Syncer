@@ -5,8 +5,9 @@
 # =========================================
 # 
 # Services:
-#   - app: Next.js application
-#   - redis: Redis for background jobs and caching
+#   - app: Next.js frontend application
+#   - backend: Node.js/Fastify backend server
+#   - redis: Redis for background jobs, rate limiting, and caching
 #
 # External Services (provide via env):
 #   - Supabase (database and auth)
@@ -14,8 +15,9 @@
 # Usage:
 #   1. Copy .env.example to .env
 #   2. Fill in your Supabase credentials
-#   3. Set NEXT_PUBLIC_APP_URL=https://suparbase.com for production
-#   4. Run: docker-compose up -d
+#   3. Generate BACKEND_SHARED_SECRET: openssl rand -hex 32
+#   4. Set NEXT_PUBLIC_APP_URL=https://suparbase.com for production
+#   5. Run: docker-compose up -d
 # =========================================
 
 version: '3.8'
@@ -25,7 +27,7 @@ services:
     image: redis:7-alpine
     container_name: supabase-syncer-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     healthcheck:
@@ -35,6 +37,59 @@ services:
       retries: 5
     networks:
       - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: supabase-syncer-backend
+    restart: unless-stopped
+    expose:
+      - "3001"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      # Server Configuration
+      - PORT=3001
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      
+      # Security: Shared secret for frontend-backend communication
+      - BACKEND_SHARED_SECRET=${BACKEND_SHARED_SECRET}
+      
+      # Supabase Configuration
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      
+      # Encryption key for database URLs
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      
+      # Optional: External PostgreSQL for persistent storage
+      - DATABASE_URL=${DATABASE_URL:-}
+      
+      # Redis (automatically connected to local redis service)
+      - REDIS_URL=redis://redis:6379
+      
+      # Admin email for admin routes
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1'
 
   app:
     build:
@@ -49,6 +104,8 @@ services:
     expose:
       - "3000"  # Internal port - Coolify's Traefik discovers this automatically
     depends_on:
+      backend:
+        condition: service_healthy
       redis:
         condition: service_healthy
     environment:
@@ -63,6 +120,10 @@ services:
       # Production: https://suparbase.com
       # Development: http://localhost:3000
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://suparbase.com}
+      
+      # Backend connection
+      - BACKEND_URL=http://backend:3001
+      - BACKEND_SHARED_SECRET=${BACKEND_SHARED_SECRET}
       
       # Optional: External PostgreSQL for persistent storage
       - DATABASE_URL=${DATABASE_URL:-}
@@ -80,6 +141,11 @@ services:
       start_period: 40s
     networks:
       - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
 
 networks:
   app_network:
