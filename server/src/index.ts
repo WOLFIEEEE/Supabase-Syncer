@@ -53,9 +53,32 @@ async function buildServer() {
     genReqId: () => crypto.randomUUID(),
   });
 
-  // Register CORS
+  // Register CORS with dynamic origin checking for Vercel preview domains
   await server.register(cors, {
-    origin: config.allowedOrigins.length > 0 ? config.allowedOrigins : true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // Check exact matches
+      if (config.allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Allow Vercel preview domains (*.vercel.app)
+      if (origin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+      
+      // In development, allow all origins
+      if (config.isDev) {
+        return callback(null, true);
+      }
+      
+      // Reject other origins
+      callback(new Error('Not allowed by CORS'), false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [

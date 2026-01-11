@@ -1,0 +1,44 @@
+{
+  "name": "supabase-syncer-backend",
+  "description": "Backend API server for Supabase Syncer - handles heavy processing, sync jobs, and database operations",
+  "type": "dockerfile",
+  "dockerfile": "./Dockerfile",
+  "port": 3001,
+  "healthcheck": {
+    "path": "/health/ready",
+    "interval": 30,
+    "timeout": 10,
+    "retries": 3,
+    "startPeriod": 20
+  },
+  "environment": {
+    "NODE_ENV": "production",
+    "PORT": "3001",
+    "LOG_LEVEL": "info",
+    "REDIS_URL": "redis://redis:6379"
+  },
+  "requiredEnvVars": [
+    "BACKEND_SHARED_SECRET",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "ENCRYPTION_KEY"
+  ],
+  "optionalEnvVars": [
+    "DATABASE_URL",
+    "ADMIN_EMAIL",
+    "FRONTEND_URL",
+    "ALLOWED_ORIGINS",
+    "RATE_LIMIT_SYNC",
+    "RATE_LIMIT_SCHEMA",
+    "RATE_LIMIT_EXECUTE",
+    "RATE_LIMIT_READ",
+    "RATE_LIMIT_ADMIN"
+  ],
+  "resources": {
+    "memory": "1G",
+    "cpu": "1"
+  },
+  "volumes": [],
+  "networks": []
+}
+

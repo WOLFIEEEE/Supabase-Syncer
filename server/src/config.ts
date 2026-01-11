@@ -97,9 +97,17 @@ export function loadConfig(): Config {
   const defaultOrigins = isDev 
     ? ['http://localhost:3000', 'http://127.0.0.1:3000']
     : [];
+  
+  // Add Vercel frontend URL if set
+  const frontendUrl = getEnvVarOptional('FRONTEND_URL');
+  const vercelOrigins: string[] = [];
+  if (frontendUrl) {
+    vercelOrigins.push(frontendUrl);
+  }
+  
   const allowedOrigins = originsEnv 
-    ? originsEnv.split(',').map(o => o.trim())
-    : defaultOrigins;
+    ? [...originsEnv.split(',').map(o => o.trim()), ...vercelOrigins]
+    : [...defaultOrigins, ...vercelOrigins];
   
   const config: Config = {
     // Server

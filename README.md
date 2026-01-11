@@ -95,9 +95,19 @@ docker-compose up -d
 
 > **Note**: Redis is automatically included and configured in Docker. Only Supabase needs to be external. See [DOCKER.md](./DOCKER.md) for details.
 
-### Option 3: Coolify (Recommended for Production)
+### Option 3: Separate Deployment (Recommended for Production)
 
-See [Coolify Deployment](#coolify-deployment) section below.
+**Frontend on Vercel + Backend on Coolify**
+
+For production deployments, you can deploy the frontend and backend separately:
+- **Frontend**: Deploy to Vercel (automatic scaling, CDN, edge functions)
+- **Backend**: Deploy to Coolify (full control, custom infrastructure)
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment guide.
+
+### Option 4: Coolify (Full Stack)
+
+See [Coolify Deployment](#coolify-deployment) section below for deploying both services together.
 
 ---
 
@@ -154,21 +164,24 @@ All tables include RLS policies so users can only access their own data.
 | `DATABASE_URL` | No | PostgreSQL URL for persistent storage (uses Supabase by default) |
 | `REDIS_URL` | Auto-configured | Auto-set to `redis://redis:6379` by Docker |
 
-### Frontend Variables
+### Frontend Variables (Vercel)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `NEXT_PUBLIC_APP_URL` | **Recommended** | Application URL (for OAuth callbacks and email links) |
-| `BACKEND_URL` | Auto-configured | Backend server URL (auto-set to `http://backend:3001` in Docker) |
+| `NEXT_PUBLIC_BACKEND_URL` | **Yes** (Vercel) | Backend server URL (from Coolify deployment, e.g., `https://api.yourdomain.com`) |
+| `BACKEND_URL` | Auto-configured (Docker) | Backend server URL (auto-set to `http://backend:3001` in Docker) |
 | `BACKEND_SHARED_SECRET` | **Yes** | Shared secret for frontend-backend communication |
 
-### Backend Variables
+### Backend Variables (Coolify)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `PORT` | No | Backend server port (default: 3001) |
 | `LOG_LEVEL` | No | Logging level: debug, info, warn, error (default: info) |
 | `BACKEND_SHARED_SECRET` | **Yes** | Shared secret for frontend-backend communication |
+| `FRONTEND_URL` | **Yes** (Coolify) | Frontend URL (from Vercel deployment, e.g., `https://your-app.vercel.app`) |
+| `ALLOWED_ORIGINS` | No | Additional CORS origins (comma-separated) |
 | `ADMIN_EMAIL` | No | Admin email for admin routes |
 | `RATE_LIMIT_SYNC` | No | Sync operations rate limit per minute (default: 10) |
 | `RATE_LIMIT_SCHEMA` | No | Schema operations rate limit per minute (default: 30) |

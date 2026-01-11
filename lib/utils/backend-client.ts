@@ -11,7 +11,11 @@
  */
 
 // Configuration
-const BACKEND_URL = process.env.BACKEND_URL || 'http://backend:3001';
+// Use NEXT_PUBLIC_BACKEND_URL for client-side (browser) requests
+// Use BACKEND_URL for server-side (API routes) requests
+const BACKEND_URL = typeof window !== 'undefined' 
+  ? (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001')
+  : (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001');
 const SHARED_SECRET = process.env.BACKEND_SHARED_SECRET;
 const DEFAULT_TIMEOUT = 300000; // 5 minutes
 const MAX_RETRIES = 3;
