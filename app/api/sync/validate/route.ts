@@ -1,20 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseConnectionStore } from '@/lib/db/supabase-store';
-import { decrypt } from '@/lib/services/encryption';
-import { validateSchemas, getValidationSummary } from '@/lib/services/schema-validator';
-import { inspectDatabaseSchema } from '@/lib/services/schema-inspector';
-import { getUser } from '@/lib/supabase/server';
-import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
-import { ValidateInputSchema, validateInput } from '@/lib/validations/schemas';
-
 /**
  * POST /api/sync/validate
  * 
- * Comprehensive pre-sync validation between source and target databases.
- * Returns categorized validation issues with severity levels.
+ * Validates schema compatibility between source and target.
+ * Proxies to backend for schema validation.
  */
-export async function POST(request: NextRequest) {
+
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseConnectionStore } from '@/lib/db/supabase-store';
+import { getUser } from '@/lib/supabase/server';
+import { createProxyPOST } from '@/lib/utils/proxy-handler';
+import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
+
+export const POST = async (request: NextRequest) => {
   try {
+    // CSRF Protection
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+    
     const user = await getUser();
     
     if (!user) {
@@ -24,161 +28,49 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Rate limit check
-    const rateLimitResult = checkRateLimit(user.id, 'read');
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { success: false, error: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.` },
-        { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'read') }
-      );
-    }
-    
     const body = await request.json();
+    const { sourceConnectionId, targetConnectionId } = body;
     
-    // Validate input with Zod
-    const validation = validateInput(ValidateInputSchema, body);
-    if (!validation.success) {
+    if (!sourceConnectionId || !targetConnectionId) {
       return NextResponse.json(
-        { success: false, error: validation.errors.join(', ') },
+        { success: false, error: 'Source and target connection IDs are required' },
         { status: 400 }
       );
     }
     
-    const {
-      sourceConnectionId,
-      targetConnectionId,
-      tables,
-      direction,
-    } = validation.data;
-    
-    // Get connections (scoped to user)
+    // Get connections from Supabase
     const [sourceConnection, targetConnection] = await Promise.all([
       supabaseConnectionStore.getById(sourceConnectionId, user.id),
       supabaseConnectionStore.getById(targetConnectionId, user.id),
     ]);
     
-    if (!sourceConnection) {
+    if (!sourceConnection || !targetConnection) {
       return NextResponse.json(
-        { success: false, error: 'Source connection not found' },
+        { success: false, error: 'Connection not found' },
         { status: 404 }
       );
     }
     
-    if (!targetConnection) {
-      return NextResponse.json(
-        { success: false, error: 'Target connection not found' },
-        { status: 404 }
-      );
-    }
+    // Forward to backend with encrypted URLs
+    const proxyHandler = createProxyPOST('/api/sync/validate');
     
-    // Decrypt URLs
-    const sourceUrl = decrypt(sourceConnection.encrypted_url);
-    const targetUrl = decrypt(targetConnection.encrypted_url);
-    
-    // Normalize table list (handle both string[] and TableConfig[])
-    let tableNames: string[] = [];
-    
-    if (tables && Array.isArray(tables) && tables.length > 0) {
-      tableNames = tables.map((t) => 
-        typeof t === 'string' ? t : t.tableName
-      );
-    } else {
-      // Auto-discover tables from both databases
-      const [sourceSchema, targetSchema] = await Promise.all([
-        inspectDatabaseSchema(sourceUrl),
-        inspectDatabaseSchema(targetUrl),
-      ]);
-      
-      // Get union of all table names from both databases
-      const allTables = new Set([
-        ...sourceSchema.tables.map((t) => t.tableName),
-        ...targetSchema.tables.map((t) => t.tableName),
-      ]);
-      
-      tableNames = Array.from(allTables);
-      
-      // If both databases are empty, return early with success
-      if (tableNames.length === 0) {
-        return NextResponse.json({
-          success: true,
-          data: {
-            validation: {
-              isValid: true,
-              canProceed: true,
-              requiresConfirmation: false,
-              issues: [],
-              summary: { critical: 0, high: 0, medium: 0, low: 0, info: 0 },
-              sourceSchema,
-              targetSchema,
-              comparisonDetails: [],
-            },
-            summary: { 
-              totalIssues: 0, 
-              critical: 0, 
-              high: 0, 
-              medium: 0, 
-              low: 0, 
-              info: 0,
-              isCompatible: true,
-              canProceed: true,
-            },
-            warnings: ['Both databases are empty - no tables to compare'],
-            canProceed: true,
-            requiresConfirmation: false,
-            targetEnvironment: targetConnection.environment,
-            targetName: targetConnection.name,
-          },
-        });
-      }
-    }
-    
-    // Run validation
-    const validationResult = await validateSchemas(sourceUrl, targetUrl, tableNames);
-    
-    // Generate additional warnings
-    const warnings: string[] = [];
-    
-    // Production target warning
-    if (targetConnection.environment === 'production') {
-      warnings.push('Target is a PRODUCTION database - proceed with extreme caution');
-    }
-    
-    // Two-way sync warning
-    if (direction === 'two_way') {
-      warnings.push('Two-way sync may result in conflicts that require resolution');
-    }
-    
-    // Large data warning
-    const totalSourceRows = validationResult.sourceSchema.tables
-      .filter((t) => tableNames.includes(t.tableName))
-      .reduce((sum, t) => sum + t.rowCount, 0);
-    
-    if (totalSourceRows > 100000) {
-      warnings.push(`Large dataset: ${totalSourceRows.toLocaleString()} rows to potentially sync`);
-    }
-    
-    return NextResponse.json({
-      success: true,
-      data: {
-        validation: validationResult,
-        summary: getValidationSummary(validationResult),
-        warnings,
-        canProceed: validationResult.canProceed,
-        requiresConfirmation: validationResult.requiresConfirmation || 
-          targetConnection.environment === 'production',
-        targetEnvironment: targetConnection.environment,
-        targetName: targetConnection.name,
-      },
+    const modifiedRequest = new NextRequest(request.url, {
+      method: 'POST',
+      headers: request.headers,
+      body: JSON.stringify({
+        ...body,
+        sourceEncryptedUrl: sourceConnection.encrypted_url,
+        targetEncryptedUrl: targetConnection.encrypted_url,
+      }),
     });
     
+    return proxyHandler(modifiedRequest);
+    
   } catch (error) {
-    console.error('Validation error:', error);
+    console.error('Sync validate proxy error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Validation failed' 
-      },
+      { success: false, error: 'Failed to proxy validation request' },
       { status: 500 }
     );
   }
-}
+};

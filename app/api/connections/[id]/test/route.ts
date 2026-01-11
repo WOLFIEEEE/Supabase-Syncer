@@ -1,27 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseConnectionStore } from '@/lib/db/supabase-store';
-import { decrypt } from '@/lib/services/encryption';
-import { testConnection } from '@/lib/services/drizzle-factory';
-import { getUser } from '@/lib/supabase/server';
-
-interface RouteParams {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
 /**
  * POST /api/connections/[id]/test
  * 
- * Tests connectivity to a database connection and returns:
- * - Connection status (connected/failed)
- * - PostgreSQL version
- * - Number of tables
- * - Response time
+ * Tests connectivity to a database connection.
+ * Proxies to backend for actual connection testing.
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  const startTime = Date.now();
-  
+
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseConnectionStore } from '@/lib/db/supabase-store';
+import { getUser } from '@/lib/supabase/server';
+import { createProxyPOST } from '@/lib/utils/proxy-handler';
+import { getRouteParams } from '@/lib/utils/proxy-handler';
+
+// Use proxy handler but first fetch connection to get encrypted URL
+export const POST = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const user = await getUser();
     
@@ -34,7 +25,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     
     const { id } = await params;
     
-    // Get connection
+    // Get connection from Supabase (lightweight operation, stays in frontend)
     const connection = await supabaseConnectionStore.getById(id, user.id);
     
     if (!connection) {
@@ -44,48 +35,27 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
     
-    // Decrypt database URL
-    const databaseUrl = decrypt(connection.encrypted_url);
+    // Forward to backend with encrypted URL
+    const proxyHandler = createProxyPOST((req) => `/api/connections/${id}/test`);
     
-    // Test connection
-    const result = await testConnection(databaseUrl);
+    // Create a new request with the encrypted URL in the body
+    const body = await request.json().catch(() => ({}));
+    const modifiedRequest = new NextRequest(request.url, {
+      method: 'POST',
+      headers: request.headers,
+      body: JSON.stringify({
+        ...body,
+        encryptedUrl: connection.encrypted_url,
+      }),
+    });
     
-    const responseTime = Date.now() - startTime;
-    
-    if (result.success) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          status: 'connected',
-          version: result.version,
-          tableCount: result.tableCount,
-          responseTime: `${responseTime}ms`,
-          testedAt: new Date().toISOString(),
-        },
-      });
-    } else {
-      return NextResponse.json({
-        success: false,
-        data: {
-          status: 'failed',
-          error: result.error,
-          responseTime: `${responseTime}ms`,
-          testedAt: new Date().toISOString(),
-        },
-      });
-    }
+    return proxyHandler(modifiedRequest);
     
   } catch (error) {
-    const responseTime = Date.now() - startTime;
-    console.error('Connection test error:', error);
-    return NextResponse.json({
-      success: false,
-      data: {
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        responseTime: `${responseTime}ms`,
-        testedAt: new Date().toISOString(),
-      },
-    });
+    console.error('Connection test proxy error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to proxy connection test' },
+      { status: 500 }
+    );
   }
-}
+};

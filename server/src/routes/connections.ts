@@ -91,12 +91,12 @@ export async function connectionRoutes(fastify: FastifyInstance) {
   );
   
   // POST /api/connections/:id/execute - Execute SQL
-  fastify.post<{ Params: ConnectionParams; Body: ExecuteSQLBody }>(
+  fastify.post<{ Params: ConnectionParams; Body: ExecuteSQLBody & { encryptedUrl?: string } }>(
     '/:id/execute',
     { preHandler: createRateLimitMiddleware('execute') },
-    async (request: FastifyRequest<{ Params: ConnectionParams; Body: ExecuteSQLBody }>, reply: FastifyReply) => {
+    async (request: FastifyRequest<{ Params: ConnectionParams; Body: ExecuteSQLBody & { encryptedUrl?: string } }>, reply: FastifyReply) => {
       const { id } = request.params;
-      const { sql, dryRun } = request.body;
+      const { sql, dryRun, encryptedUrl } = request.body;
       const userId = request.userId;
       
       logger.info({ userId, connectionId: id, dryRun, sqlLength: sql?.length }, 'Executing SQL');
@@ -108,12 +108,37 @@ export async function connectionRoutes(fastify: FastifyInstance) {
         });
       }
       
-      // TODO: Fetch connection from database and get encrypted URL
-      // For now, return error
-      return reply.status(400).send({
-        success: false,
-        error: 'Connection not found or encrypted URL required in request',
-      });
+      if (!encryptedUrl) {
+        return reply.status(400).send({
+          success: false,
+          error: 'Encrypted URL is required',
+        });
+      }
+      
+      try {
+        const { decrypt } = await import('../services/encryption.js');
+        const { executeSQL } = await import('../services/drizzle-factory.js');
+        
+        const databaseUrl = decrypt(encryptedUrl);
+        const result = await executeSQL(databaseUrl, sql, { dryRun, maxRows: 10000 });
+        
+        return reply.send({
+          success: result.success,
+          data: result.success ? {
+            rows: result.rows,
+            rowCount: result.rowCount,
+          } : undefined,
+          error: result.error,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'SQL execution failed';
+        logger.error({ error, userId, connectionId: id }, 'SQL execution failed');
+        
+        return reply.status(500).send({
+          success: false,
+          error: message,
+        });
+      }
     }
   );
   
