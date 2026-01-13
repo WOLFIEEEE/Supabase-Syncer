@@ -6,7 +6,7 @@
     "domain": "suparbase.com",
     "services": {
         "app": {
-            "name": "Supabase Syncer",
+            "name": "Supabase Syncer Frontend",
             "ports": {
                 "3000": "3000"
             },
@@ -22,12 +22,41 @@
                 "PORT": "3000",
                 "HOSTNAME": "0.0.0.0",
                 "REDIS_URL": "redis://redis:6379",
+                "BACKEND_URL": "http://backend:3001",
                 "NEXT_PUBLIC_APP_URL": "https://suparbase.com"
+            },
+            "resources": {
+                "memory": "512M",
+                "cpu": "0.5"
+            }
+        },
+        "backend": {
+            "name": "Supabase Syncer Backend",
+            "internal": true,
+            "healthcheck": {
+                "path": "/health/ready",
+                "interval": 30,
+                "timeout": 10,
+                "retries": 3,
+                "startPeriod": 20
+            },
+            "environment": {
+                "NODE_ENV": "production",
+                "PORT": "3001",
+                "LOG_LEVEL": "info",
+                "REDIS_URL": "redis://redis:6379"
+            },
+            "resources": {
+                "memory": "1G",
+                "cpu": "1"
             }
         },
         "redis": {
             "name": "Redis Cache",
-            "internal": true
+            "internal": true,
+            "resources": {
+                "memory": "512M"
+            }
         }
     },
     "volumes": [{
@@ -37,5 +66,15 @@
     "networks": [{
         "name": "app_network",
         "driver": "bridge"
-    }]
+    }],
+    "requiredEnvVars": [
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "ENCRYPTION_KEY",
+        "BACKEND_SHARED_SECRET"
+    ],
+    "optionalEnvVars": [
+        "DATABASE_URL",
+        "ADMIN_EMAIL"
+    ]
 }

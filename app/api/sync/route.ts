@@ -1,16 +1,21 @@
+/**
+ * Sync Routes
+ * 
+ * GET - List sync jobs (lightweight, stays in frontend)
+ * POST - Create sync job (proxies to backend)
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseConnectionStore, supabaseSyncJobStore, getJobWithConnections } from '@/lib/db/supabase-store';
-import { decrypt } from '@/lib/services/encryption';
-import { calculateDiff } from '@/lib/services/diff-engine';
+import { supabaseSyncJobStore, getJobWithConnections } from '@/lib/db/supabase-store';
 import { getUser } from '@/lib/supabase/server';
 import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
 import { SyncJobInputSchema, PaginationSchema, validateInput } from '@/lib/validations/schemas';
-import { checkSyncJobLimit, incrementSyncJobCount } from '@/lib/services/usage-limits';
-import { notifySyncStarted } from '@/lib/services/email-notifications';
+import { createProxyPOST } from '@/lib/utils/proxy-handler';
+import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
 import { sanitizeErrorMessage } from '@/lib/services/security-utils';
 
-// GET - List all sync jobs for the authenticated user
+// GET - List all sync jobs for the authenticated user (lightweight, stays in frontend)
 export async function GET(request: NextRequest) {
   try {
     const user = await getUser();
@@ -55,7 +60,6 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    // SECURITY: Log full error server-side, sanitize for client
     console.error('Error fetching sync jobs:', error);
     return NextResponse.json(
       { success: false, error: sanitizeErrorMessage(error) || 'Failed to fetch sync jobs' },
@@ -64,10 +68,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new sync job (with optional dry run)
+// POST - Create a new sync job (proxies to backend)
 export async function POST(request: NextRequest) {
   try {
-    // SECURITY: CSRF Protection
+    // CSRF Protection
     const csrfValidation = await validateCSRFProtection(request);
     if (!csrfValidation.valid) {
       return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
@@ -79,15 +83,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
         { status: 401 }
-      );
-    }
-    
-    // Rate limit check for sync operations (more restrictive)
-    const rateLimitResult = checkRateLimit(user.id, 'sync');
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { success: false, error: 'Too many sync requests. Please wait before starting another sync.' },
-        { status: 429, headers: createRateLimitHeaders(rateLimitResult, 'sync') }
       );
     }
     
@@ -110,7 +105,7 @@ export async function POST(request: NextRequest) {
       dryRun,
     } = validation.data;
     
-    // Get connections (scoped to user)
+    // Get connections (lightweight check, stays in frontend)
     const [sourceConnection, targetConnection] = await Promise.all([
       supabaseConnectionStore.getById(sourceConnectionId, user.id),
       supabaseConnectionStore.getById(targetConnectionId, user.id),
@@ -139,10 +134,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Decrypt URLs
-    const sourceUrl = decrypt(sourceConnection.encrypted_url);
-    const targetUrl = decrypt(targetConnection.encrypted_url);
-    
     // Get enabled tables
     const enabledTables = tables.filter((t) => t.enabled).map((t) => t.tableName);
     
@@ -161,108 +152,20 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (dryRun) {
-      // Perform dry run - calculate differences
-      const diff = await calculateDiff({
-        sourceUrl,
-        targetUrl,
-        tables: enabledTables,
-      });
-      
-      // Estimate duration (rough: 1 second per 1000 rows)
-      const totalRows = diff.totalInserts + diff.totalUpdates;
-      const estimatedDuration = Math.ceil(totalRows / 1000);
-      
-      // Generate warnings
-      const warnings: string[] = [];
-      
-      if (targetConnection.environment === 'production') {
-        warnings.push('Target is a PRODUCTION database - proceed with caution');
-      }
-      
-      if (diff.schemaIssues.length > 0) {
-        warnings.push(`${diff.schemaIssues.length} table(s) have schema differences`);
-      }
-      
-      if (direction === 'two_way') {
-        warnings.push('Two-way sync may result in conflicts that require resolution');
-      }
-      
-      if (totalRows > 100000) {
-        warnings.push(`Large sync: ${totalRows.toLocaleString()} rows will be processed`);
-      }
-      
-      return NextResponse.json({
-        success: true,
-        data: {
-          dryRun: true,
-          tables: diff.tables,
-          schemaIssues: diff.schemaIssues,
-          totalInserts: diff.totalInserts,
-          totalUpdates: diff.totalUpdates,
-          estimatedDuration,
-          estimatedSpeed: '~1000 rows/sec',
-          warnings,
-        },
-      });
-    }
+    // Forward to backend with encrypted URLs
+    const proxyHandler = createProxyPOST('/api/sync');
     
-    // Check sync job limit using usage limits service
-    const syncJobLimitCheck = await checkSyncJobLimit(user.id);
-    if (!syncJobLimitCheck.allowed) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: syncJobLimitCheck.reason || 'Sync job limit reached',
-          usage: syncJobLimitCheck.currentUsage,
-          limits: syncJobLimitCheck.limits,
-        },
-        { status: 403 }
-      );
-    }
-    
-    // Check concurrent job limit (max 3 running jobs per user)
-    const allJobs = await supabaseSyncJobStore.getAll(user.id, 100, 0);
-    const runningJobs = allJobs.filter(
-      job => job.status === 'running' || job.status === 'pending'
-    );
-    if (runningJobs.length >= 3) {
-      return NextResponse.json(
-        { success: false, error: 'Maximum concurrent jobs reached (3). Wait for existing jobs to complete.' },
-        { status: 400 }
-      );
-    }
-    
-    // Create sync job (with user ID)
-    const job = await supabaseSyncJobStore.create(user.id, {
-      sourceConnectionId,
-      targetConnectionId,
-      direction,
-      tablesConfig: tables,
+    const modifiedRequest = new NextRequest(request.url, {
+      method: 'POST',
+      headers: request.headers,
+      body: JSON.stringify({
+        ...body,
+        sourceEncryptedUrl: sourceConnection.encrypted_url,
+        targetEncryptedUrl: targetConnection.encrypted_url,
+      }),
     });
     
-    // Increment sync job count
-    await incrementSyncJobCount(user.id);
-    
-    // Send email notification (async, don't wait)
-    if (user.email) {
-      notifySyncStarted(
-        user.id,
-        user.email,
-        job.id,
-        sourceConnection.name,
-        targetConnection.name
-      ).catch(err => console.error('Failed to send sync started email:', err));
-    }
-    
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: job.id,
-        status: 'pending',
-        message: 'Sync job created. Use /api/sync/{id}/start to begin.',
-      },
-    });
+    return proxyHandler(modifiedRequest);
     
   } catch (error) {
     console.error('Error creating sync job:', error);

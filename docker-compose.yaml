@@ -1,31 +1,31 @@
 # =========================================
 # Supabase Syncer - Docker Compose
-# For local development and production
-# Main Domain: suparbase.com
+# Backend Server for Coolify Deployment
+# Frontend: Hosted on Vercel separately
 # =========================================
 # 
 # Services:
-#   - app: Next.js application
-#   - redis: Redis for background jobs and caching
+#   - backend: Node.js/Fastify backend server (heavy operations)
+#   - redis: Redis for background jobs, rate limiting, and caching
 #
 # External Services (provide via env):
 #   - Supabase (database and auth)
+#   - Vercel (frontend hosting)
 #
 # Usage:
 #   1. Copy .env.example to .env
 #   2. Fill in your Supabase credentials
-#   3. Set NEXT_PUBLIC_APP_URL=https://suparbase.com for production
-#   4. Run: docker-compose up -d
+#   3. Generate BACKEND_SHARED_SECRET: openssl rand -hex 32
+#   4. Set FRONTEND_URL to your Vercel domain
+#   5. Run: docker-compose up -d
 # =========================================
-
-version: '3.8'
 
 services:
   redis:
     image: redis:7-alpine
     container_name: supabase-syncer-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     healthcheck:
@@ -35,34 +35,40 @@ services:
       retries: 5
     networks:
       - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
-  app:
+  backend:
     build:
-      context: .
+      context: ./server
       dockerfile: Dockerfile
-    container_name: supabase-syncer
+    container_name: supabase-syncer-backend
     restart: unless-stopped
-    # Port mapping: NOT needed in Coolify (Traefik handles routing via domains)
-    # For local development, uncomment the ports section below
-    # ports:
-    #   - "3000:3000"
-    expose:
-      - "3000"  # Internal port - Coolify's Traefik discovers this automatically
+    ports:
+      - "3001:3001"
     depends_on:
       redis:
         condition: service_healthy
     environment:
-      # Required: Supabase Configuration (external hosted)
+      # Server Configuration
+      - PORT=3001
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      
+      # Security: Shared secret for frontend-backend communication
+      - BACKEND_SHARED_SECRET=${BACKEND_SHARED_SECRET}
+      
+      # Frontend URL (Vercel domain) for CORS
+      - FRONTEND_URL=${FRONTEND_URL:-https://suparbase.com}
+      
+      # Supabase Configuration
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       
-      # Required: Encryption key for database URLs
+      # Encryption key for database URLs
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      
-      # Required: App URL (for OAuth callbacks and email links)
-      # Production: https://suparbase.com
-      # Development: http://localhost:3000
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://suparbase.com}
       
       # Optional: External PostgreSQL for persistent storage
       - DATABASE_URL=${DATABASE_URL:-}
@@ -70,16 +76,21 @@ services:
       # Redis (automatically connected to local redis service)
       - REDIS_URL=redis://redis:6379
       
-      # Node environment
-      - NODE_ENV=production
+      # Admin email for admin routes
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/status"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health/ready"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
     networks:
       - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1'
 
 networks:
   app_network:

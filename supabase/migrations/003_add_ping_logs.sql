@@ -51,3 +51,4 @@ COMMENT ON COLUMN ping_logs.error_message IS 'Error message if ping failed';
 
 
 
+

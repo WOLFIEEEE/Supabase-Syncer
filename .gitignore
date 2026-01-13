@@ -45,3 +45,23 @@ docker-compose.override.yml
 
 # development/testing files
 cookies.txt
+
+# backend server
+/server/node_modules
+/server/dist
+/server/*.tsbuildinfo
+/server/.env
+/server/.env.local
+/server/.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+test-results-comprehensive.log

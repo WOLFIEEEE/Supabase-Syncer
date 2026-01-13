@@ -259,3 +259,4 @@ export const metadata: Metadata = {
 - Turbopack is the default bundler
 - Always follow Next.js 16 conventions, not older versions
 
+

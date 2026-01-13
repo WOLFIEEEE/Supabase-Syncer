@@ -1,0 +1,46 @@
+# ============================================
+# Coolify Backend Environment Variables
+# ============================================
+# Copy these to Coolify Application Settings → Environment Variables
+
+# Server Configuration
+NODE_ENV=production
+PORT=3001
+LOG_LEVEL=info
+
+# Security
+BACKEND_SHARED_SECRET=your_64_character_shared_secret_here
+# Generate with: openssl rand -hex 32
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+
+# Encryption Key
+ENCRYPTION_KEY=your_32_character_encryption_key
+# Generate with: openssl rand -hex 16
+
+# Frontend URL (from Vercel deployment)
+FRONTEND_URL=https://your-app.vercel.app
+
+# Redis Configuration
+REDIS_URL=redis://redis:6379
+# Or if using external Redis:
+# REDIS_URL=redis://your-redis-host:6379
+
+# Admin Configuration
+ADMIN_EMAIL=admin@example.com
+
+# CORS (comma-separated, if you need additional origins)
+ALLOWED_ORIGINS=https://custom-domain.com
+
+# Rate Limiting (requests per minute)
+RATE_LIMIT_SYNC=10
+RATE_LIMIT_SCHEMA=30
+RATE_LIMIT_EXECUTE=20
+RATE_LIMIT_READ=100
+RATE_LIMIT_ADMIN=50
+
+# Optional: External Database
+DATABASE_URL=postgresql://user:password@host:5432/database
+
