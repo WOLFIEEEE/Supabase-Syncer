@@ -131,7 +131,7 @@ export default function ApiPage() {
           REST API Reference
         </Text>
         <Text color="gray.400" lineHeight="1.7">
-          Complete reference for all Suparman REST API endpoints. All endpoints return JSON responses.
+          Complete reference for all Suparbase REST API endpoints. All endpoints return JSON responses.
         </Text>
       </Box>
 

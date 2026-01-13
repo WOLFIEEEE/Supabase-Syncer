@@ -276,7 +276,7 @@ function Sidebar({ pathname }: { pathname: string }) {
           </Box>
           <Box>
             <Text fontSize="md" fontWeight="700" color="white" lineHeight="1.2">
-              Suparman
+              Suparbase
             </Text>
             <Text fontSize="xs" color="gray.500" lineHeight="1">
               Documentation
@@ -413,7 +413,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   </Text>
                 </Box>
                 <Text fontSize="md" fontWeight="700" color="white">
-                  Suparman Docs
+                  Suparbase Docs
                 </Text>
               </HStack>
             </Link>

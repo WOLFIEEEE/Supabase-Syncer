@@ -1,4 +1,4 @@
-# Suparman
+# Suparbase
 
 A powerful database synchronization and keep-alive platform for Supabase. Keep your free-tier databases alive and sync data between environments with ease.
 

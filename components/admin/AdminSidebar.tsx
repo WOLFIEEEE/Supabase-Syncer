@@ -27,8 +27,8 @@ import { motion } from 'framer-motion';
 
 const MotionBox = motion.create(Box);
 
-// Suparman Logo Icon - Superhero Shield
-const SuparmanLogo = () => (
+// Suparbase Logo Icon - Superhero Shield
+const SuparbaseLogo = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -238,7 +238,7 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
             border="1px solid"
             borderColor="rgba(20, 184, 166, 0.2)"
           >
-            <SuparmanLogo />
+            <SuparbaseLogo />
           </Box>
           <VStack spacing={0} align="start">
             <HStack spacing={2}>
@@ -250,7 +250,7 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
                 fontFamily="'Outfit', sans-serif"
                 letterSpacing="-0.02em"
               >
-                Suparman
+                Suparbase
               </Text>
             </HStack>
             <Text fontSize="xs" color="surface.500" fontWeight="medium">
@@ -429,13 +429,13 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
           <DrawerCloseButton color="white" />
           <DrawerHeader>
             <HStack spacing={2}>
-              <SuparmanLogo />
+              <SuparbaseLogo />
               <Text 
                 bgGradient="linear(to-r, teal.400, cyan.400)"
                 bgClip="text"
                 fontWeight="800"
               >
-                Suparman
+                Suparbase
               </Text>
             </HStack>
           </DrawerHeader>

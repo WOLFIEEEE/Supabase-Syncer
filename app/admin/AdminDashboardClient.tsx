@@ -33,8 +33,8 @@ import LineChart from '@/components/admin/charts/LineChart';
 const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card);
 
-// Suparman Logo
-const SuparmanLogo = () => (
+// Suparbase Logo
+const SuparbaseLogo = () => (
   <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -245,7 +245,7 @@ export default function AdminDashboardClient({
                 <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={8} alignItems="center">
                   <VStack align="start" spacing={4}>
                     <HStack spacing={4}>
-                      <SuparmanLogo />
+                      <SuparbaseLogo />
                       <VStack align="start" spacing={0}>
                         <Heading
                           size="2xl"
@@ -254,7 +254,7 @@ export default function AdminDashboardClient({
                           fontFamily="'Outfit', sans-serif"
                           letterSpacing="-0.03em"
                         >
-                          Suparman
+                          Suparbase
                         </Heading>
                         <Text color="surface.400" fontSize="sm">Admin Control Center</Text>
                       </VStack>

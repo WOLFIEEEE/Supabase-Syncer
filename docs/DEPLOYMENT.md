@@ -1,6 +1,6 @@
-# Suparman Deployment Guide
+# Suparbase Deployment Guide
 
-This guide covers deploying Suparman to production with Vercel (frontend) and Coolify (backend).
+This guide covers deploying Suparbase to production with Vercel (frontend) and Coolify (backend).
 
 ## Architecture Overview
 

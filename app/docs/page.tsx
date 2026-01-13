@@ -132,7 +132,7 @@ export default function DocsPage() {
           lineHeight="1.2"
           mb={4}
         >
-          Welcome to Suparman Docs
+          Welcome to Suparbase Docs
         </Text>
         <Text fontSize="lg" color="gray.400" maxW="600px" lineHeight="1.7">
           Add complete database synchronization and keep-alive functionality to your Supabase projects in minutes.
@@ -153,7 +153,7 @@ export default function DocsPage() {
               </svg>
             }
             title="Quickstart Tutorial"
-            description="Get up and running with Suparman in under 5 minutes. Connect your first database and start syncing."
+            description="Get up and running with Suparbase in under 5 minutes. Connect your first database and start syncing."
             badge="Start here"
           />
           <DocCard

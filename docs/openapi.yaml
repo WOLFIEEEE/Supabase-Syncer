@@ -1,12 +1,12 @@
 openapi: 3.0.3
 info:
-  title: Suparman API
+  title: Suparbase API
   description: |
-    Suparman is a database synchronization and keep-alive platform for Supabase.
+    Suparbase is a database synchronization and keep-alive platform for Supabase.
     This API allows you to manage database connections, sync jobs, and monitor system health.
   version: 1.0.0
   contact:
-    name: Suparman Support
+    name: Suparbase Support
     url: https://suparbase.com
   license:
     name: MIT

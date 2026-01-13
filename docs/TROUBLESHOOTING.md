@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-Common issues and solutions for Suparman.
+Common issues and solutions for Suparbase.
 
 ---
 

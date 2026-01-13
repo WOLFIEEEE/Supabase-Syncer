@@ -117,7 +117,7 @@ export default function GettingStartedPage() {
           Getting Started
         </Text>
         <Text color="gray.400" lineHeight="1.7">
-          Get up and running with Suparman in under 5 minutes. This guide will walk you through 
+          Get up and running with Suparbase in under 5 minutes. This guide will walk you through 
           connecting your first database and starting a sync operation.
         </Text>
       </Box>
@@ -140,7 +140,7 @@ export default function GettingStartedPage() {
       <VStack align="stretch" spacing={8}>
         <Step number={1} title="Create an Account">
           <Text mb={3}>
-            Sign up for Suparman using your email or continue with your existing Supabase account.
+            Sign up for Suparbase using your email or continue with your existing Supabase account.
           </Text>
           <Link href="/signup">
             <HStack
@@ -229,7 +229,7 @@ export default function GettingStartedPage() {
           Environment Variables (Self-Hosted)
         </Text>
         <Text color="gray.400" fontSize="sm" mb={4}>
-          If you're self-hosting Suparman, you'll need to configure these environment variables:
+          If you're self-hosting Suparbase, you'll need to configure these environment variables:
         </Text>
         <CodeBlock
           code={`# Supabase Configuration

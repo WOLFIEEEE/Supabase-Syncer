@@ -1,6 +1,6 @@
-# Suparman API Reference
+# Suparbase API Reference
 
-This document provides a comprehensive reference for the Suparman API.
+This document provides a comprehensive reference for the Suparbase API.
 
 ## Base URL
 
