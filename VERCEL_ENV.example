@@ -1,22 +1,29 @@
 # ============================================
 # Vercel Frontend Environment Variables
 # ============================================
-# Copy these to Vercel Project Settings → Environment Variables
+# Copy these to Vercel Project Settings -> Environment Variables
+# See DEPLOYMENT.md for full deployment guide
 
-# Supabase Configuration
+# REQUIRED: Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
-# Backend Configuration (from Coolify deployment)
+# REQUIRED: Backend Configuration (from Coolify deployment)
+# BACKEND_URL is for server-side requests
+BACKEND_URL=https://your-backend-api.yourdomain.com
+# NEXT_PUBLIC_BACKEND_URL is for client-side requests
 NEXT_PUBLIC_BACKEND_URL=https://your-backend-api.yourdomain.com
+
+# REQUIRED: Shared secret - MUST match backend exactly!
+# Generate with: openssl rand -hex 32
 BACKEND_SHARED_SECRET=your_64_character_shared_secret_here
 
-# Encryption Key
+# REQUIRED: Encryption key - MUST match backend exactly!
+# Generate with: openssl rand -hex 16
 ENCRYPTION_KEY=your_32_character_encryption_key
 
-# App URL (your Vercel domain)
+# REQUIRED: App URL (your Vercel domain - for OAuth callbacks)
 NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
 
-# Optional: External Database (if not using Supabase)
-DATABASE_URL=postgresql://user:password@host:5432/database
-
+# OPTIONAL: External Database (if not using Supabase)
+# DATABASE_URL=postgresql://user:password@host:5432/database
