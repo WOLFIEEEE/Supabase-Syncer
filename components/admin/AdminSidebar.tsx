@@ -5,6 +5,7 @@ import {
   VStack,
   HStack,
   Text,
+  Link,
   Divider,
   Badge,
   Drawer,
@@ -22,7 +23,6 @@ import {
   Tooltip,
 } from '@chakra-ui/react';
 import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 const MotionBox = motion.create(Box);
@@ -255,7 +255,7 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
             </HStack>
             <Text fontSize="xs" color="surface.500" fontWeight="medium">
               Admin Control Center
-            </Text>
+          </Text>
           </VStack>
         </HStack>
       </MotionBox>
@@ -281,43 +281,43 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
               px={3}
             >
               {group.title}
-            </Text>
+        </Text>
             <VStack spacing={1} align="stretch">
               {group.items.map((item) => {
                 const isActive = pathname === item.href || 
                   (item.href !== '/admin' && pathname.startsWith(item.href + '/'));
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => {
-                      if (isMobile && onClose) {
-                        onClose();
-                      }
-                    }}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <HStack
-                      spacing={3}
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => {
+                if (isMobile && onClose) {
+                  onClose();
+                }
+              }}
+              _hover={{ textDecoration: 'none' }}
+            >
+              <HStack
+                spacing={3}
                       px={3}
                       py={2.5}
                       borderRadius="lg"
                       bg={isActive ? 'rgba(20, 184, 166, 0.15)' : 'transparent'}
-                      borderLeft={isActive ? '3px solid' : '3px solid transparent'}
+                borderLeft={isActive ? '3px solid' : '3px solid transparent'}
                       borderColor={isActive ? 'teal.400' : 'transparent'}
                       color={isActive ? 'teal.400' : 'surface.300'}
-                      _hover={{
+                _hover={{
                         bg: isActive ? 'rgba(20, 184, 166, 0.15)' : 'rgba(255, 255, 255, 0.05)',
                         color: isActive ? 'teal.400' : 'white',
-                      }}
-                      transition="all 0.2s"
-                      cursor="pointer"
+                }}
+                transition="all 0.2s"
+                cursor="pointer"
                       position="relative"
-                    >
+              >
                       <Box opacity={isActive ? 1 : 0.7}>{item.icon}</Box>
-                      <Text fontSize="sm" fontWeight={isActive ? '600' : '400'} flex={1}>
-                        {item.label}
-                      </Text>
+                <Text fontSize="sm" fontWeight={isActive ? '600' : '400'} flex={1}>
+                  {item.label}
+                </Text>
                       {item.isNew && (
                         <Badge 
                           colorScheme="teal" 
@@ -329,16 +329,16 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
                           New
                         </Badge>
                       )}
-                      {item.badge && item.badge > 0 && (
-                        <Badge colorScheme="red" fontSize="xs" borderRadius="full">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </HStack>
-                  </Link>
-                );
-              })}
-            </VStack>
+                {item.badge && item.badge > 0 && (
+                  <Badge colorScheme="red" fontSize="xs" borderRadius="full">
+                    {item.badge}
+                  </Badge>
+                )}
+              </HStack>
+            </Link>
+          );
+        })}
+      </VStack>
           </MotionBox>
         ))}
       </VStack>
@@ -348,7 +348,7 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
       {/* Quick Links */}
       <Box mb={4}>
         <Tooltip label="Return to main app" placement="right">
-          <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+          <Link href="/dashboard" _hover={{ textDecoration: 'none' }}>
             <HStack
               spacing={3}
               px={3}
@@ -398,9 +398,9 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
                 </Text>
                 <HStack spacing={1}>
                   <Box w={2} h={2} borderRadius="full" bg="green.400" />
-                  <Text fontSize="xs" color="surface.400">
+                <Text fontSize="xs" color="surface.400">
                     Super Admin
-                  </Text>
+                </Text>
                 </HStack>
               </VStack>
             </HStack>

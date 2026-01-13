@@ -219,13 +219,31 @@ export default function APITestingClient({ adminUser, requestId }: APITestingCli
   // Category Test Runners
   const runHealthTests = async (): Promise<TestResult[]> => {
     const tests: TestResult[] = [];
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
     tests.push(await runTest('Frontend Health', 'GET', '/api/health'));
     tests.push(await runTest('Frontend Status', 'GET', '/api/status'));
     tests.push(await runTest('Frontend Version', 'GET', '/api/version'));
     
-    // Backend health via proxy (avoids CORS)
-    tests.push(await runTest('Backend Health', 'GET', '/backend-api/health'));
+    // Backend health via frontend proxy (avoids CORS)
+    try {
+      const start = Date.now();
+      const res = await fetch('/api/backend-health', { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      tests.push({
+        name: 'Backend Health',
+        status: res.ok && data.healthy ? 'passed' : 'failed',
+        message: res.ok && data.healthy ? `Healthy - ${data.latency}ms` : data.error || 'Backend unhealthy',
+        duration: data.latency || Date.now() - start,
+        response: { status: res.status, data },
+      });
+    } catch (error) {
+      tests.push({
+        name: 'Backend Health',
+        status: 'failed',
+        message: error instanceof Error ? error.message : 'Connection failed',
+      });
+    }
 
     return tests;
   };

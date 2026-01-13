@@ -25,23 +25,6 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'production' ? "https://suparbase.com" : "http://localhost:3000"),
   },
   
-  // Proxy backend API requests to avoid CORS issues
-  async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
-    
-    // Only add rewrites if backend URL is configured
-    if (!backendUrl) {
-      return [];
-    }
-    
-    return [
-      {
-        source: '/backend-api/:path*',
-        destination: `${backendUrl}/:path*`,
-      },
-    ];
-  },
-  
   // SECURITY: Additional headers for suparbase.com production domain
   async headers() {
     return [

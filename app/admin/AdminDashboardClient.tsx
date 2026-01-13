@@ -175,11 +175,11 @@ export default function AdminDashboardClient({
 
     const checkBackend = async () => {
       try {
-        // Use proxy path configured in next.config.ts
-        const res = await fetch('/backend-api/health', { signal: AbortSignal.timeout(5000) });
+        // Use frontend API proxy to avoid CORS issues
+        const res = await fetch('/api/backend-health', { signal: AbortSignal.timeout(5000) });
         if (res.ok) {
           const data = await res.json();
-          setBackendStatus(data.status === 'healthy' || data.status === 'running' ? 'online' : 'offline');
+          setBackendStatus(data.healthy ? 'online' : 'offline');
         } else {
           setBackendStatus('offline');
         }
@@ -269,8 +269,8 @@ export default function AdminDashboardClient({
                         border="1px solid"
                         borderColor="red.500/30"
                       >
-                        ADMIN ACCESS
-                      </Badge>
+                ADMIN ACCESS
+              </Badge>
                       <Badge 
                         bg="rgba(34, 197, 94, 0.2)" 
                         color="green.400" 
@@ -280,8 +280,8 @@ export default function AdminDashboardClient({
                         border="1px solid"
                         borderColor="green.500/30"
                       >
-                        VERIFIED
-                      </Badge>
+                VERIFIED
+              </Badge>
                       <Badge 
                         bg={backendStatus === 'online' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}
                         color={backendStatus === 'online' ? 'green.400' : 'red.400'}
@@ -297,11 +297,11 @@ export default function AdminDashboardClient({
                         {backendStatus === 'checking' ? <Spinner size="xs" /> : null}
                         Backend {backendStatus === 'checking' ? '...' : backendStatus.toUpperCase()}
                       </Badge>
-                    </HStack>
+            </HStack>
                     <Text color="surface.300" fontSize="sm">
                       Logged in as <Text as="span" color="teal.400" fontWeight="600">{adminUser.email}</Text>
-                    </Text>
-                  </VStack>
+                  </Text>
+                </VStack>
 
                   {/* Quick Actions */}
                   <VStack align={{ base: 'start', lg: 'end' }} spacing={3}>
@@ -415,7 +415,7 @@ export default function AdminDashboardClient({
 
           {/* Stats Grid */}
           <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={8}>
-            {/* User Statistics */}
+          {/* User Statistics */}
             <MotionBox
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -445,12 +445,12 @@ export default function AdminDashboardClient({
                     <StatItem label="New (7d)" value={userStats.newUsers7d} />
                     <StatItem label="New (30d)" value={userStats.newUsers30d} />
                     <StatItem label="Active (24h)" value={userStats.activeUsers24h} />
-                  </SimpleGrid>
+            </SimpleGrid>
                 </CardBody>
               </Card>
             </MotionBox>
 
-            {/* Sync Statistics */}
+          {/* Sync Statistics */}
             <MotionBox
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -477,14 +477,14 @@ export default function AdminDashboardClient({
                     <StatItem label="Total Syncs" value={syncStats.totalSyncs} />
                     <StatItem 
                       label="Success Rate" 
-                      value={`${syncStats.successRate.toFixed(1)}%`} 
+                value={`${syncStats.successRate.toFixed(1)}%`}
                       color={syncStats.successRate >= 90 ? 'green' : syncStats.successRate >= 70 ? 'yellow' : 'red'}
-                    />
+              />
                     <StatItem label="Completed" value={syncStats.completedSyncs} color="green" />
                     <StatItem label="Failed" value={syncStats.failedSyncs} color="red" />
                     <StatItem label="Running" value={syncStats.runningSyncs} highlight />
                     <StatItem label="Avg Duration" value={`${syncStats.avgDurationSeconds.toFixed(1)}s`} />
-                  </SimpleGrid>
+            </SimpleGrid>
                 </CardBody>
               </Card>
             </MotionBox>
@@ -516,19 +516,19 @@ export default function AdminDashboardClient({
                 <SimpleGrid columns={{ base: 2, md: 3, lg: 6 }} spacing={4}>
                   <StatItem 
                     label="Critical" 
-                    value={securityStats.eventsBySeverity.critical} 
-                    color={securityStats.eventsBySeverity.critical > 0 ? 'red' : 'gray'}
-                  />
+                value={securityStats.eventsBySeverity.critical}
+                color={securityStats.eventsBySeverity.critical > 0 ? 'red' : 'gray'}
+              />
                   <StatItem 
                     label="High" 
-                    value={securityStats.eventsBySeverity.high} 
-                    color={securityStats.eventsBySeverity.high > 0 ? 'orange' : 'gray'}
-                  />
+                value={securityStats.eventsBySeverity.high}
+                color={securityStats.eventsBySeverity.high > 0 ? 'orange' : 'gray'}
+              />
                   <StatItem label="Medium" value={securityStats.eventsBySeverity.medium} />
                   <StatItem label="Low" value={securityStats.eventsBySeverity.low} />
                   <StatItem label="Failed Auth" value={securityStats.failedAuthAttempts} />
                   <StatItem label="Threat IPs" value={securityStats.uniqueThreatIPs} />
-                </SimpleGrid>
+            </SimpleGrid>
               </CardBody>
             </Card>
           </MotionBox>
@@ -644,13 +644,13 @@ function SystemStatusCard({ label, status }: { label: string; status: 'operation
 
 // Component: Metric Card
 function MetricCard({ 
-  title, 
-  value, 
+  title,
+  value,
   icon, 
   color 
-}: { 
-  title: string; 
-  value: string | number; 
+}: {
+  title: string;
+  value: string | number;
   icon: React.ReactNode;
   color: string;
 }) {
@@ -686,12 +686,12 @@ function MetricCard({
 // Component: Stat Item
 function StatItem({ 
   label, 
-  value, 
+  value,
   color, 
   highlight 
-}: { 
+}: {
   label: string; 
-  value: string | number; 
+  value: string | number;
   color?: string; 
   highlight?: boolean;
 }) {
@@ -714,7 +714,7 @@ function StatItem({
       <Text fontSize="xs" color="surface.400" mb={1}>{label}</Text>
       <Text fontSize="lg" fontWeight="700" color={color ? colorMap[color] : 'white'}>
         {value}
-      </Text>
+        </Text>
     </Box>
   );
 }

@@ -56,12 +56,12 @@ async function buildServer() {
   // Register CORS with dynamic origin checking for Vercel preview domains
   await server.register(cors, {
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
+      // Allow requests with no origin (like mobile apps, curl, or server-side requests)
       if (!origin) {
         return callback(null, true);
       }
       
-      // Check exact matches
+      // Check exact matches from ALLOWED_ORIGINS or FRONTEND_URL
       if (config.allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -71,10 +71,18 @@ async function buildServer() {
         return callback(null, true);
       }
       
+      // Allow localhost for development
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return callback(null, true);
+      }
+      
       // In development, allow all origins
       if (config.isDev) {
         return callback(null, true);
       }
+      
+      // Log rejected origin for debugging
+      log.warn('CORS rejected origin', { origin, allowedOrigins: config.allowedOrigins });
       
       // Reject other origins
       callback(new Error('Not allowed by CORS'), false);
@@ -87,7 +95,9 @@ async function buildServer() {
       'X-Backend-Secret',
       'X-Request-ID',
       'X-User-ID',
+      'Accept',
     ],
+    exposedHeaders: ['X-Request-ID'],
   });
 
   // Register Helmet for security headers

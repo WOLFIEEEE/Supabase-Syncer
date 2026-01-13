@@ -11,20 +11,11 @@
  */
 
 // Configuration
-// Use proxy path for client-side (browser) requests to avoid CORS
-// Use direct URL for server-side (API routes) requests
-const getBackendUrl = () => {
-  if (typeof window !== 'undefined') {
-    // Browser: Use proxy path if available, otherwise direct URL
-    // The proxy is configured in next.config.ts rewrites
-    return '/backend-api';
-  } else {
-    // Server: Use direct backend URL
-    return process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-  }
-};
-
-const BACKEND_URL = getBackendUrl();
+// Use NEXT_PUBLIC_BACKEND_URL for client-side (browser) requests
+// Use BACKEND_URL for server-side (API routes) requests
+const BACKEND_URL = typeof window !== 'undefined' 
+  ? (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:3001')
+  : (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001');
 const SHARED_SECRET = process.env.BACKEND_SHARED_SECRET;
 const DEFAULT_TIMEOUT = 300000; // 5 minutes
 const MAX_RETRIES = 3;
