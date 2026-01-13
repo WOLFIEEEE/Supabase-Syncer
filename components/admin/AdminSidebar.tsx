@@ -5,7 +5,6 @@ import {
   VStack,
   HStack,
   Text,
-  Link,
   Divider,
   Badge,
   Drawer,
@@ -23,6 +22,7 @@ import {
   Tooltip,
 } from '@chakra-ui/react';
 import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 const MotionBox = motion.create(Box);
@@ -295,7 +295,7 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
                         onClose();
                       }
                     }}
-                    _hover={{ textDecoration: 'none' }}
+                    style={{ textDecoration: 'none' }}
                   >
                     <HStack
                       spacing={3}
@@ -348,7 +348,7 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
       {/* Quick Links */}
       <Box mb={4}>
         <Tooltip label="Return to main app" placement="right">
-          <Link href="/dashboard" _hover={{ textDecoration: 'none' }}>
+          <Link href="/dashboard" style={{ textDecoration: 'none' }}>
             <HStack
               spacing={3}
               px={3}

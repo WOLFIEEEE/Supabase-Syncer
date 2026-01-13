@@ -175,9 +175,13 @@ export default function AdminDashboardClient({
 
     const checkBackend = async () => {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-        const res = await fetch(`${backendUrl}/health`, { signal: AbortSignal.timeout(5000) });
-        setBackendStatus(res.ok ? 'online' : 'offline');
+        const res = await fetch('/api/backend-health', { signal: AbortSignal.timeout(5000) });
+        if (res.ok) {
+          const data = await res.json();
+          setBackendStatus(data.status || (data.healthy ? 'online' : 'offline'));
+        } else {
+          setBackendStatus('offline');
+        }
       } catch {
         setBackendStatus('offline');
       }
