@@ -1,44 +1,20 @@
 {
-    "name": "supabase-syncer",
-    "description": "Database synchronization and keep-alive tool for Supabase - suparbase.com",
+    "name": "supabase-syncer-backend",
+    "description": "Backend API server for Supabase Syncer - handles sync jobs, database operations",
     "type": "docker-compose",
     "dockerCompose": "./docker-compose.yaml",
-    "domain": "suparbase.com",
     "services": {
-        "app": {
-            "name": "Supabase Syncer Frontend",
-            "ports": {
-                "3000": "3000"
-            },
-            "healthcheck": {
-                "path": "/api/status",
-                "interval": 30,
-                "timeout": 10,
-                "retries": 3,
-                "startPeriod": 40
-            },
-            "environment": {
-                "NODE_ENV": "production",
-                "PORT": "3000",
-                "HOSTNAME": "0.0.0.0",
-                "REDIS_URL": "redis://redis:6379",
-                "BACKEND_URL": "http://backend:3001",
-                "NEXT_PUBLIC_APP_URL": "https://suparbase.com"
-            },
-            "resources": {
-                "memory": "512M",
-                "cpu": "0.5"
-            }
-        },
         "backend": {
             "name": "Supabase Syncer Backend",
-            "internal": true,
+            "ports": {
+                "3001": "3001"
+            },
             "healthcheck": {
-                "path": "/health/ready",
+                "path": "/health/live",
                 "interval": 30,
                 "timeout": 10,
-                "retries": 3,
-                "startPeriod": 20
+                "retries": 5,
+                "startPeriod": 40
             },
             "environment": {
                 "NODE_ENV": "production",
@@ -68,13 +44,15 @@
         "driver": "bridge"
     }],
     "requiredEnvVars": [
-        "NEXT_PUBLIC_SUPABASE_URL",
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-        "ENCRYPTION_KEY",
-        "BACKEND_SHARED_SECRET"
+        "BACKEND_SHARED_SECRET",
+        "ENCRYPTION_KEY"
     ],
     "optionalEnvVars": [
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
         "DATABASE_URL",
-        "ADMIN_EMAIL"
+        "ADMIN_EMAIL",
+        "FRONTEND_URL",
+        "ALLOWED_ORIGINS"
     ]
 }

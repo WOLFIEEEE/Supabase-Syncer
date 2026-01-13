@@ -70,20 +70,36 @@ function getEnvVarOptional(name: string): string | null {
 }
 
 function validateConfig(config: Config): void {
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  
   // Validate required fields in production
   if (config.isProd) {
     if (!config.backendSharedSecret || config.backendSharedSecret.length < 32) {
-      throw new Error('BACKEND_SHARED_SECRET must be at least 32 characters in production');
+      errors.push('BACKEND_SHARED_SECRET must be at least 32 characters in production');
     }
     if (!config.encryptionKey || config.encryptionKey.length < 32) {
-      throw new Error('ENCRYPTION_KEY must be at least 32 characters in production');
+      errors.push('ENCRYPTION_KEY must be at least 32 characters in production');
     }
     if (!config.supabaseUrl) {
-      throw new Error('NEXT_PUBLIC_SUPABASE_URL is required in production');
+      warnings.push('NEXT_PUBLIC_SUPABASE_URL is not set - some features will be disabled');
     }
     if (!config.supabaseAnonKey) {
-      throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is required in production');
+      warnings.push('NEXT_PUBLIC_SUPABASE_ANON_KEY is not set - some features will be disabled');
     }
+  }
+  
+  // Log warnings
+  if (warnings.length > 0) {
+    console.warn('Configuration warnings:');
+    warnings.forEach(w => console.warn(`  - ${w}`));
+  }
+  
+  // Only fail for critical errors
+  if (errors.length > 0) {
+    console.error('Configuration errors:');
+    errors.forEach(e => console.error(`  - ${e}`));
+    throw new Error(`Configuration validation failed: ${errors.join('; ')}`);
   }
 }
 
