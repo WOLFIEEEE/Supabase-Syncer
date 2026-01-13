@@ -219,31 +219,13 @@ export default function APITestingClient({ adminUser, requestId }: APITestingCli
   // Category Test Runners
   const runHealthTests = async (): Promise<TestResult[]> => {
     const tests: TestResult[] = [];
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
     tests.push(await runTest('Frontend Health', 'GET', '/api/health'));
     tests.push(await runTest('Frontend Status', 'GET', '/api/status'));
     tests.push(await runTest('Frontend Version', 'GET', '/api/version'));
     
-    // Backend health (may fail due to CORS from browser)
-    try {
-      const start = Date.now();
-      const res = await fetch(`${backendUrl}/health`, { signal: AbortSignal.timeout(5000) });
-      const data = await res.json();
-      tests.push({
-        name: 'Backend Health',
-        status: res.ok && data.status === 'healthy' ? 'passed' : 'failed',
-        message: res.ok ? `Healthy - ${Date.now() - start}ms` : 'Backend unhealthy',
-        duration: Date.now() - start,
-        response: { status: res.status, data },
-      });
-    } catch {
-      tests.push({
-        name: 'Backend Health',
-        status: 'skipped',
-        message: 'Backend not directly accessible (CORS)',
-      });
-    }
+    // Backend health via proxy (avoids CORS)
+    tests.push(await runTest('Backend Health', 'GET', '/backend-api/health'));
 
     return tests;
   };

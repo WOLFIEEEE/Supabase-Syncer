@@ -113,23 +113,24 @@ export default function AdminHeader({ onMenuClick, adminUser }: AdminHeaderProps
   const [backendStatus, setBackendStatus] = useState<BackendStatus>('checking');
   const [backendLatency, setBackendLatency] = useState<number | null>(null);
 
-  // Check backend status via frontend API proxy (avoids CORS)
+  // Check backend status via proxy (avoids CORS)
   useEffect(() => {
     const checkBackendHealth = async () => {
       const start = Date.now();
       try {
-        const res = await fetch('/api/backend-health', {
+        // Use proxy path configured in next.config.ts
+        const res = await fetch('/backend-api/health', {
           method: 'GET',
           signal: AbortSignal.timeout(5000),
         });
+        const latency = Date.now() - start;
+        setBackendLatency(latency);
         
         if (res.ok) {
           const data = await res.json();
-          setBackendLatency(data.latency || Date.now() - start);
-          setBackendStatus(data.status || (data.healthy ? 'online' : 'offline'));
+          setBackendStatus(data.status === 'healthy' || data.status === 'running' ? 'online' : 'degraded');
         } else {
-          setBackendStatus('offline');
-          setBackendLatency(null);
+          setBackendStatus('degraded');
         }
       } catch {
         setBackendStatus('offline');

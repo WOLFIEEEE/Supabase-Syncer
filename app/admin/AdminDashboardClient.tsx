@@ -175,10 +175,11 @@ export default function AdminDashboardClient({
 
     const checkBackend = async () => {
       try {
-        const res = await fetch('/api/backend-health', { signal: AbortSignal.timeout(5000) });
+        // Use proxy path configured in next.config.ts
+        const res = await fetch('/backend-api/health', { signal: AbortSignal.timeout(5000) });
         if (res.ok) {
           const data = await res.json();
-          setBackendStatus(data.status || (data.healthy ? 'online' : 'offline'));
+          setBackendStatus(data.status === 'healthy' || data.status === 'running' ? 'online' : 'offline');
         } else {
           setBackendStatus('offline');
         }
