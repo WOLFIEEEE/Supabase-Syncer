@@ -64,3 +64,4 @@ cookies.txt
 # OS
 .DS_Store
 Thumbs.db
+test-results-comprehensive.log
