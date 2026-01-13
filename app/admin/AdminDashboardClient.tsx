@@ -29,6 +29,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import LineChart from '@/components/admin/charts/LineChart';
+import { useDashboardWidgets } from '@/lib/hooks/useDashboardWidgets';
+import DashboardWidget from '@/components/admin/DashboardWidget';
+import WidgetSettings from '@/components/admin/WidgetSettings';
+import { useDisclosure } from '@chakra-ui/react';
 
 const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card);
@@ -105,6 +109,13 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
+const SettingsIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+);
+
 interface AdminDashboardProps {
   userStats: {
     totalUsers: number;
@@ -155,6 +166,8 @@ export default function AdminDashboardClient({
   requestId,
 }: AdminDashboardProps) {
   const router = useRouter();
+  const { widgets, visibleWidgets, toggleWidget, setWidgetOrder, resetToDefaults, isWidgetVisible } = useDashboardWidgets();
+  const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onClose: onSettingsClose } = useDisclosure();
   type ChartDataPoint = { date: string; value: number; label?: string };
   const [analytics, setAnalytics] = useState<{ userGrowth?: { data: ChartDataPoint[] }; syncPerformance?: { data: ChartDataPoint[] } } | null>(null);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
@@ -311,6 +324,17 @@ export default function AdminDashboardClient({
                     <HStack spacing={3} flexWrap="wrap">
                       <Button
                         size="sm"
+                        leftIcon={<SettingsIcon />}
+                        variant="outline"
+                        borderColor="surface.600"
+                        color="surface.300"
+                        _hover={{ bg: 'surface.800', borderColor: 'surface.500' }}
+                        onClick={onSettingsOpen}
+                      >
+                        Widget Settings
+                      </Button>
+                      <Button
+                        size="sm"
                         leftIcon={<TestIcon />}
                         bg="linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)"
                         color="white"
@@ -350,268 +374,399 @@ export default function AdminDashboardClient({
           </MotionBox>
 
           {/* System Health Overview */}
-          <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <HStack justify="space-between" mb={4}>
-              <Heading as="h2" size="lg" color="white" fontFamily="'Outfit', sans-serif">
-                System Health
-              </Heading>
-              <Badge 
-                colorScheme={healthPercent === 100 ? 'green' : healthPercent >= 75 ? 'yellow' : 'red'} 
-                fontSize="sm" 
-                px={3} 
-                py={1}
+          {isWidgetVisible('system-health') && (
+            <DashboardWidget
+              id="system-health"
+              onMoveUp={() => {
+                const widget = widgets.find(w => w.id === 'system-health');
+                if (widget) setWidgetOrder('system-health', Math.max(0, widget.order - 1));
+              }}
+              onMoveDown={() => {
+                const widget = widgets.find(w => w.id === 'system-health');
+                if (widget) setWidgetOrder('system-health', widget.order + 1);
+              }}
+              canMoveUp={widgets.find(w => w.id === 'system-health')?.order !== 0}
+              canMoveDown={widgets.find(w => w.id === 'system-health')?.order !== widgets.length - 1}
+            >
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
               >
-                {healthPercent}% Healthy
-              </Badge>
-            </HStack>
-            <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
-              <SystemStatusCard label="API" status={systemStatus.api} />
-              <SystemStatusCard label="Database" status={systemStatus.database} />
-              <SystemStatusCard label="Queue" status={systemStatus.queue} />
-              <SystemStatusCard label="Cache" status={systemStatus.cache} />
-            </SimpleGrid>
-          </MotionBox>
+                <HStack justify="space-between" mb={4}>
+                  <Heading as="h2" size="lg" color="white" fontFamily="'Outfit', sans-serif">
+                    System Health
+                  </Heading>
+                  <Badge 
+                    colorScheme={healthPercent === 100 ? 'green' : healthPercent >= 75 ? 'yellow' : 'red'} 
+                    fontSize="sm" 
+                    px={3} 
+                    py={1}
+                  >
+                    {healthPercent}% Healthy
+                  </Badge>
+                </HStack>
+                <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+                  <SystemStatusCard label="API" status={systemStatus.api} />
+                  <SystemStatusCard label="Database" status={systemStatus.database} />
+                  <SystemStatusCard label="Queue" status={systemStatus.queue} />
+                  <SystemStatusCard label="Cache" status={systemStatus.cache} />
+                </SimpleGrid>
+              </MotionBox>
+            </DashboardWidget>
+          )}
 
           {/* Real-Time Metrics */}
-          <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <Heading as="h2" size="lg" mb={4} color="white" fontFamily="'Outfit', sans-serif">
-              Real-Time Metrics
-            </Heading>
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4}>
-              <MetricCard
-                title="Active Users"
-                value={liveMetrics.activeUsersCount}
-                icon={<UsersIcon />}
-                color="teal"
-              />
-              <MetricCard
-                title="Active Syncs"
-                value={liveMetrics.activeSyncsCount}
-                icon={<SyncIcon />}
-                color="cyan"
-              />
-              <MetricCard
-                title="Requests/Min"
-                value={liveMetrics.apiRequestsPerMinute.toFixed(1)}
-                icon={<HealthIcon />}
-                color="blue"
-              />
-              <MetricCard
-                title="Error Rate"
-                value={`${liveMetrics.errorRate.toFixed(1)}%`}
-                icon={<SecurityIcon />}
-                color={liveMetrics.errorRate > 10 ? 'red' : liveMetrics.errorRate > 5 ? 'yellow' : 'green'}
-              />
-            </SimpleGrid>
-          </MotionBox>
+          {isWidgetVisible('real-time-metrics') && (
+            <DashboardWidget
+              id="real-time-metrics"
+              onMoveUp={() => {
+                const widget = widgets.find(w => w.id === 'real-time-metrics');
+                if (widget) setWidgetOrder('real-time-metrics', Math.max(0, widget.order - 1));
+              }}
+              onMoveDown={() => {
+                const widget = widgets.find(w => w.id === 'real-time-metrics');
+                if (widget) setWidgetOrder('real-time-metrics', widget.order + 1);
+              }}
+              canMoveUp={widgets.find(w => w.id === 'real-time-metrics')?.order !== 0}
+              canMoveDown={widgets.find(w => w.id === 'real-time-metrics')?.order !== widgets.length - 1}
+            >
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Heading as="h2" size="lg" mb={4} color="white" fontFamily="'Outfit', sans-serif">
+                  Real-Time Metrics
+                </Heading>
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4}>
+                  <MetricCard
+                    title="Active Users"
+                    value={liveMetrics.activeUsersCount}
+                    icon={<UsersIcon />}
+                    color="teal"
+                  />
+                  <MetricCard
+                    title="Active Syncs"
+                    value={liveMetrics.activeSyncsCount}
+                    icon={<SyncIcon />}
+                    color="cyan"
+                  />
+                  <MetricCard
+                    title="Requests/Min"
+                    value={liveMetrics.apiRequestsPerMinute.toFixed(1)}
+                    icon={<HealthIcon />}
+                    color="blue"
+                  />
+                  <MetricCard
+                    title="Error Rate"
+                    value={`${liveMetrics.errorRate.toFixed(1)}%`}
+                    icon={<SecurityIcon />}
+                    color={liveMetrics.errorRate > 10 ? 'red' : liveMetrics.errorRate > 5 ? 'yellow' : 'green'}
+                  />
+                </SimpleGrid>
+              </MotionBox>
+            </DashboardWidget>
+          )}
 
           {/* Stats Grid */}
           <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={8}>
           {/* User Statistics */}
-            <MotionBox
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
-                <CardBody>
-                  <HStack justify="space-between" mb={4}>
-                    <HStack spacing={2}>
-                      <UsersIcon />
-                      <Heading size="md" color="white">User Statistics</Heading>
-                    </HStack>
-                    <Button 
-                      size="xs" 
-                      variant="ghost" 
-                      color="teal.400" 
-                      rightIcon={<ArrowRightIcon />}
-                      onClick={() => router.push('/admin/users')}
-                    >
-                      View All
-                    </Button>
-                  </HStack>
-                  <SimpleGrid columns={2} spacing={4}>
-                    <StatItem label="Total Users" value={userStats.totalUsers} />
-                    <StatItem label="Active Now" value={userStats.activeUsersNow} highlight />
-                    <StatItem label="New (24h)" value={userStats.newUsers24h} />
-                    <StatItem label="New (7d)" value={userStats.newUsers7d} />
-                    <StatItem label="New (30d)" value={userStats.newUsers30d} />
-                    <StatItem label="Active (24h)" value={userStats.activeUsers24h} />
-            </SimpleGrid>
-                </CardBody>
-              </Card>
-            </MotionBox>
+            {isWidgetVisible('user-stats') && (
+              <DashboardWidget
+                id="user-stats"
+                onMoveUp={() => {
+                  const widget = widgets.find(w => w.id === 'user-stats');
+                  if (widget) setWidgetOrder('user-stats', Math.max(0, widget.order - 1));
+                }}
+                onMoveDown={() => {
+                  const widget = widgets.find(w => w.id === 'user-stats');
+                  if (widget) setWidgetOrder('user-stats', widget.order + 1);
+                }}
+                canMoveUp={widgets.find(w => w.id === 'user-stats')?.order !== 0}
+                canMoveDown={widgets.find(w => w.id === 'user-stats')?.order !== widgets.length - 1}
+              >
+                <MotionBox
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+                    <CardBody>
+                      <HStack justify="space-between" mb={4}>
+                        <HStack spacing={2}>
+                          <UsersIcon />
+                          <Heading size="md" color="white">User Statistics</Heading>
+                        </HStack>
+                        <Button 
+                          size="xs" 
+                          variant="ghost" 
+                          color="teal.400" 
+                          rightIcon={<ArrowRightIcon />}
+                          onClick={() => router.push('/admin/users')}
+                        >
+                          View All
+                        </Button>
+                      </HStack>
+                      <SimpleGrid columns={2} spacing={4}>
+                        <StatItem label="Total Users" value={userStats.totalUsers} />
+                        <StatItem label="Active Now" value={userStats.activeUsersNow} highlight />
+                        <StatItem label="New (24h)" value={userStats.newUsers24h} />
+                        <StatItem label="New (7d)" value={userStats.newUsers7d} />
+                        <StatItem label="New (30d)" value={userStats.newUsers30d} />
+                        <StatItem label="Active (24h)" value={userStats.activeUsers24h} />
+                </SimpleGrid>
+                    </CardBody>
+                  </Card>
+                </MotionBox>
+              </DashboardWidget>
+            )}
 
           {/* Sync Statistics */}
-            <MotionBox
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
-                <CardBody>
-                  <HStack justify="space-between" mb={4}>
-                    <HStack spacing={2}>
-                      <SyncIcon />
-                      <Heading size="md" color="white">Sync Statistics</Heading>
-                    </HStack>
-                    <Button 
-                      size="xs" 
-                      variant="ghost" 
-                      color="teal.400" 
-                      rightIcon={<ArrowRightIcon />}
-                      onClick={() => router.push('/admin/sync-jobs')}
-                    >
-                      View All
-                    </Button>
-                  </HStack>
-                  <SimpleGrid columns={2} spacing={4}>
-                    <StatItem label="Total Syncs" value={syncStats.totalSyncs} />
-                    <StatItem 
-                      label="Success Rate" 
-                value={`${syncStats.successRate.toFixed(1)}%`}
-                      color={syncStats.successRate >= 90 ? 'green' : syncStats.successRate >= 70 ? 'yellow' : 'red'}
-              />
-                    <StatItem label="Completed" value={syncStats.completedSyncs} color="green" />
-                    <StatItem label="Failed" value={syncStats.failedSyncs} color="red" />
-                    <StatItem label="Running" value={syncStats.runningSyncs} highlight />
-                    <StatItem label="Avg Duration" value={`${syncStats.avgDurationSeconds.toFixed(1)}s`} />
-            </SimpleGrid>
-                </CardBody>
-              </Card>
-            </MotionBox>
+            {isWidgetVisible('sync-stats') && (
+              <DashboardWidget
+                id="sync-stats"
+                onMoveUp={() => {
+                  const widget = widgets.find(w => w.id === 'sync-stats');
+                  if (widget) setWidgetOrder('sync-stats', Math.max(0, widget.order - 1));
+                }}
+                onMoveDown={() => {
+                  const widget = widgets.find(w => w.id === 'sync-stats');
+                  if (widget) setWidgetOrder('sync-stats', widget.order + 1);
+                }}
+                canMoveUp={widgets.find(w => w.id === 'sync-stats')?.order !== 0}
+                canMoveDown={widgets.find(w => w.id === 'sync-stats')?.order !== widgets.length - 1}
+              >
+                <MotionBox
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+                    <CardBody>
+                      <HStack justify="space-between" mb={4}>
+                        <HStack spacing={2}>
+                          <SyncIcon />
+                          <Heading size="md" color="white">Sync Statistics</Heading>
+                        </HStack>
+                        <Button 
+                          size="xs" 
+                          variant="ghost" 
+                          color="teal.400" 
+                          rightIcon={<ArrowRightIcon />}
+                          onClick={() => router.push('/admin/sync-jobs')}
+                        >
+                          View All
+                        </Button>
+                      </HStack>
+                      <SimpleGrid columns={2} spacing={4}>
+                        <StatItem label="Total Syncs" value={syncStats.totalSyncs} />
+                        <StatItem 
+                          label="Success Rate" 
+                    value={`${syncStats.successRate.toFixed(1)}%`}
+                          color={syncStats.successRate >= 90 ? 'green' : syncStats.successRate >= 70 ? 'yellow' : 'red'}
+                />
+                        <StatItem label="Completed" value={syncStats.completedSyncs} color="green" />
+                        <StatItem label="Failed" value={syncStats.failedSyncs} color="red" />
+                        <StatItem label="Running" value={syncStats.runningSyncs} highlight />
+                        <StatItem label="Avg Duration" value={`${syncStats.avgDurationSeconds.toFixed(1)}s`} />
+                </SimpleGrid>
+                    </CardBody>
+                  </Card>
+                </MotionBox>
+              </DashboardWidget>
+            )}
           </Grid>
 
           {/* Security Overview */}
-          <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
-              <CardBody>
-                <HStack justify="space-between" mb={4}>
-                  <HStack spacing={2}>
-                    <SecurityIcon />
-                    <Heading size="md" color="white">Security Overview (24h)</Heading>
-                  </HStack>
-                  <Button 
-                    size="xs" 
-                    variant="ghost" 
-                    color="teal.400" 
-                    rightIcon={<ArrowRightIcon />}
-                    onClick={() => router.push('/admin/security')}
-                  >
-                    View Details
-                  </Button>
-                </HStack>
-                <SimpleGrid columns={{ base: 2, md: 3, lg: 6 }} spacing={4}>
-                  <StatItem 
-                    label="Critical" 
-                value={securityStats.eventsBySeverity.critical}
-                color={securityStats.eventsBySeverity.critical > 0 ? 'red' : 'gray'}
-              />
-                  <StatItem 
-                    label="High" 
-                value={securityStats.eventsBySeverity.high}
-                color={securityStats.eventsBySeverity.high > 0 ? 'orange' : 'gray'}
-              />
-                  <StatItem label="Medium" value={securityStats.eventsBySeverity.medium} />
-                  <StatItem label="Low" value={securityStats.eventsBySeverity.low} />
-                  <StatItem label="Failed Auth" value={securityStats.failedAuthAttempts} />
-                  <StatItem label="Threat IPs" value={securityStats.uniqueThreatIPs} />
-            </SimpleGrid>
-              </CardBody>
-            </Card>
-          </MotionBox>
+          {isWidgetVisible('security-overview') && (
+            <DashboardWidget
+              id="security-overview"
+              onMoveUp={() => {
+                const widget = widgets.find(w => w.id === 'security-overview');
+                if (widget) setWidgetOrder('security-overview', Math.max(0, widget.order - 1));
+              }}
+              onMoveDown={() => {
+                const widget = widgets.find(w => w.id === 'security-overview');
+                if (widget) setWidgetOrder('security-overview', widget.order + 1);
+              }}
+              canMoveUp={widgets.find(w => w.id === 'security-overview')?.order !== 0}
+              canMoveDown={widgets.find(w => w.id === 'security-overview')?.order !== widgets.length - 1}
+            >
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+                  <CardBody>
+                    <HStack justify="space-between" mb={4}>
+                      <HStack spacing={2}>
+                        <SecurityIcon />
+                        <Heading size="md" color="white">Security Overview (24h)</Heading>
+                      </HStack>
+                      <Button 
+                        size="xs" 
+                        variant="ghost" 
+                        color="teal.400" 
+                        rightIcon={<ArrowRightIcon />}
+                        onClick={() => router.push('/admin/security')}
+                      >
+                        View Details
+                      </Button>
+                    </HStack>
+                    <SimpleGrid columns={{ base: 2, md: 3, lg: 6 }} spacing={4}>
+                      <StatItem 
+                        label="Critical" 
+                    value={securityStats.eventsBySeverity.critical}
+                    color={securityStats.eventsBySeverity.critical > 0 ? 'red' : 'gray'}
+                  />
+                      <StatItem 
+                        label="High" 
+                    value={securityStats.eventsBySeverity.high}
+                    color={securityStats.eventsBySeverity.high > 0 ? 'orange' : 'gray'}
+                  />
+                      <StatItem label="Medium" value={securityStats.eventsBySeverity.medium} />
+                      <StatItem label="Low" value={securityStats.eventsBySeverity.low} />
+                      <StatItem label="Failed Auth" value={securityStats.failedAuthAttempts} />
+                      <StatItem label="Threat IPs" value={securityStats.uniqueThreatIPs} />
+                </SimpleGrid>
+                  </CardBody>
+                </Card>
+              </MotionBox>
+            </DashboardWidget>
+          )}
 
           {/* Recent Security Events */}
-          {securityStats.recentEvents.length > 0 && (
-            <MotionBox
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
+          {isWidgetVisible('recent-events') && securityStats.recentEvents.length > 0 && (
+            <DashboardWidget
+              id="recent-events"
+              onMoveUp={() => {
+                const widget = widgets.find(w => w.id === 'recent-events');
+                if (widget) setWidgetOrder('recent-events', Math.max(0, widget.order - 1));
+              }}
+              onMoveDown={() => {
+                const widget = widgets.find(w => w.id === 'recent-events');
+                if (widget) setWidgetOrder('recent-events', widget.order + 1);
+              }}
+              canMoveUp={widgets.find(w => w.id === 'recent-events')?.order !== 0}
+              canMoveDown={widgets.find(w => w.id === 'recent-events')?.order !== widgets.length - 1}
             >
-              <Heading as="h2" size="lg" mb={4} color="white" fontFamily="'Outfit', sans-serif">
-                Recent Security Events
-              </Heading>
-              <Card bg="surface.800" borderColor="surface.700" borderWidth="1px" overflow="hidden">
-                <Box overflowX="auto">
-                  <Table variant="simple">
-                    <Thead bg="surface.700/50">
-                      <Tr>
-                        <Th color="surface.300" borderColor="surface.600">Event Type</Th>
-                        <Th color="surface.300" borderColor="surface.600">Severity</Th>
-                        <Th color="surface.300" borderColor="surface.600" isNumeric>Count</Th>
-                        <Th color="surface.300" borderColor="surface.600">Last Occurrence</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {securityStats.recentEvents.slice(0, 5).map((event, index) => (
-                        <Tr key={index} _hover={{ bg: 'surface.700/30' }}>
-                          <Td color="white" borderColor="surface.700" textTransform="capitalize">
-                            {event.eventType.replace(/_/g, ' ')}
-                          </Td>
-                          <Td borderColor="surface.700">
-                            <SeverityBadge severity={event.severity} />
-                          </Td>
-                          <Td color="white" borderColor="surface.700" isNumeric fontWeight="600">
-                            {event.count}
-                          </Td>
-                          <Td color="surface.400" borderColor="surface.700" fontSize="sm">
-                            {new Date(event.lastOccurrence).toLocaleString()}
-                          </Td>
+              <MotionBox
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+              >
+                <Heading as="h2" size="lg" mb={4} color="white" fontFamily="'Outfit', sans-serif">
+                  Recent Security Events
+                </Heading>
+                <Card bg="surface.800" borderColor="surface.700" borderWidth="1px" overflow="hidden">
+                  <Box overflowX="auto">
+                    <Table variant="simple">
+                      <Thead bg="surface.700/50">
+                        <Tr>
+                          <Th color="surface.300" borderColor="surface.600">Event Type</Th>
+                          <Th color="surface.300" borderColor="surface.600">Severity</Th>
+                          <Th color="surface.300" borderColor="surface.600" isNumeric>Count</Th>
+                          <Th color="surface.300" borderColor="surface.600">Last Occurrence</Th>
                         </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                </Box>
-              </Card>
-            </MotionBox>
+                      </Thead>
+                      <Tbody>
+                        {securityStats.recentEvents.slice(0, 5).map((event, index) => (
+                          <Tr key={index} _hover={{ bg: 'surface.700/30' }}>
+                            <Td color="white" borderColor="surface.700" textTransform="capitalize">
+                              {event.eventType.replace(/_/g, ' ')}
+                            </Td>
+                            <Td borderColor="surface.700">
+                              <SeverityBadge severity={event.severity} />
+                            </Td>
+                            <Td color="white" borderColor="surface.700" isNumeric fontWeight="600">
+                              {event.count}
+                            </Td>
+                            <Td color="surface.400" borderColor="surface.700" fontSize="sm">
+                              {new Date(event.lastOccurrence).toLocaleString()}
+                            </Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                </Card>
+              </MotionBox>
+            </DashboardWidget>
           )}
 
           {/* Analytics Charts */}
           {analytics && (
             <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={8}>
-              {analytics.userGrowth && (
-                <MotionBox
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
+              {isWidgetVisible('user-growth-chart') && analytics.userGrowth && (
+                <DashboardWidget
+                  id="user-growth-chart"
+                  onMoveUp={() => {
+                    const widget = widgets.find(w => w.id === 'user-growth-chart');
+                    if (widget) setWidgetOrder('user-growth-chart', Math.max(0, widget.order - 1));
+                  }}
+                  onMoveDown={() => {
+                    const widget = widgets.find(w => w.id === 'user-growth-chart');
+                    if (widget) setWidgetOrder('user-growth-chart', widget.order + 1);
+                  }}
+                  canMoveUp={widgets.find(w => w.id === 'user-growth-chart')?.order !== 0}
+                  canMoveDown={widgets.find(w => w.id === 'user-growth-chart')?.order !== widgets.length - 1}
                 >
-                  <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
-                    <CardBody>
-                      <Heading size="md" color="white" mb={4}>User Growth Trend</Heading>
-                      <LineChart data={analytics.userGrowth.data} color="#14b8a6" height={250} />
-                    </CardBody>
-                  </Card>
-                </MotionBox>
+                  <MotionBox
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                  >
+                    <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+                      <CardBody>
+                        <Heading size="md" color="white" mb={4}>User Growth Trend</Heading>
+                        <LineChart data={analytics.userGrowth.data} color="#14b8a6" height={250} />
+                      </CardBody>
+                    </Card>
+                  </MotionBox>
+                </DashboardWidget>
               )}
 
-              {analytics.syncPerformance && (
-                <MotionBox
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.8 }}
+              {isWidgetVisible('sync-performance-chart') && analytics.syncPerformance && (
+                <DashboardWidget
+                  id="sync-performance-chart"
+                  onMoveUp={() => {
+                    const widget = widgets.find(w => w.id === 'sync-performance-chart');
+                    if (widget) setWidgetOrder('sync-performance-chart', Math.max(0, widget.order - 1));
+                  }}
+                  onMoveDown={() => {
+                    const widget = widgets.find(w => w.id === 'sync-performance-chart');
+                    if (widget) setWidgetOrder('sync-performance-chart', widget.order + 1);
+                  }}
+                  canMoveUp={widgets.find(w => w.id === 'sync-performance-chart')?.order !== 0}
+                  canMoveDown={widgets.find(w => w.id === 'sync-performance-chart')?.order !== widgets.length - 1}
                 >
-                  <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
-                    <CardBody>
-                      <Heading size="md" color="white" mb={4}>Sync Performance</Heading>
-                      <LineChart data={analytics.syncPerformance.data} color="#06b6d4" height={250} />
-                    </CardBody>
-                  </Card>
-                </MotionBox>
+                  <MotionBox
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
+                  >
+                    <Card bg="surface.800" borderColor="surface.700" borderWidth="1px">
+                      <CardBody>
+                        <Heading size="md" color="white" mb={4}>Sync Performance</Heading>
+                        <LineChart data={analytics.syncPerformance.data} color="#06b6d4" height={250} />
+                      </CardBody>
+                    </Card>
+                  </MotionBox>
+                </DashboardWidget>
               )}
             </Grid>
           )}
+
+          {/* Widget Settings Modal */}
+          <WidgetSettings
+            isOpen={isSettingsOpen}
+            onClose={onSettingsClose}
+            widgets={widgets}
+            onToggleWidget={toggleWidget}
+            onReset={resetToDefaults}
+          />
         </VStack>
       </Container>
     </Box>
