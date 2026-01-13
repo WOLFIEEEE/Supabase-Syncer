@@ -9,7 +9,7 @@ export async function GET() {
     };
 
     // Check if required environment variables are present
-    if (!process.env.ENCRYPTION_KEY || !process.env.SESSION_SECRET) {
+    if (!process.env.ENCRYPTION_KEY) {
       checks.auth = 'error';
     }
 

@@ -13,8 +13,8 @@ import { logSecurityEvent } from '@/lib/services/security-logger';
 import AdminLayoutClient from './AdminLayoutClient';
 
 export const metadata = {
-  title: 'Admin Dashboard - Supabase Syncer',
-  description: 'Admin monitoring and management dashboard'
+  title: 'Suparman - Admin Dashboard',
+  description: 'Suparman admin control center - monitoring, testing, and management dashboard'
 };
 
 export default async function AdminLayout({
