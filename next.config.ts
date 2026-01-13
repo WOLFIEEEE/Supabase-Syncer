@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Enable standalone output for Docker/Coolify deployment
@@ -68,4 +69,37 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry configuration options
+const sentryWebpackPluginOptions = {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+  
+  // Suppresses source map uploading logs during build
+  silent: true,
+  
+  // Upload source maps to Sentry
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  
+  // Auth token for source map upload
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  
+  // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
+  tunnelRoute: "/monitoring",
+  
+  // Hides source maps from generated client bundles
+  hideSourceMaps: true,
+  
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
+  
+  // Enables automatic instrumentation of Vercel Cron Monitors
+  automaticVercelMonitors: true,
+};
+
+// Only wrap with Sentry in production or when DSN is configured
+const config = process.env.NEXT_PUBLIC_SENTRY_DSN 
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;
+
+export default config;

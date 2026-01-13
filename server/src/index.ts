@@ -19,6 +19,10 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import { config } from './config.js';
 import { log } from './utils/logger.js';
+import { initSentry, captureException, flush as flushSentry } from './utils/sentry.js';
+
+// Initialize Sentry early
+initSentry();
 import { healthRoutes, closeHealthCheckConnections } from './routes/health.js';
 import { syncRoutes } from './routes/sync.js';
 import { connectionRoutes } from './routes/connections.js';
@@ -132,6 +136,17 @@ async function buildServer() {
       requestId: request.id,
     }, 'Request error');
 
+    // Capture error in Sentry (only for 5xx errors)
+    const statusCode = error.statusCode || 500;
+    if (statusCode >= 500) {
+      captureException(error, {
+        requestId: request.id,
+        method: request.method,
+        url: request.url,
+        userId: (request as unknown as { userId?: string }).userId,
+      });
+    }
+
     // Handle known error types
     if (error.validation) {
       return reply.status(400).send({
@@ -143,7 +158,6 @@ async function buildServer() {
 
     // Don't expose internal errors in production
     const message = config.isProd ? 'Internal server error' : error.message;
-    const statusCode = error.statusCode || 500;
 
     return reply.status(statusCode).send({
       success: false,
@@ -217,7 +231,11 @@ async function gracefulShutdown(signal: string) {
     log.info('Closing queue connections...');
     await closeQueues();
 
-    // 5. Wait a bit for in-flight requests to complete
+    // 5. Flush Sentry events
+    log.info('Flushing Sentry events...');
+    await flushSentry(2000);
+
+    // 6. Wait a bit for in-flight requests to complete
     log.info('Waiting for in-flight requests...');
     await new Promise(resolve => setTimeout(resolve, 5000));
 

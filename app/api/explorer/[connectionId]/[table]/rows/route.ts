@@ -36,13 +36,21 @@ export const GET = async (
       );
     }
     
-    // Forward to backend with encrypted URL
-    const url = new URL(request.url);
-    url.searchParams.set('encryptedUrl', connection.encrypted_url);
+    if (!connection.encrypted_url) {
+      return NextResponse.json(
+        { success: false, error: 'Connection missing encrypted URL' },
+        { status: 400 }
+      );
+    }
     
+    // Forward to backend with encrypted URL in query params
     const proxyHandler = createProxyGET((req) => {
       const url = new URL(req.url);
-      return `/api/explorer/${connectionId}/${table}/rows${url.search}`;
+      // Preserve existing query params
+      const existingParams = url.search;
+      // Add encryptedUrl to the path
+      const separator = existingParams ? '&' : '?';
+      return `/api/explorer/${connectionId}/${table}/rows${existingParams}${separator}encryptedUrl=${encodeURIComponent(connection.encrypted_url)}`;
     });
     
     return proxyHandler(request);

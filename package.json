@@ -34,6 +34,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@react-spring/web": "^10.0.3",
+    "@sentry/nextjs": "^10.33.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
     "bcryptjs": "^3.0.3",
@@ -50,6 +51,7 @@
     "recharts": "^3.6.0",
     "resend": "^6.6.0",
     "uuid": "^13.0.0",
+    "yaml": "^2.8.2",
     "zod": "^4.3.5"
   },
   "devDependencies": {
