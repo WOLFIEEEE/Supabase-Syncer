@@ -21,3 +21,4 @@ COMMENT ON COLUMN connections.last_pinged_at IS 'Timestamp of the last successfu
 
 
 
+
