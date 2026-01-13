@@ -10,7 +10,7 @@ import { getUser } from '@/lib/supabase/server';
 import { createProxyStream } from '@/lib/utils/proxy-handler';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 600; // 10 minutes for streaming
+export const maxDuration = 300; // 5 minutes max (Vercel hobby plan limit)
 
 export async function GET(
   request: NextRequest,
