@@ -41,9 +41,8 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  useRef,
 } from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import MetricCard from '@/components/admin/charts/MetricCard';
 
 interface Connection {
@@ -77,7 +76,7 @@ export default function ConnectionsManagementClient({ adminUser }: ConnectionsMa
   
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
-  const cancelRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null!);  // Non-null assertion for Chakra AlertDialog
 
   const fetchConnections = async () => {
     setLoading(true);

@@ -40,10 +40,10 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  useRef,
   Textarea,
+  FormControl,
 } from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import MetricCard from '@/components/admin/charts/MetricCard';
 
 interface User {
@@ -95,7 +95,7 @@ export default function UserManagementClient({ adminUser }: UserManagementClient
   
   const { isOpen: isDetailsOpen, onOpen: onDetailsOpen, onClose: onDetailsClose } = useDisclosure();
   const { isOpen: isBanOpen, onOpen: onBanOpen, onClose: onBanClose } = useDisclosure();
-  const cancelRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null!);  // Non-null assertion for Chakra AlertDialog
 
   const fetchUsers = async () => {
     setLoading(true);

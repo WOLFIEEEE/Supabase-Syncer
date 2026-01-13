@@ -255,6 +255,38 @@ export interface Database {
           error_message?: string | null;
         };
       };
+      user_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          session_token: string;
+          last_activity: string;
+          created_at: string;
+          expires_at: string;
+          user_agent?: string;
+          ip_address?: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          session_token: string;
+          last_activity?: string;
+          created_at?: string;
+          expires_at: string;
+          user_agent?: string;
+          ip_address?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          session_token?: string;
+          last_activity?: string;
+          created_at?: string;
+          expires_at?: string;
+          user_agent?: string;
+          ip_address?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

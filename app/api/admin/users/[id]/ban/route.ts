@@ -14,12 +14,13 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminCheck = await requireAdmin(request);
     if (adminCheck) return adminCheck;
 
+    const { id } = await params;
     const body = await request.json();
     const { banned, reason } = body;
 
@@ -30,7 +31,7 @@ export async function POST(
       );
     }
 
-    const result = await banUser(params.id, banned, reason);
+    const result = await banUser(id, banned, reason);
 
     if (!result.success) {
       return NextResponse.json(
@@ -47,11 +48,11 @@ export async function POST(
         eventType: banned ? 'suspicious_activity' : 'auth_success',
         severity: banned ? 'high' : 'low',
         userId: user.id,
-        endpoint: `/api/admin/users/${params.id}/ban`,
+        endpoint: `/api/admin/users/${id}/ban`,
         method: 'POST',
         details: {
           action: banned ? 'ban_user' : 'unban_user',
-          targetUserId: params.id,
+          targetUserId: id,
           reason: reason || 'No reason provided',
         },
       }).catch(() => {});
@@ -60,7 +61,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       data: {
-        userId: params.id,
+        userId: id,
         banned: result.banned,
       },
     });

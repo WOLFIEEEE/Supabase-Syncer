@@ -15,13 +15,14 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminCheck = await requireAdmin(request);
     if (adminCheck) return adminCheck;
 
-    const token = await createImpersonationToken(params.id);
+    const { id } = await params;
+    const token = await createImpersonationToken(id);
 
     if (!token) {
       return NextResponse.json(
@@ -38,11 +39,11 @@ export async function POST(
         eventType: 'suspicious_activity',
         severity: 'critical',
         userId: user.id,
-        endpoint: `/api/admin/users/${params.id}/impersonate`,
+        endpoint: `/api/admin/users/${id}/impersonate`,
         method: 'POST',
         details: {
           action: 'impersonate_user',
-          targetUserId: params.id,
+          targetUserId: id,
           impersonationToken: token.substring(0, 20) + '...', // Partial token for logging
         },
       }).catch(() => {});
@@ -51,7 +52,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       data: {
-        userId: params.id,
+        userId: id,
         token,
         // In production, you'd want to return a secure URL or handle this differently
         note: 'This token can be used for impersonation. Store securely.',

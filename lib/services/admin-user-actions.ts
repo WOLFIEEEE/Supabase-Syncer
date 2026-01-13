@@ -11,6 +11,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { supabaseSyncJobStore } from '@/lib/db/supabase-store';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // ============================================================================
 // TYPES
@@ -42,6 +43,20 @@ export interface BanUserResult {
   error?: string;
 }
 
+interface UserSettingsRow {
+  id?: string;
+  user_id: string;
+  settings: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface UserSessionRow {
+  id?: string;
+  user_id: string;
+  last_activity: string;
+}
+
 // ============================================================================
 // USER DETAILS
 // ============================================================================
@@ -51,7 +66,7 @@ export interface BanUserResult {
  */
 export async function getUserDetails(userId: string): Promise<UserDetails | null> {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as SupabaseClient;
 
     // Get user connections
     const connections = await supabaseConnectionStore.getAll(userId);
@@ -65,19 +80,20 @@ export async function getUserDetails(userId: string): Promise<UserDetails | null
       .select('last_activity')
       .eq('user_id', userId)
       .order('last_activity', { ascending: false })
-      .limit(1);
+      .limit(1) as { data: UserSessionRow[] | null };
 
     // Check if user is banned (using user_settings table)
-    const { data: settings } = await supabase
+    const { data: settingsData } = await supabase
       .from('user_settings')
       .select('settings')
       .eq('user_id', userId)
-      .single();
+      .single() as { data: { settings: Record<string, unknown> } | null };
 
-    const isBanned = settings?.settings && 
-      typeof settings.settings === 'object' &&
-      'banned' in (settings.settings as Record<string, unknown>) &&
-      (settings.settings as Record<string, unknown>).banned === true;
+    const settings = settingsData?.settings;
+    const isBanned = settings && 
+      typeof settings === 'object' &&
+      'banned' in settings &&
+      settings.banned === true;
 
     const lastActivity = sessions && sessions.length > 0 
       ? sessions[0].last_activity 
@@ -120,30 +136,29 @@ export async function banUser(
   reason?: string
 ): Promise<BanUserResult> {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as SupabaseClient;
 
     // Get or create user settings
     const { data: existing } = await supabase
       .from('user_settings')
       .select('settings')
       .eq('user_id', userId)
-      .single();
+      .single() as { data: { settings: Record<string, unknown> } | null };
 
-    const currentSettings = existing?.settings as Record<string, unknown> || {};
-    const updatedSettings = {
+    const currentSettings = existing?.settings || {};
+    const updatedSettings: Record<string, unknown> = {
       ...currentSettings,
       banned,
-      bannedAt: banned ? new Date().toISOString() : undefined,
-      banReason: banned ? reason : undefined,
-      unbannedAt: !banned ? new Date().toISOString() : undefined,
     };
-
-    // Remove undefined fields
-    Object.keys(updatedSettings).forEach(key => {
-      if (updatedSettings[key] === undefined) {
-        delete updatedSettings[key];
-      }
-    });
+    
+    if (banned) {
+      updatedSettings.bannedAt = new Date().toISOString();
+      if (reason) updatedSettings.banReason = reason;
+    } else {
+      updatedSettings.unbannedAt = new Date().toISOString();
+      delete updatedSettings.bannedAt;
+      delete updatedSettings.banReason;
+    }
 
     const { error } = await supabase
       .from('user_settings')
@@ -151,7 +166,7 @@ export async function banUser(
         user_id: userId,
         settings: updatedSettings,
         updated_at: new Date().toISOString(),
-      }, {
+      } as UserSettingsRow, {
         onConflict: 'user_id',
       });
 
@@ -183,18 +198,17 @@ export async function banUser(
  */
 export async function isUserBanned(userId: string): Promise<boolean> {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as SupabaseClient;
     
-    const { data: settings } = await supabase
+    const { data: settingsData } = await supabase
       .from('user_settings')
       .select('settings')
       .eq('user_id', userId)
-      .single();
+      .single() as { data: { settings: Record<string, unknown> } | null };
 
-    if (!settings?.settings) return false;
+    if (!settingsData?.settings) return false;
 
-    const settingsObj = settings.settings as Record<string, unknown>;
-    return settingsObj.banned === true;
+    return settingsData.settings.banned === true;
   } catch {
     return false;
   }
@@ -209,7 +223,7 @@ export async function isUserBanned(userId: string): Promise<boolean> {
  */
 export async function forceLogout(userId: string): Promise<boolean> {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as SupabaseClient;
 
     // Delete all user sessions
     const { error } = await supabase
@@ -239,7 +253,7 @@ export async function forceLogout(userId: string): Promise<boolean> {
  */
 export async function createImpersonationToken(userId: string): Promise<string | null> {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as SupabaseClient;
 
     // Create a temporary session for impersonation
     // In production, you'd want to use Supabase admin API or a more secure method
@@ -247,17 +261,28 @@ export async function createImpersonationToken(userId: string): Promise<string |
     
     const token = `impersonate_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Store impersonation record (you might want a separate table for this)
+    // Get existing settings first
+    const { data: existing } = await supabase
+      .from('user_settings')
+      .select('settings')
+      .eq('user_id', userId)
+      .single() as { data: { settings: Record<string, unknown> } | null };
+
+    const currentSettings = existing?.settings || {};
+    const updatedSettings: Record<string, unknown> = {
+      ...currentSettings,
+      impersonationToken: token,
+      impersonationCreatedAt: new Date().toISOString(),
+    };
+
+    // Store impersonation record
     const { error } = await supabase
       .from('user_settings')
       .upsert({
         user_id: userId,
-        settings: {
-          impersonationToken: token,
-          impersonationCreatedAt: new Date().toISOString(),
-        },
+        settings: updatedSettings,
         updated_at: new Date().toISOString(),
-      }, {
+      } as UserSettingsRow, {
         onConflict: 'user_id',
       });
 

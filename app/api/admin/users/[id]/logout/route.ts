@@ -14,13 +14,14 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminCheck = await requireAdmin(request);
     if (adminCheck) return adminCheck;
 
-    const success = await forceLogout(params.id);
+    const { id } = await params;
+    const success = await forceLogout(id);
 
     if (!success) {
       return NextResponse.json(
@@ -37,11 +38,11 @@ export async function POST(
         eventType: 'session_revoked',
         severity: 'medium',
         userId: user.id,
-        endpoint: `/api/admin/users/${params.id}/logout`,
+        endpoint: `/api/admin/users/${id}/logout`,
         method: 'POST',
         details: {
           action: 'force_logout',
-          targetUserId: params.id,
+          targetUserId: id,
         },
       }).catch(() => {});
     }

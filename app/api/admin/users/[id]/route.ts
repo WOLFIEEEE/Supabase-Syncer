@@ -14,13 +14,14 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminCheck = await requireAdmin(request);
     if (adminCheck) return adminCheck;
 
-    const userDetails = await getUserDetails(params.id);
+    const { id } = await params;
+    const userDetails = await getUserDetails(id);
 
     if (!userDetails) {
       return NextResponse.json(
@@ -37,11 +38,11 @@ export async function GET(
         eventType: 'auth_success',
         severity: 'low',
         userId: user.id,
-        endpoint: `/api/admin/users/${params.id}`,
+        endpoint: `/api/admin/users/${id}`,
         method: 'GET',
         details: {
           action: 'view_user_details',
-          targetUserId: params.id,
+          targetUserId: id,
         },
       }).catch(() => {});
     }

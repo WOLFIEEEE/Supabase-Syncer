@@ -14,13 +14,14 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminCheck = await requireAdmin(request);
     if (adminCheck) return adminCheck;
 
-    const connection = await supabaseConnectionStore.getByIdForService(params.id);
+    const { id } = await params;
+    const connection = await supabaseConnectionStore.getByIdForService(id);
     if (!connection) {
       return NextResponse.json(
         { success: false, error: 'Connection not found' },
@@ -33,15 +34,24 @@ export async function POST(
       const decryptedUrl = decrypt(connection.encrypted_url);
       const testResult = await testConnection(decryptedUrl);
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          healthy: testResult.success,
-          version: testResult.version,
-          tableCount: testResult.tableCount,
-          error: testResult.error,
-        },
-      });
+      if (testResult.success) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            healthy: true,
+            version: testResult.version,
+            tableCount: testResult.tableCount,
+          },
+        });
+      } else {
+        return NextResponse.json({
+          success: true,
+          data: {
+            healthy: false,
+            error: testResult.error,
+          },
+        });
+      }
     } catch (error) {
       return NextResponse.json({
         success: false,

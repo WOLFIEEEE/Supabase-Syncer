@@ -9,19 +9,19 @@ import { requireAdmin } from '@/lib/middleware/admin-auth';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { logSecurityEvent } from '@/lib/services/security-logger';
 import { createClient } from '@/lib/supabase/server';
-import { testConnection } from '@/lib/services/drizzle-factory';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminCheck = await requireAdmin(request);
     if (adminCheck) return adminCheck;
 
-    const connection = await supabaseConnectionStore.getByIdForService(params.id);
+    const { id } = await params;
+    const connection = await supabaseConnectionStore.getByIdForService(id);
     
     if (!connection) {
       return NextResponse.json(
@@ -54,16 +54,17 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminCheck = await requireAdmin(request);
     if (adminCheck) return adminCheck;
 
+    const { id } = await params;
     const body = await request.json();
     const { name, environment } = body;
 
-    const connection = await supabaseConnectionStore.getByIdForService(params.id);
+    const connection = await supabaseConnectionStore.getByIdForService(id);
     if (!connection) {
       return NextResponse.json(
         { success: false, error: 'Connection not found' },
@@ -79,7 +80,7 @@ export async function PATCH(
     }
 
     const updated = await supabaseConnectionStore.update(
-      params.id,
+      id,
       connection.user_id,
       updateData
     );
@@ -99,11 +100,11 @@ export async function PATCH(
         eventType: 'auth_success',
         severity: 'low',
         userId: user.id,
-        endpoint: `/api/admin/connections/${params.id}`,
+        endpoint: `/api/admin/connections/${id}`,
         method: 'PATCH',
         details: {
           action: 'update_connection',
-          connectionId: params.id,
+          connectionId: id,
           targetUserId: connection.user_id,
           changes: updateData,
         },
@@ -134,13 +135,14 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminCheck = await requireAdmin(request);
     if (adminCheck) return adminCheck;
 
-    const connection = await supabaseConnectionStore.getByIdForService(params.id);
+    const { id } = await params;
+    const connection = await supabaseConnectionStore.getByIdForService(id);
     if (!connection) {
       return NextResponse.json(
         { success: false, error: 'Connection not found' },
@@ -149,7 +151,7 @@ export async function DELETE(
     }
 
     // Delete connection (admin can delete any connection)
-    const deleted = await supabaseConnectionStore.delete(params.id, connection.user_id);
+    const deleted = await supabaseConnectionStore.delete(id, connection.user_id);
 
     if (!deleted) {
       return NextResponse.json(
@@ -166,11 +168,11 @@ export async function DELETE(
         eventType: 'auth_success',
         severity: 'medium',
         userId: user.id,
-        endpoint: `/api/admin/connections/${params.id}`,
+        endpoint: `/api/admin/connections/${id}`,
         method: 'DELETE',
         details: {
           action: 'delete_connection',
-          connectionId: params.id,
+          connectionId: id,
           targetUserId: connection.user_id,
           connectionName: connection.name,
         },
