@@ -155,7 +155,8 @@ export default function AdminDashboardClient({
   requestId,
 }: AdminDashboardProps) {
   const router = useRouter();
-  const [analytics, setAnalytics] = useState<{ userGrowth?: { data: unknown[] }; syncPerformance?: { data: unknown[] } } | null>(null);
+  type ChartDataPoint = { date: string; value: number; label?: string };
+  const [analytics, setAnalytics] = useState<{ userGrowth?: { data: ChartDataPoint[] }; syncPerformance?: { data: ChartDataPoint[] } } | null>(null);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [lastTestRun, setLastTestRun] = useState<{ passed: number; failed: number; time: string } | null>(null);
 

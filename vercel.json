@@ -1,4 +1,11 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "ignoreCommand": "bash scripts/vercel-ignore.sh",
   "crons": [
     {
       "path": "/api/cron/keep-alive",
@@ -28,5 +35,6 @@
         }
       ]
     }
-  ]
+  ],
+  "rewrites": []
 }

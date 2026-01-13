@@ -1,0 +1,34 @@
+{
+  "name": "supabase-syncer-backend",
+  "watchPaths": [
+    "server/src/**",
+    "server/package.json",
+    "server/package-lock.json",
+    "server/Dockerfile",
+    "server/tsconfig.json",
+    "docker-compose.yaml"
+  ],
+  "ignorePaths": [
+    "app/**",
+    "components/**",
+    "public/**",
+    "lib/**",
+    "types/**",
+    "tests/**",
+    "docs/**",
+    "scripts/**",
+    "supabase/**",
+    "*.md",
+    "vercel.json",
+    "next.config.ts",
+    "tsconfig.json",
+    "package.json",
+    "package-lock.json"
+  ],
+  "buildCommand": "cd server && npm ci && npm run build",
+  "startCommand": "cd server && npm start",
+  "healthCheck": {
+    "path": "/health",
+    "interval": 30
+  }
+}

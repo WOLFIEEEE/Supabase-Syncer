@@ -1,0 +1,61 @@
+# Coolify Ignore File
+# These paths will NOT trigger a backend rebuild
+
+# Frontend app directory
+app/
+
+# Frontend components
+components/
+
+# Public assets
+public/
+
+# Frontend configs
+vercel.json
+next.config.ts
+next-env.d.ts
+postcss.config.mjs
+tailwind.config.ts
+
+# Frontend type definitions
+types/
+
+# Test files
+tests/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation (except server docs)
+docs/
+*.md
+!server/*.md
+
+# Scripts (except server scripts)
+scripts/
+!server/scripts/
+
+# Root config files
+.eslintrc*
+eslint.config.mjs
+jest.config.js
+jest.setup.js
+tsconfig.json
+tsconfig.tsbuildinfo
+
+# Supabase migrations (handled separately)
+supabase/
+
+# IDE and editor
+.vscode/
+.idea/
+.cursor/
+
+# Git
+.git/
+.gitignore
+
+# Environment examples
+*.example
+VERCEL_ENV.example

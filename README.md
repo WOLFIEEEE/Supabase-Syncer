@@ -1,6 +1,22 @@
-# suparbase
+# Suparman
 
 A powerful database synchronization and keep-alive platform for Supabase. Keep your free-tier databases alive and sync data between environments with ease.
+
+## Deployment Status
+
+| Service | Status | Platform |
+|---------|--------|----------|
+| **Frontend** | [![Frontend](https://img.shields.io/badge/Frontend-Live-success?logo=vercel)](https://your-app.vercel.app) | Vercel |
+| **Backend** | [![Backend](https://img.shields.io/badge/Backend-Live-success?logo=docker)](http://csockw8w80ww08gccgo4cs8c.72.61.229.220.sslip.io/health) | Coolify |
+
+<!-- Replace the URLs above with your actual deployment URLs -->
+<!-- 
+For Vercel deployment badge with auto-status:
+![Vercel](https://vercelbadge.vercel.app/api/YOUR_USERNAME/YOUR_REPO)
+
+For custom status endpoint badges:
+![Frontend Status](https://img.shields.io/endpoint?url=https://your-app.vercel.app/api/health)
+-->
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
