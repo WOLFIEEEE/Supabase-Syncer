@@ -36,6 +36,9 @@ const memoryStore = new Map<string, { count: number; resetTime: number }>();
 function getRedisClient(): Redis | null {
   if (redisClient) return redisClient;
   
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rate-limit.ts:36',message:'creating Redis client for rate limiting',data:{redisUrl:config.redisUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   try {
     redisClient = new Redis(config.redisUrl, {
       maxRetriesPerRequest: 1,
@@ -44,6 +47,9 @@ function getRedisClient(): Redis | null {
     });
     
     redisClient.on('error', (err: Error) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rate-limit.ts:47',message:'Redis rate limiter error',data:{error:err.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       logger.warn({ err }, 'Redis rate limiter connection error');
       redisAvailable = false;
     });

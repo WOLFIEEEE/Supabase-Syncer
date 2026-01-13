@@ -97,6 +97,10 @@ function validateConfig(config: Config): void {
   
   // Only fail for critical errors
   if (errors.length > 0) {
+    // #region agent log
+    console.error('[DEBUG] config validation failed:', {errors});
+    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'config.ts:99',message:'config validation failed',data:{errors},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     console.error('Configuration errors:');
     errors.forEach(e => console.error(`  - ${e}`));
     throw new Error(`Configuration validation failed: ${errors.join('; ')}`);
@@ -104,6 +108,9 @@ function validateConfig(config: Config): void {
 }
 
 export function loadConfig(): Config {
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'config.ts:106',message:'loadConfig entry',data:{nodeEnv:process.env.NODE_ENV},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   const nodeEnv = getEnvVar('NODE_ENV', 'development');
   const isDev = nodeEnv === 'development';
   const isProd = nodeEnv === 'production';
@@ -163,7 +170,13 @@ export function loadConfig(): Config {
     allowedOrigins,
   };
   
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'config.ts:165',message:'before validateConfig',data:{hasBackendSecret:!!config.backendSharedSecret,hasEncryptionKey:!!config.encryptionKey,isProd},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   validateConfig(config);
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'config.ts:167',message:'after validateConfig - success',data:{port:config.port,host:config.host},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   
   return config;
 }

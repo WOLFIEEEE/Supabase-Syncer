@@ -171,35 +171,51 @@ export async function cancelSyncJob(jobId: string): Promise<boolean> {
 export function createSyncWorker(
   processor: (job: Job<SyncJobData>) => Promise<void>
 ): Worker<SyncJobData> {
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:171',message:'createSyncWorker entry',data:{redisUrl:config.redisUrl,redisOptions:getRedisOptions()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
   if (syncWorker) {
     logger.warn('Sync worker already exists, returning existing worker');
     return syncWorker;
   }
   
-  syncWorker = new Worker<SyncJobData>('sync-jobs', processor, {
-    connection: getRedisOptions(),
-    concurrency: 2,
-    limiter: {
-      max: 10,
-      duration: 1000,
-    },
-  });
-  
-  syncWorker.on('completed', (job) => {
-    logger.info({ jobId: job.id }, 'Sync job completed');
-  });
-  
-  syncWorker.on('failed', (job, err) => {
-    logger.error({ jobId: job?.id, error: err }, 'Sync job failed');
-  });
-  
-  syncWorker.on('error', (err) => {
-    logger.error({ error: err }, 'Sync worker error');
-  });
-  
-  logger.info('Sync worker started');
-  
-  return syncWorker;
+  try {
+    syncWorker = new Worker<SyncJobData>('sync-jobs', processor, {
+      connection: getRedisOptions(),
+      concurrency: 2,
+      limiter: {
+        max: 10,
+        duration: 1000,
+      },
+    });
+    
+    syncWorker.on('completed', (job) => {
+      logger.info({ jobId: job.id }, 'Sync job completed');
+    });
+    
+    syncWorker.on('failed', (job, err) => {
+      logger.error({ jobId: job?.id, error: err }, 'Sync job failed');
+    });
+    
+    syncWorker.on('error', (err) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:196',message:'sync worker error event',data:{error:err.message,stack:err.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      logger.error({ error: err }, 'Sync worker error');
+    });
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:200',message:'sync worker created successfully',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+    logger.info('Sync worker started');
+    
+    return syncWorker;
+  } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:203',message:'createSyncWorker catch - failed',data:{error:error instanceof Error?error.message:String(error),stack:error instanceof Error?error.stack:undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+    throw error;
+  }
 }
 
 /**

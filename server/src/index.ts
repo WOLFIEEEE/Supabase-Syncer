@@ -228,14 +228,23 @@ declare global {
 }
 
 async function main() {
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:230',message:'main entry',data:{port:config.port,host:config.host,nodeEnv:config.nodeEnv},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
   try {
     log.info('Starting Supabase Syncer Backend...', {
       port: config.port,
       env: config.nodeEnv,
       logLevel: config.logLevel,
     });
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:238',message:'before buildServer',data:{redisUrl:config.redisUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
 
     const server = await buildServer();
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:239',message:'after buildServer - success',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     global.server = server;
 
     // Register shutdown handlers
@@ -244,30 +253,56 @@ async function main() {
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:246',message:'uncaughtException',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       log.fatal('Uncaught exception', error);
       gracefulShutdown('uncaughtException');
     });
 
     process.on('unhandledRejection', (reason) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:251',message:'unhandledRejection',data:{reason:reason instanceof Error?reason.message:String(reason),stack:reason instanceof Error?reason.stack:undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       log.fatal('Unhandled rejection', reason as Error);
       gracefulShutdown('unhandledRejection');
     });
 
     // Start server
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:257',message:'before server.listen',data:{port:config.port,host:config.host},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     await server.listen({
       port: config.port,
       host: config.host,
     });
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:262',message:'after server.listen - success',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
 
     log.info(`Server listening on http://${config.host}:${config.port}`);
     log.info('Health check available at /health');
 
     // Start sync worker (background job processor)
     if (process.env.ENABLE_WORKER !== 'false') {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:266',message:'before startSyncWorker',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       startSyncWorker();
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:268',message:'after startSyncWorker - success',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       log.info('Sync worker started');
     }
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:270',message:'main completed successfully',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'ALL'})}).catch(()=>{});
+    // #endregion
   } catch (error) {
+    // #region agent log
+    const errorData = {error:error instanceof Error?error.message:String(error),stack:error instanceof Error?error.stack:undefined};
+    console.error('[DEBUG] main catch - fatal error:', errorData);
+    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:271',message:'main catch - fatal error',data:errorData,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     log.fatal('Failed to start server', error as Error);
     process.exit(1);
   }
