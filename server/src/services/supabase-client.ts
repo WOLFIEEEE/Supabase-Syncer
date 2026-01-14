@@ -265,20 +265,31 @@ export async function getKeepAliveConnections(): Promise<{
 export async function updateConnectionLastPinged(connectionId: string): Promise<boolean> {
   try {
     const supabase = getSupabaseClient();
+    const timestamp = new Date().toISOString();
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('connections')
-      .update({ last_pinged_at: new Date().toISOString() })
-      .eq('id', connectionId);
+      .update({ last_pinged_at: timestamp })
+      .eq('id', connectionId)
+      .select('id, last_pinged_at')
+      .single();
     
     if (error) {
-      logger.warn({ error, connectionId }, 'Failed to update last_pinged_at');
+      logger.warn({ error, connectionId, timestamp }, 'Failed to update last_pinged_at');
       return false;
     }
     
-    return true;
+    // Verify the update was successful
+    if (data && data.last_pinged_at) {
+      logger.debug({ connectionId, lastPingedAt: data.last_pinged_at }, 
+        'Successfully updated last_pinged_at');
+      return true;
+    } else {
+      logger.warn({ connectionId }, 'Update returned no data - update may have failed');
+      return false;
+    }
   } catch (error) {
-    logger.warn({ error, connectionId }, 'Failed to update last_pinged_at');
+    logger.warn({ error, connectionId }, 'Exception while updating last_pinged_at');
     return false;
   }
 }

@@ -90,7 +90,14 @@ async function runKeepAliveCycle(): Promise<void> {
           stats.successful++;
           
           // Update last_pinged_at timestamp
-          await updateConnectionLastPinged(connection.id);
+          const updateSuccess = await updateConnectionLastPinged(connection.id);
+          if (!updateSuccess) {
+            logger.warn({ connectionId: connection.id, connectionName: connection.name }, 
+              'Ping succeeded but failed to update last_pinged_at timestamp');
+          } else {
+            logger.debug({ connectionId: connection.id, connectionName: connection.name }, 
+              'Successfully updated last_pinged_at timestamp');
+          }
         } else {
           stats.failed++;
         }
@@ -201,7 +208,16 @@ export async function triggerKeepAliveCycle(): Promise<KeepAliveStats> {
       
       if (result.success) {
         stats.successful++;
-        await updateConnectionLastPinged(connection.id);
+        
+        // Update last_pinged_at timestamp
+        const updateSuccess = await updateConnectionLastPinged(connection.id);
+        if (!updateSuccess) {
+          logger.warn({ connectionId: connection.id, connectionName: connection.name }, 
+            'Ping succeeded but failed to update last_pinged_at timestamp');
+        } else {
+          logger.debug({ connectionId: connection.id, connectionName: connection.name }, 
+            'Successfully updated last_pinged_at timestamp');
+        }
       } else {
         stats.failed++;
       }

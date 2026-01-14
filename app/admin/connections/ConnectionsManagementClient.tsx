@@ -247,16 +247,22 @@ export default function ConnectionsManagementClient({ adminUser }: ConnectionsMa
       const result = await response.json();
       
       if (result.success) {
+        const isAlive = result.data?.alive;
         toast({
           title: 'Keep-Alive Ping',
-          description: result.data.alive 
+          description: isAlive
             ? `Ping successful! Duration: ${result.data.duration}`
-            : `Ping failed: ${result.data.error || 'Unknown error'}`,
-          status: result.data.alive ? 'success' : 'error',
+            : `Ping failed: ${result.data?.error || 'Unknown error'}`,
+          status: isAlive ? 'success' : 'error',
           duration: 5000,
         });
         // Refresh connections to update lastPingedAt
-        fetchConnections();
+        // Add small delay to ensure database update has propagated
+        if (isAlive) {
+          setTimeout(() => {
+            fetchConnections();
+          }, 500);
+        }
       } else {
         toast({
           title: 'Error',

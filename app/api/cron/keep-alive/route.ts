@@ -96,7 +96,13 @@ export async function GET(request: NextRequest) {
         stats.successful++;
         
         // Update last_pinged_at timestamp
-        await supabaseConnectionStore.updateLastPinged(connection.id);
+        try {
+          await supabaseConnectionStore.updateLastPinged(connection.id);
+          console.log(`[Keep Alive Cron] ✅ Updated last_pinged_at for "${connection.name}"`);
+        } catch (error) {
+          console.error(`[Keep Alive Cron] ⚠️ Failed to update last_pinged_at for "${connection.name}":`, error);
+          // Don't fail the ping - logging is more important than timestamp update
+        }
       } else {
         stats.failed++;
       }
@@ -171,7 +177,13 @@ export async function POST(request: NextRequest) {
     
     if (result.success) {
       // Update last_pinged_at timestamp
-      await supabaseConnectionStore.updateLastPinged(connection.id);
+      try {
+        await supabaseConnectionStore.updateLastPinged(connection.id);
+        console.log(`[Keep Alive] ✅ Updated last_pinged_at for "${connection.name}"`);
+      } catch (error) {
+        console.error(`[Keep Alive] ⚠️ Failed to update last_pinged_at for "${connection.name}":`, error);
+        // Don't fail the ping - logging is more important than timestamp update
+      }
     }
     
     return NextResponse.json({

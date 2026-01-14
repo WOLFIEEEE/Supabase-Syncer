@@ -31,9 +31,8 @@ export async function POST(
     }
 
     // Forward to backend keep-alive endpoint
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
     const { createProxyPOST } = await import('@/lib/utils/proxy-handler');
-    const proxyHandler = createProxyPOST((req) => `/api/connections/${id}/keep-alive`);
+    const proxyHandler = createProxyPOST(() => `/api/connections/${id}/keep-alive`);
     
     const modifiedRequest = new NextRequest(request.url, {
       method: 'POST',
@@ -45,6 +44,16 @@ export async function POST(
     
     const response = await proxyHandler(modifiedRequest);
     const result = await response.json();
+
+    // Update last_pinged_at if ping was successful
+    if (result.success && result.data?.alive) {
+      try {
+        await supabaseConnectionStore.updateLastPinged(id);
+      } catch (error) {
+        console.error('[ADMIN_CONNECTIONS] Failed to update last_pinged_at:', error);
+        // Don't fail the request if update fails, but log it
+      }
+    }
 
     // Log admin action
     const supabase = await createClient();
