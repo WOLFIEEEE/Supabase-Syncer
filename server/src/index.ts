@@ -31,6 +31,7 @@ import { explorerRoutes } from './routes/explorer.js';
 import { registerRateLimiting, closeRateLimitConnections } from './middleware/rate-limit.js';
 import { closeQueues } from './queue/client.js';
 import { startSyncWorker } from './queue/worker.js';
+import { startScheduledJobs, stopScheduledJobs } from './services/scheduled-jobs.js';
 
 // Track shutdown state
 let isShuttingDown = false;
@@ -227,15 +228,19 @@ async function gracefulShutdown(signal: string) {
     log.info('Closing rate limit connections...');
     await closeRateLimitConnections();
 
-    // 4. Close queue connections
+    // 4. Stop scheduled jobs
+    log.info('Stopping scheduled jobs...');
+    stopScheduledJobs();
+
+    // 5. Close queue connections
     log.info('Closing queue connections...');
     await closeQueues();
 
-    // 5. Flush Sentry events
+    // 6. Flush Sentry events
     log.info('Flushing Sentry events...');
     await flushSentry(2000);
 
-    // 6. Wait a bit for in-flight requests to complete
+    // 7. Wait a bit for in-flight requests to complete
     log.info('Waiting for in-flight requests...');
     await new Promise(resolve => setTimeout(resolve, 5000));
 
@@ -321,6 +326,12 @@ async function main() {
       fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:268',message:'after startSyncWorker - success',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
       // #endregion
       log.info('Sync worker started');
+    }
+
+    // Start scheduled jobs (keep-alive, etc.)
+    if (process.env.ENABLE_SCHEDULED_JOBS !== 'false') {
+      startScheduledJobs();
+      log.info('Scheduled jobs started');
     }
     // #region agent log
     fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.ts:270',message:'main completed successfully',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'ALL'})}).catch(()=>{});

@@ -18,6 +18,8 @@ import {
   getSyncableTables,
 } from '../services/drizzle-factory.js';
 import { decrypt } from '../services/encryption.js';
+import { pingDatabase, logPingResult, updateLastPinged } from '../services/keep-alive.js';
+import { getConnectionById } from '../services/supabase-client.js';
 
 // Route params
 interface ConnectionParams {
@@ -203,7 +205,6 @@ export async function connectionRoutes(fastify: FastifyInstance) {
       const { id } = request.params;
       const { encryptedUrl } = request.body;
       const userId = request.userId!;
-      const startTime = Date.now();
       
       logger.debug({ userId, connectionId: id }, 'Keep-alive ping');
       
@@ -215,34 +216,39 @@ export async function connectionRoutes(fastify: FastifyInstance) {
       }
       
       try {
-        const databaseUrl = decrypt(encryptedUrl);
-        const result = await testConnection(databaseUrl);
-        const duration = Date.now() - startTime;
+        // Get connection details for logging
+        const connection = await getConnectionById(id, userId);
+        const connectionName = connection?.name || id;
         
-        // TODO: Update last_pinged_at in Supabase if needed
-        // This could be done via a Supabase client service
+        // Use the proper keep-alive service
+        const result = await pingDatabase(id, connectionName, encryptedUrl);
+        
+        // Log the ping result to history
+        await logPingResult(result);
+        
+        // Update last_pinged_at if successful
+        if (result.success) {
+          await updateLastPinged(id);
+        }
         
         return reply.send({
           success: result.success,
           data: {
             alive: result.success,
-            duration: `${duration}ms`,
-            version: result.success ? result.version : undefined,
-            tableCount: result.success ? result.tableCount : undefined,
-            error: result.success ? undefined : result.error,
-            timestamp: new Date().toISOString(),
+            duration: `${result.duration}ms`,
+            error: result.error,
+            timestamp: result.timestamp.toISOString(),
           },
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Keep-alive failed';
-        const duration = Date.now() - startTime;
         logger.warn({ error, userId, connectionId: id }, 'Keep-alive failed');
         
         return reply.send({
           success: false,
           data: {
             alive: false,
-            duration: `${duration}ms`,
+            duration: '0ms',
             error: message,
             timestamp: new Date().toISOString(),
           },

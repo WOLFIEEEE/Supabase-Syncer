@@ -72,6 +72,7 @@ export default function ConnectionsManagementClient({ adminUser }: ConnectionsMa
   const [total, setTotal] = useState(0);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
+  const [pingingConnection, setPingingConnection] = useState<string | null>(null);
   const toast = useToast();
   
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
@@ -233,6 +234,44 @@ export default function ConnectionsManagementClient({ adminUser }: ConnectionsMa
       });
     } finally {
       setTestingConnection(null);
+    }
+  };
+
+  const handlePingConnection = async (connectionId: string) => {
+    setPingingConnection(connectionId);
+    try {
+      const response = await fetch(`/api/admin/connections/${connectionId}/keep-alive`, {
+        method: 'POST',
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        toast({
+          title: 'Keep-Alive Ping',
+          description: result.data.alive 
+            ? `Ping successful! Duration: ${result.data.duration}`
+            : `Ping failed: ${result.data.error || 'Unknown error'}`,
+          status: result.data.alive ? 'success' : 'error',
+          duration: 5000,
+        });
+        // Refresh connections to update lastPingedAt
+        fetchConnections();
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to ping connection',
+          status: 'error',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to ping connection',
+        status: 'error',
+      });
+    } finally {
+      setPingingConnection(null);
     }
   };
 
@@ -425,6 +464,15 @@ export default function ConnectionsManagementClient({ adminUser }: ConnectionsMa
                             isDisabled={testingConnection === connection.id}
                           >
                             {testingConnection === connection.id ? 'Testing...' : 'Test Connection'}
+                          </MenuItem>
+                          <MenuItem 
+                            bg="surface.800" 
+                            _hover={{ bg: 'surface.700' }} 
+                            color="teal.400"
+                            onClick={() => handlePingConnection(connection.id)}
+                            isDisabled={pingingConnection === connection.id}
+                          >
+                            {pingingConnection === connection.id ? 'Pinging...' : 'Ping Keep-Alive'}
                           </MenuItem>
                           <MenuItem 
                             bg="surface.800" 

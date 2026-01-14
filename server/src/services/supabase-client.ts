@@ -228,3 +228,58 @@ export async function addSyncLog(
   }
 }
 
+/**
+ * Get all connections with keep_alive enabled (for service/cron use)
+ * This is used by the backend keep-alive scheduler
+ */
+export async function getKeepAliveConnections(): Promise<{
+  id: string;
+  name: string;
+  encrypted_url: string;
+  keep_alive: boolean;
+  last_pinged_at: string | null;
+}[]> {
+  try {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase
+      .from('connections')
+      .select('id, name, encrypted_url, keep_alive, last_pinged_at')
+      .eq('keep_alive', true);
+    
+    if (error) {
+      logger.error({ error }, 'Error fetching keep-alive connections');
+      return [];
+    }
+    
+    return (data || []) as any;
+  } catch (error) {
+    logger.error({ error }, 'Failed to get keep-alive connections');
+    return [];
+  }
+}
+
+/**
+ * Update last_pinged_at for a connection
+ */
+export async function updateConnectionLastPinged(connectionId: string): Promise<boolean> {
+  try {
+    const supabase = getSupabaseClient();
+    
+    const { error } = await supabase
+      .from('connections')
+      .update({ last_pinged_at: new Date().toISOString() })
+      .eq('id', connectionId);
+    
+    if (error) {
+      logger.warn({ error, connectionId }, 'Failed to update last_pinged_at');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    logger.warn({ error, connectionId }, 'Failed to update last_pinged_at');
+    return false;
+  }
+}
+

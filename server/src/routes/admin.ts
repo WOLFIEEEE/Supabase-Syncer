@@ -13,6 +13,7 @@ import { adminAuthMiddleware } from '../middleware/auth.js';
 import { createRateLimitMiddleware } from '../middleware/rate-limit.js';
 import { logger } from '../utils/logger.js';
 import { getSupabaseClient } from '../services/supabase-client.js';
+import { triggerKeepAliveCycle } from '../services/scheduled-jobs.js';
 
 // Query params
 interface PaginationQuery {
@@ -291,6 +292,35 @@ export async function adminRoutes(fastify: FastifyInstance) {
           createdAt: new Date().toISOString(),
         },
       });
+    }
+  );
+
+  // POST /api/admin/keep-alive/trigger - Manually trigger keep-alive cycle
+  fastify.post(
+    '/keep-alive/trigger',
+    { preHandler: createRateLimitMiddleware('admin') },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const userId = request.userId;
+      
+      logger.info({ userId }, 'Manual keep-alive trigger requested');
+      
+      try {
+        const stats = await triggerKeepAliveCycle();
+        
+        return reply.send({
+          success: true,
+          message: `Keep-alive cycle completed: ${stats.successful}/${stats.totalPinged} successful, ${stats.failed} failed, ${stats.skipped} skipped`,
+          stats,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to trigger keep-alive';
+        logger.error({ error, userId }, 'Failed to trigger keep-alive');
+        
+        return reply.status(500).send({
+          success: false,
+          error: message,
+        });
+      }
     }
   );
 }
