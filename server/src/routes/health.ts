@@ -39,11 +39,29 @@ let redisClient: Redis | null = null;
 
 function getRedisClient(): Redis {
   if (!redisClient) {
-    redisClient = new Redis(config.redisUrl, {
-      maxRetriesPerRequest: 1,
-      connectTimeout: 5000,
-      lazyConnect: true,
-    });
+    // Parse the Redis URL to handle TLS connections properly
+    try {
+      const url = new URL(config.redisUrl);
+      const isTls = url.protocol === 'rediss:';
+
+      redisClient = new Redis({
+        host: url.hostname,
+        port: parseInt(url.port || '6379', 10),
+        password: url.password || undefined,
+        tls: isTls ? { rejectUnauthorized: false } : undefined,
+        maxRetriesPerRequest: 1,
+        connectTimeout: 5000,
+        lazyConnect: true,
+      });
+    } catch (error) {
+      // Fallback to simple URL string if parsing fails
+      logger.warn({ error }, 'Failed to parse Redis URL, using direct connection');
+      redisClient = new Redis(config.redisUrl, {
+        maxRetriesPerRequest: 1,
+        connectTimeout: 5000,
+        lazyConnect: true,
+      });
+    }
   }
   return redisClient;
 }
@@ -68,7 +86,7 @@ async function checkRedis(): Promise<HealthCheckResult> {
 
 async function checkDatabase(): Promise<HealthCheckResult> {
   const start = Date.now();
-  
+
   // If no database URL configured, report as not configured (but not down)
   if (!config.databaseUrl) {
     return {
@@ -77,7 +95,7 @@ async function checkDatabase(): Promise<HealthCheckResult> {
       details: { configured: false, message: 'Using Supabase directly' },
     };
   }
-  
+
   try {
     // Dynamic import to avoid loading postgres if not needed
     const postgres = await import('postgres');
@@ -86,10 +104,10 @@ async function checkDatabase(): Promise<HealthCheckResult> {
       idle_timeout: 5,
       connect_timeout: 5,
     });
-    
+
     await sql`SELECT 1`;
     await sql.end();
-    
+
     return {
       status: 'up',
       latency: Date.now() - start,
@@ -107,11 +125,11 @@ async function checkQueue(): Promise<HealthCheckResult> {
   const start = Date.now();
   try {
     const redis = getRedisClient();
-    
+
     // Check queue metrics
     const waitingCount = await redis.llen('bull:sync-jobs:wait') || 0;
     const activeCount = await redis.llen('bull:sync-jobs:active') || 0;
-    
+
     return {
       status: 'up',
       latency: Date.now() - start,
@@ -137,16 +155,16 @@ export async function healthRoutes(fastify: FastifyInstance) {
       checkDatabase(),
       checkQueue(),
     ]);
-    
+
     // Determine overall status
     let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    
+
     if (redisCheck.status === 'down') {
       status = 'unhealthy'; // Redis is critical
     } else if (dbCheck.status === 'down') {
       status = 'degraded'; // Database issues are degraded if Redis is up
     }
-    
+
     const response: HealthResponse = {
       status,
       version: process.env.npm_package_version || '1.0.0',
@@ -158,18 +176,18 @@ export async function healthRoutes(fastify: FastifyInstance) {
         queue: queueCheck,
       },
     };
-    
+
     const statusCode = status === 'unhealthy' ? 503 : 200;
     return reply.status(statusCode).send(response);
   });
-  
+
   // Liveness probe - just checks if process is running
   fastify.get('/health/live', async (_request: FastifyRequest, reply: FastifyReply) => {
     const memUsage = process.memoryUsage();
     const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
     const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
     const usagePercent = Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100);
-    
+
     // Log memory usage if it's high (but don't fail the health check)
     if (usagePercent > 90) {
       logger.warn({
@@ -179,7 +197,7 @@ export async function healthRoutes(fastify: FastifyInstance) {
         usagePercent,
       }, 'High memory usage detected in health check');
     }
-    
+
     return reply.status(200).send({
       status: 'alive',
       timestamp: new Date().toISOString(),
@@ -190,13 +208,13 @@ export async function healthRoutes(fastify: FastifyInstance) {
       },
     });
   });
-  
+
   // Readiness probe - checks if ready to accept traffic
   fastify.get('/health/ready', async (_request: FastifyRequest, reply: FastifyReply) => {
     try {
       // Check Redis (critical for rate limiting and queues)
       const redisCheck = await checkRedis();
-      
+
       if (redisCheck.status === 'down') {
         logger.warn('Readiness check failed: Redis is down');
         return reply.status(503).send({
@@ -205,7 +223,7 @@ export async function healthRoutes(fastify: FastifyInstance) {
           timestamp: new Date().toISOString(),
         });
       }
-      
+
       return reply.status(200).send({
         status: 'ready',
         timestamp: new Date().toISOString(),

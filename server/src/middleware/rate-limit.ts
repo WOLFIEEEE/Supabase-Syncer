@@ -35,29 +35,31 @@ const memoryStore = new Map<string, { count: number; resetTime: number }>();
 
 function getRedisClient(): Redis | null {
   if (redisClient) return redisClient;
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rate-limit.ts:36',message:'creating Redis client for rate limiting',data:{redisUrl:config.redisUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
+
   try {
-    redisClient = new Redis(config.redisUrl, {
+    // Parse the Redis URL to handle TLS connections properly
+    const url = new URL(config.redisUrl);
+    const isTls = url.protocol === 'rediss:';
+
+    redisClient = new Redis({
+      host: url.hostname,
+      port: parseInt(url.port || '6379', 10),
+      password: url.password || undefined,
+      tls: isTls ? { rejectUnauthorized: false } : undefined,
       maxRetriesPerRequest: 1,
       connectTimeout: 3000,
       lazyConnect: true,
     });
-    
+
     redisClient.on('error', (err: Error) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rate-limit.ts:47',message:'Redis rate limiter error',data:{error:err.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       logger.warn({ err }, 'Redis rate limiter connection error');
       redisAvailable = false;
     });
-    
+
     redisClient.on('ready', () => {
       redisAvailable = true;
     });
-    
+
     return redisClient;
   } catch (error) {
     logger.warn({ error }, 'Failed to create Redis client for rate limiting');
@@ -122,7 +124,7 @@ async function checkRateLimit(
 ): Promise<RateLimitResult> {
   const limits = RATE_LIMITS[type];
   const key = `ratelimit:${type}:${userId}`;
-  
+
   // Try Redis first
   if (redisAvailable) {
     const client = getRedisClient();
@@ -131,7 +133,7 @@ async function checkRateLimit(
         const sha = await loadScript(client);
         const now = Date.now();
         const uniqueId = `${now}-${Math.random().toString(36).substr(2, 9)}`;
-        
+
         const result = await client.evalsha(
           sha,
           1,
@@ -141,7 +143,7 @@ async function checkRateLimit(
           limits.max.toString(),
           uniqueId
         ) as [number, number, number];
-        
+
         return {
           allowed: result[0] === 1,
           remaining: result[1],
@@ -157,7 +159,7 @@ async function checkRateLimit(
       }
     }
   }
-  
+
   // Fallback to in-memory
   return checkMemoryRateLimit(key, limits.max, limits.window);
 }
@@ -169,12 +171,12 @@ function checkMemoryRateLimit(
 ): RateLimitResult {
   const now = Date.now();
   const entry = memoryStore.get(key);
-  
+
   // Clean up expired entries periodically
   if (Math.random() < 0.01) {
     cleanupMemoryStore();
   }
-  
+
   if (!entry || now > entry.resetTime) {
     // New window
     memoryStore.set(key, { count: 1, resetTime: now + window });
@@ -186,7 +188,7 @@ function checkMemoryRateLimit(
       source: 'memory',
     };
   }
-  
+
   if (entry.count < max) {
     entry.count++;
     return {
@@ -197,7 +199,7 @@ function checkMemoryRateLimit(
       source: 'memory',
     };
   }
-  
+
   // Rate limited
   const retryAfter = Math.ceil((entry.resetTime - now) / 1000);
   return {
@@ -247,25 +249,25 @@ export function createRateLimitMiddleware(type: RateLimitType) {
   ): Promise<void> {
     // Get user ID from request (set by auth middleware)
     const userId = request.userId || request.headers['x-user-id'] as string || 'anonymous';
-    
+
     const result = await checkRateLimit(userId, type);
-    
+
     // Set rate limit headers
     const headers = createRateLimitHeaders(result);
     for (const [key, value] of Object.entries(headers)) {
       reply.header(key, value);
     }
-    
+
     if (!result.allowed) {
       reply.header('Retry-After', result.retryAfter.toString());
-      
+
       logger.warn({
         userId,
         type,
         retryAfter: result.retryAfter,
         source: result.source,
       }, 'Rate limit exceeded');
-      
+
       return reply.status(429).send({
         success: false,
         error: 'Too many requests',
@@ -282,11 +284,11 @@ export function createRateLimitMiddleware(type: RateLimitType) {
 export async function registerRateLimiting(fastify: FastifyInstance): Promise<void> {
   // Initialize Redis client
   getRedisClient();
-  
+
   // Add decorator to set rate limit type on routes
   fastify.decorateRequest('rateLimitType', undefined);
   fastify.decorateRequest('userId', undefined);
-  
+
   logger.info('Rate limiting middleware registered');
 }
 

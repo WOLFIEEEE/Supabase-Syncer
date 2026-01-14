@@ -10,11 +10,31 @@ import { logger } from '../utils/logger.js';
 import type { SyncJobData } from '../types/index.js';
 
 // Redis connection options for BullMQ
-const getRedisOptions = () => ({
-  host: new URL(config.redisUrl).hostname || 'localhost',
-  port: parseInt(new URL(config.redisUrl).port || '6379', 10),
-  maxRetriesPerRequest: null as null,
-});
+// Properly handles rediss:// (TLS) URLs with authentication
+const getRedisOptions = () => {
+  try {
+    const url = new URL(config.redisUrl);
+    const isTls = url.protocol === 'rediss:';
+
+    return {
+      host: url.hostname || 'localhost',
+      port: parseInt(url.port || '6379', 10),
+      password: url.password || undefined,
+      tls: isTls ? { rejectUnauthorized: false } : undefined,
+      maxRetriesPerRequest: null as null,
+      enableReadyCheck: false,
+      lazyConnect: true,
+    };
+  } catch (error) {
+    // Fallback for simple redis:// URLs or localhost
+    logger.warn({ error }, 'Failed to parse Redis URL, using defaults');
+    return {
+      host: 'localhost',
+      port: 6379,
+      maxRetriesPerRequest: null as null,
+    };
+  }
+};
 
 // Singleton instances
 let syncQueue: Queue<SyncJobData> | null = null;
@@ -42,7 +62,7 @@ export function getSyncQueue(): Queue<SyncJobData> {
         },
       },
     });
-    
+
     logger.info('Sync queue initialized');
   }
   return syncQueue;
@@ -65,9 +85,9 @@ export function getQueueEvents(): QueueEvents {
  */
 export async function addSyncJob(data: SyncJobData): Promise<Job<SyncJobData>> {
   const queue = getSyncQueue();
-  
+
   logger.info({ jobId: data.jobId, userId: data.userId }, 'Adding sync job to queue');
-  
+
   return queue.add('sync', data, {
     jobId: data.jobId,
     priority: 1,
@@ -84,15 +104,15 @@ export async function getJobStatus(jobId: string): Promise<{
 } | null> {
   const queue = getSyncQueue();
   const job = await queue.getJob(jobId);
-  
+
   if (!job) {
     return null;
   }
-  
+
   const state = await job.getState();
   const progress = job.progress as number | object | null;
   const failedReason = job.failedReason;
-  
+
   return {
     state,
     progress,
@@ -106,16 +126,16 @@ export async function getJobStatus(jobId: string): Promise<{
 export async function pauseSyncJob(jobId: string): Promise<boolean> {
   const queue = getSyncQueue();
   const job = await queue.getJob(jobId);
-  
+
   if (!job) {
     return false;
   }
-  
+
   await job.updateData({
     ...job.data,
     checkpoint: { ...job.data.checkpoint, paused: true } as SyncJobData['checkpoint'],
   });
-  
+
   return true;
 }
 
@@ -124,12 +144,12 @@ export async function pauseSyncJob(jobId: string): Promise<boolean> {
  */
 export async function resumeSyncJob(data: SyncJobData): Promise<Job<SyncJobData>> {
   const queue = getSyncQueue();
-  
+
   const existingJob = await queue.getJob(data.jobId);
   if (existingJob) {
     await existingJob.remove();
   }
-  
+
   return queue.add('sync', data, {
     jobId: `${data.jobId}-resumed-${Date.now()}`,
     priority: 1,
@@ -142,13 +162,13 @@ export async function resumeSyncJob(data: SyncJobData): Promise<Job<SyncJobData>
 export async function cancelSyncJob(jobId: string): Promise<boolean> {
   const queue = getSyncQueue();
   const job = await queue.getJob(jobId);
-  
+
   if (!job) {
     return false;
   }
-  
+
   const state = await job.getState();
-  
+
   if (state === 'active') {
     await job.updateData({
       ...job.data,
@@ -156,12 +176,12 @@ export async function cancelSyncJob(jobId: string): Promise<boolean> {
     });
     return true;
   }
-  
+
   if (state === 'waiting' || state === 'delayed') {
     await job.remove();
     return true;
   }
-  
+
   return false;
 }
 
@@ -171,14 +191,11 @@ export async function cancelSyncJob(jobId: string): Promise<boolean> {
 export function createSyncWorker(
   processor: (job: Job<SyncJobData>) => Promise<void>
 ): Worker<SyncJobData> {
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:171',message:'createSyncWorker entry',data:{redisUrl:config.redisUrl,redisOptions:getRedisOptions()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-  // #endregion
   if (syncWorker) {
     logger.warn('Sync worker already exists, returning existing worker');
     return syncWorker;
   }
-  
+
   try {
     syncWorker = new Worker<SyncJobData>('sync-jobs', processor, {
       connection: getRedisOptions(),
@@ -188,32 +205,23 @@ export function createSyncWorker(
         duration: 1000,
       },
     });
-    
+
     syncWorker.on('completed', (job) => {
       logger.info({ jobId: job.id }, 'Sync job completed');
     });
-    
+
     syncWorker.on('failed', (job, err) => {
       logger.error({ jobId: job?.id, error: err }, 'Sync job failed');
     });
-    
+
     syncWorker.on('error', (err) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:196',message:'sync worker error event',data:{error:err.message,stack:err.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       logger.error({ error: err }, 'Sync worker error');
     });
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:200',message:'sync worker created successfully',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
+
     logger.info('Sync worker started');
-    
+
     return syncWorker;
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/dc998fd8-2859-44c1-bc48-bc4cedaa2ded',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:203',message:'createSyncWorker catch - failed',data:{error:error instanceof Error?error.message:String(error),stack:error instanceof Error?error.stack:undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     throw error;
   }
 }
@@ -230,28 +238,28 @@ export function getWorker(): Worker<SyncJobData> | null {
  */
 export async function closeQueues(): Promise<void> {
   const closePromises: Promise<void>[] = [];
-  
+
   if (syncWorker) {
     logger.info('Closing sync worker...');
     closePromises.push(syncWorker.close().then(() => {
       syncWorker = null;
     }));
   }
-  
+
   if (syncQueue) {
     logger.info('Closing sync queue...');
     closePromises.push(syncQueue.close().then(() => {
       syncQueue = null;
     }));
   }
-  
+
   if (queueEvents) {
     logger.info('Closing queue events...');
     closePromises.push(queueEvents.close().then(() => {
       queueEvents = null;
     }));
   }
-  
+
   await Promise.all(closePromises);
   logger.info('All queue connections closed');
 }
