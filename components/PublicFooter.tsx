@@ -19,9 +19,9 @@ export default function PublicFooter() {
   const router = useRouter();
 
   return (
-    <Box 
+    <Box
       position="relative"
-      borderTop="1px solid" 
+      borderTop="1px solid"
       borderColor="rgba(255,255,255,0.05)"
       bg="rgba(0,0,0,0.3)"
       backdropFilter="blur(20px)"
@@ -30,8 +30,8 @@ export default function PublicFooter() {
       <Container maxW="7xl" py={{ base: 10, md: 12 }} position="relative" px={{ base: 4, md: 6 }}>
         <VStack spacing={{ base: 8, md: 10 }} align="stretch">
           {/* Main Footer Content */}
-          <Grid 
-            templateColumns={{ base: '1fr', sm: '1fr', md: '2fr 1fr 1fr 1fr' }} 
+          <Grid
+            templateColumns={{ base: '1fr', sm: '1fr', md: '2fr 1fr 1fr 1fr' }}
             gap={{ base: 8, md: 12 }}
           >
             {/* Brand Column */}
@@ -44,9 +44,9 @@ export default function PublicFooter() {
                   <SuparbaseLogo size="2xl" showText={true} variant="full" />
                 </Box>
               </Box>
-              <Text 
-                color="surface.500" 
-                fontSize={{ base: 'xs', md: 'sm' }} 
+              <Text
+                color="surface.500"
+                fontSize={{ base: 'xs', md: 'sm' }}
                 maxW="xs"
                 textAlign={{ base: 'center', md: 'left' }}
                 lineHeight="1.6"
@@ -57,10 +57,10 @@ export default function PublicFooter() {
 
             {/* Product Column */}
             <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
-              <Text 
-                fontSize="xs" 
-                fontWeight="600" 
-                color="surface.300" 
+              <Text
+                fontSize="xs"
+                fontWeight="600"
+                color="surface.300"
                 letterSpacing="0.05em"
                 textTransform="uppercase"
               >
@@ -81,7 +81,7 @@ export default function PublicFooter() {
                     color="surface.500"
                     fontSize="sm"
                     fontWeight="400"
-                    _hover={{ 
+                    _hover={{
                       color: 'white',
                     }}
                     onClick={() => router.push(link.path)}
@@ -95,10 +95,10 @@ export default function PublicFooter() {
 
             {/* Learn Column */}
             <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
-              <Text 
-                fontSize="xs" 
-                fontWeight="600" 
-                color="surface.300" 
+              <Text
+                fontSize="xs"
+                fontWeight="600"
+                color="surface.300"
                 letterSpacing="0.05em"
                 textTransform="uppercase"
               >
@@ -123,7 +123,7 @@ export default function PublicFooter() {
                     color="surface.500"
                     fontSize="sm"
                     fontWeight="400"
-                    _hover={{ 
+                    _hover={{
                       color: 'white',
                     }}
                     onClick={() => router.push(link.path)}
@@ -137,10 +137,10 @@ export default function PublicFooter() {
 
             {/* Company & Legal Column */}
             <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
-              <Text 
-                fontSize="xs" 
-                fontWeight="600" 
-                color="surface.300" 
+              <Text
+                fontSize="xs"
+                fontWeight="600"
+                color="surface.300"
                 letterSpacing="0.05em"
                 textTransform="uppercase"
               >
@@ -151,7 +151,8 @@ export default function PublicFooter() {
                   { label: 'About', path: '/about' },
                   { label: 'Contact', path: '/contact' },
                   { label: 'Privacy', path: '/privacy' },
-                  { label: 'Terms', path: '/terms' }
+                  { label: 'Terms', path: '/terms' },
+                  { label: 'Legal Notice', path: '/legal' }
                 ].map((link) => (
                   <Link
                     key={link.path}
@@ -159,7 +160,7 @@ export default function PublicFooter() {
                     color="surface.500"
                     fontSize="sm"
                     fontWeight="400"
-                    _hover={{ 
+                    _hover={{
                       color: 'white',
                     }}
                     onClick={() => router.push(link.path)}
@@ -176,30 +177,30 @@ export default function PublicFooter() {
           <Box h="1px" bg="rgba(255,255,255,0.05)" />
 
           {/* Bottom Bar */}
-          <Flex 
+          <Flex
             direction={{ base: 'column', md: 'row' }}
-            justify="space-between" 
+            justify="space-between"
             align="center"
             gap={{ base: 3, md: 4 }}
             pt={2}
           >
-            <Text 
-              color="surface.600" 
+            <Text
+              color="surface.600"
               fontSize={{ base: '2xs', md: 'xs' }}
               textAlign={{ base: 'center', md: 'left' }}
             >
               © {new Date().getFullYear()} Suparbase. All rights reserved.
             </Text>
             <HStack spacing={4} flexWrap="wrap" justify="center">
-              <Text 
-                color="surface.600" 
+              <Text
+                color="surface.600"
                 fontSize={{ base: '2xs', md: 'xs' }}
               >
                 v1.0.0
               </Text>
               <Box w="1px" h="10px" bg="surface.700" display={{ base: 'none', sm: 'block' }} />
-              <Text 
-                color="surface.600" 
+              <Text
+                color="surface.600"
                 fontSize={{ base: '2xs', md: 'xs' }}
               >
                 Beta
