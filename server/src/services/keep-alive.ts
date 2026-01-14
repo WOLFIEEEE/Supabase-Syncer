@@ -64,12 +64,20 @@ export async function pingDatabase(
     connection = createDrizzleClient(databaseUrl);
     
     // Run a lightweight ping query with timeout
-    await Promise.race([
-      performPing(connection),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Ping timeout')), KEEP_ALIVE_CONFIG.pingTimeout)
-      ),
-    ]);
+    let timeoutId: NodeJS.Timeout | null = null;
+    try {
+      await Promise.race([
+        performPing(connection),
+        new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Ping timeout')), KEEP_ALIVE_CONFIG.pingTimeout);
+        }),
+      ]);
+    } finally {
+      // Always clear timeout to prevent memory leak
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
     
     const duration = Date.now() - startTime;
     
@@ -103,8 +111,12 @@ export async function pingDatabase(
     if (connection) {
       try {
         await connection.close();
-      } catch {
-        // Ignore close errors
+        // Force garbage collection hint (if available)
+        if (global.gc) {
+          global.gc();
+        }
+      } catch (error) {
+        logger.warn({ error, connectionId }, 'Error closing connection during cleanup');
       }
     }
   }

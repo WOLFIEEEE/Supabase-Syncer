@@ -47,10 +47,10 @@ export interface DrizzleConnection {
 
 // Connection configuration
 const CONNECTION_CONFIG = {
-  max: 5,                    // Maximum connections in pool
-  idle_timeout: 30,          // Close idle connections after 30s
+  max: 3,                    // Reduced from 5 to 3 to save memory
+  idle_timeout: 20,          // Close idle connections after 20s (reduced from 30s)
   connect_timeout: 30,       // Connection timeout 30s
-  max_lifetime: 60 * 30,     // Max connection lifetime 30 minutes
+  max_lifetime: 60 * 15,     // Max connection lifetime 15 minutes (reduced from 30)
   fetch_types: false,        // Disable type fetching for faster connections
   prepare: false,            // Disable prepared statements for better compatibility
   ssl: 'require' as const,   // Require SSL for security

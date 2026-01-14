@@ -33,6 +33,8 @@ WORKDIR /app
 # Set environment
 ENV NODE_ENV=production
 ENV PORT=3001
+# Increase Node.js heap size (default is ~512MB, set to 768MB to leave room for other memory)
+ENV NODE_OPTIONS=--max-old-space-size=768
 
 # Install wget for health checks
 RUN apk add --no-cache wget

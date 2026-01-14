@@ -165,9 +165,29 @@ export async function healthRoutes(fastify: FastifyInstance) {
   
   // Liveness probe - just checks if process is running
   fastify.get('/health/live', async (_request: FastifyRequest, reply: FastifyReply) => {
+    const memUsage = process.memoryUsage();
+    const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+    const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
+    const usagePercent = Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100);
+    
+    // Log memory usage if it's high (but don't fail the health check)
+    if (usagePercent > 90) {
+      logger.warn({
+        heapTotal: heapTotalMB,
+        heapUsed: heapUsedMB,
+        rss: Math.round(memUsage.rss / 1024 / 1024),
+        usagePercent,
+      }, 'High memory usage detected in health check');
+    }
+    
     return reply.status(200).send({
       status: 'alive',
       timestamp: new Date().toISOString(),
+      memory: {
+        heapUsed: heapUsedMB,
+        heapTotal: heapTotalMB,
+        usagePercent,
+      },
     });
   });
   

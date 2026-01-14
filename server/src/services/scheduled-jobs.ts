@@ -105,6 +105,11 @@ async function runKeepAliveCycle(): Promise<void> {
         // Small delay between pings to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 500));
         
+        // Force garbage collection hint after each ping to free memory
+        if (global.gc) {
+          global.gc();
+        }
+        
       } catch (error) {
         logger.error({ error, connectionId: connection.id }, 'Error pinging connection');
         stats.failed++;
@@ -223,6 +228,11 @@ export async function triggerKeepAliveCycle(): Promise<KeepAliveStats> {
       }
       
       await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Force garbage collection hint after each ping
+      if (global.gc) {
+        global.gc();
+      }
     }
   } catch (error) {
     logger.error({ error }, 'Error in manual keep-alive trigger');
