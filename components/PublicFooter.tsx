@@ -71,6 +71,8 @@ export default function PublicFooter() {
                   { label: 'Features', path: '/features' },
                   { label: 'Pricing', path: '/pricing' },
                   { label: 'Benefits', path: '/benefits' },
+                  { label: 'Integrations', path: '/integrations' },
+                  { label: 'Comparison', path: '/comparison' },
                   { label: 'Status', path: '/status' }
                 ].map((link) => (
                   <Link
@@ -110,7 +112,10 @@ export default function PublicFooter() {
                   { label: 'Guide', path: '/guide' },
                   { label: 'Best Practices', path: '/best-practices' },
                   { label: 'Troubleshooting', path: '/troubleshooting' },
-                  { label: 'FAQ', path: '/faq' }
+                  { label: 'FAQ', path: '/faq' },
+                  { label: 'Blog', path: '/blog' },
+                  { label: 'Resources', path: '/resources' },
+                  { label: 'Changelog', path: '/changelog' }
                 ].map((link) => (
                   <Link
                     key={link.path}
