@@ -11,6 +11,7 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { Redis } from 'ioredis';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -130,12 +131,40 @@ async function checkRedis(): Promise<HealthCheck> {
     };
   }
   
-  // Note: In a real implementation, you would ping Redis here
-  // For now, we just check if the URL is configured
-  return {
-    status: 'ok',
-    message: 'Redis URL configured',
-  };
+  const start = Date.now();
+  let redis: Redis | null = null;
+  
+  try {
+    redis = new Redis(redisUrl, {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 5000,
+      lazyConnect: true,
+    });
+    
+    await redis.ping();
+    const latency = Date.now() - start;
+    
+    return {
+      status: 'ok',
+      latency,
+      message: 'Redis connected',
+    };
+  } catch (error) {
+    const latency = Date.now() - start;
+    return {
+      status: 'error',
+      latency,
+      message: error instanceof Error ? error.message : 'Redis connection failed',
+    };
+  } finally {
+    if (redis) {
+      try {
+        await redis.quit();
+      } catch {
+        // Ignore quit errors during cleanup
+      }
+    }
+  }
 }
 
 function checkEncryption(): HealthCheck {

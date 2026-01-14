@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { Redis } from 'ioredis';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -103,12 +104,45 @@ export async function GET() {
       ? 'Supabase Auth configured'
       : 'Supabase credentials missing';
     
-    // Redis status (optional)
+    // Redis status (optional) - actually test connection
     const redisUrl = process.env.REDIS_URL;
-    const redisStatus = redisUrl ? 'connected' : 'not_configured';
-    const redisMessage = redisUrl 
-      ? 'Redis connected for job queue'
-      : 'Not configured - using in-memory processing';
+    let redisStatus: 'connected' | 'not_configured' | 'error' = 'not_configured';
+    let redisMessage = 'Not configured - using in-memory processing';
+    let redisResponseTime = 0;
+    
+    if (redisUrl) {
+      try {
+        const redisCheckStart = performance.now();
+        const redis = new Redis(redisUrl, {
+          maxRetriesPerRequest: 1,
+          connectTimeout: 5000,
+          lazyConnect: true,
+        });
+        
+        try {
+          await redis.ping();
+          redisResponseTime = Math.round(performance.now() - redisCheckStart);
+          redisStatus = 'connected';
+          redisMessage = `Redis connected for job queue (${redisResponseTime}ms)`;
+        } catch (pingError) {
+          redisStatus = 'error';
+          redisMessage = pingError instanceof Error 
+            ? `Redis connection failed: ${pingError.message}`
+            : 'Redis connection failed';
+        } finally {
+          try {
+            await redis.quit();
+          } catch {
+            // Ignore quit errors
+          }
+        }
+      } catch (error) {
+        redisStatus = 'error';
+        redisMessage = error instanceof Error 
+          ? `Failed to connect to Redis: ${error.message}`
+          : 'Failed to connect to Redis';
+      }
+    }
     
     // Calculate uptime
     const uptime = formatUptime(Date.now() - startTime);
