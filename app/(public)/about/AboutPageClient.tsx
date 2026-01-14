@@ -10,42 +10,40 @@ import {
   HStack,
   Button,
   SimpleGrid,
-  Divider,
   Badge,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
-import { ScrollReveal, ParallaxBox, GlassCard } from '@/components/animations';
+import { ScrollReveal, GlassCard } from '@/components/animations';
 
 const MotionBox = motion(Box);
-const MotionVStack = motion(VStack);
 
 const DatabaseIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <ellipse cx="12" cy="5" rx="9" ry="3"/>
-    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+    <ellipse cx="12" cy="5" rx="9" ry="3" />
+    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
   </svg>
 );
 
 const CodeIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <polyline points="16 18 22 12 16 6"/>
-    <polyline points="8 6 2 12 8 18"/>
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
   </svg>
 );
 
 const ShieldIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
 
 const RocketIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
-    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
   </svg>
 );
 
@@ -102,10 +100,10 @@ export default function AboutPageClient() {
   const router = useRouter();
 
   return (
-    <Box 
-      minH="100vh" 
-      bg="rgba(9, 9, 11, 1)" 
-      position="relative" 
+    <Box
+      minH="100vh"
+      bg="rgba(9, 9, 11, 1)"
+      position="relative"
       overflow="hidden"
     >
       {/* Animated Background Particles */}
@@ -131,7 +129,7 @@ export default function AboutPageClient() {
           ease: 'easeInOut',
         }}
       />
-      
+
       <MotionBox
         position="absolute"
         bottom="20%"
@@ -181,9 +179,9 @@ export default function AboutPageClient() {
                   About suparbase
                 </Text>
               </Heading>
-              <Text 
-                color="surface.400" 
-                fontSize={{ base: 'lg', md: 'xl' }} 
+              <Text
+                color="surface.400"
+                fontSize={{ base: 'lg', md: 'xl' }}
                 maxW="3xl"
                 lineHeight="1.7"
               >
@@ -200,13 +198,13 @@ export default function AboutPageClient() {
                   Our Mission
                 </Heading>
                 <Text color="surface.300" fontSize="md" lineHeight="tall">
-                  suparbase was created to solve real problems faced by developers working with Supabase databases. 
-                  Whether you're syncing data between environments, preventing free tier pausing, or managing schema 
+                  suparbase was created to solve real problems faced by developers working with Supabase databases.
+                  Whether you're syncing data between environments, preventing free tier pausing, or managing schema
                   migrations, we provide the tools you need to work confidently with your databases.
                 </Text>
                 <Text color="surface.300" fontSize="md" lineHeight="tall">
-                  We believe in transparency and putting developers first. Every feature we 
-                  build is designed with your workflow in mind, ensuring that database management doesn't get in the 
+                  We believe in transparency and putting developers first. Every feature we
+                  build is designed with your workflow in mind, ensuring that database management doesn't get in the
                   way of building great applications.
                 </Text>
               </VStack>
@@ -220,7 +218,7 @@ export default function AboutPageClient() {
                 Our Journey
               </Heading>
             </ScrollReveal>
-            
+
             {/* Timeline Line */}
             <Box
               position="absolute"
@@ -236,7 +234,7 @@ export default function AboutPageClient() {
             {timelineEvents.map((event, index) => {
               const IconComponent = event.icon;
               const isEven = index % 2 === 0;
-              
+
               return (
                 <ScrollReveal
                   key={index}
@@ -329,13 +327,13 @@ export default function AboutPageClient() {
                     <GlassCard p={6} h="100%">
                       <VStack spacing={4} align="start">
                         <motion.div
-                          whileHover={{ 
+                          whileHover={{
                             rotate: [0, -10, 10, -10, 0],
                             scale: 1.1,
                           }}
                           transition={{ duration: 0.5 }}
                         >
-                          <Box 
+                          <Box
                             color="teal.400"
                             p={3}
                             bgGradient="linear(to-br, teal.400/20, teal.500/10)"

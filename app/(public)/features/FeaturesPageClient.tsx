@@ -16,73 +16,66 @@ import {
 import { motion } from 'framer-motion';
 import { ScrollReveal, GlassCard, FloatingCard } from '@/components/animations';
 
-const HomeIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-    <polyline points="9 22 9 12 15 12 15 22"/>
-  </svg>
-);
-
 const SyncIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <polyline points="23 4 23 10 17 10"/>
-    <polyline points="1 20 1 14 7 14"/>
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    <polyline points="23 4 23 10 17 10" />
+    <polyline points="1 20 1 14 7 14" />
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
   </svg>
 );
 
 const ShieldIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
 
 const CodeIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <polyline points="16 18 22 12 16 6"/>
-    <polyline points="8 6 2 12 8 18"/>
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
   </svg>
 );
 
 const ZapIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
   </svg>
 );
 
 const DatabaseIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <ellipse cx="12" cy="5" rx="9" ry="3"/>
-    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+    <ellipse cx="12" cy="5" rx="9" ry="3" />
+    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
   </svg>
 );
 
 const RewindIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <polygon points="11 19 2 12 11 5 11 19"/>
-    <polygon points="22 19 13 12 22 5 22 19"/>
+    <polygon points="11 19 2 12 11 5 11 19" />
+    <polygon points="22 19 13 12 22 5 22 19" />
   </svg>
 );
 
 const LayersIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-    <polyline points="2 17 12 22 22 17"/>
-    <polyline points="2 12 12 17 22 12"/>
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
   </svg>
 );
 
 const ActivityIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
   </svg>
 );
 
 const ClockIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <circle cx="12" cy="12" r="10"/>
-    <polyline points="12 6 12 12 16 14"/>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
   </svg>
 );
 
@@ -208,17 +201,17 @@ export default function FeaturesPageClient() {
   };
 
   return (
-    <Box 
-      minH="100vh" 
-      bg="rgba(9, 9, 11, 1)" 
-      position="relative" 
+    <Box
+      minH="100vh"
+      bg="rgba(9, 9, 11, 1)"
+      position="relative"
       overflow="hidden"
     >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
       />
-      
+
       {/* Animated Gradient Backgrounds */}
       <MotionBox
         position="absolute"
@@ -241,7 +234,7 @@ export default function FeaturesPageClient() {
           ease: 'easeInOut',
         }}
       />
-      
+
       <MotionBox
         position="absolute"
         bottom="10%"
@@ -264,18 +257,18 @@ export default function FeaturesPageClient() {
           delay: 2,
         }}
       />
-      
+
       <Container maxW="7xl" py={{ base: 12, md: 20 }} px={{ base: 4, md: 6 }} position="relative" zIndex={1}>
         <VStack spacing={16} align="stretch">
           {/* Header */}
           <ScrollReveal direction="fade" delay={0.2}>
             <VStack spacing={6} align="center" textAlign="center">
               <FloatingCard intensity={8} duration={4}>
-                <Badge 
-                  colorScheme="teal" 
-                  px={4} 
-                  py={2} 
-                  borderRadius="full" 
+                <Badge
+                  colorScheme="teal"
+                  px={4}
+                  py={2}
+                  borderRadius="full"
                   fontSize="sm"
                   fontWeight="700"
                   letterSpacing="0.1em"
@@ -288,8 +281,8 @@ export default function FeaturesPageClient() {
                   COMPLETE FEATURE SET
                 </Badge>
               </FloatingCard>
-              <Heading 
-                as="h1" 
+              <Heading
+                as="h1"
                 fontSize={{ base: '4xl', md: '6xl', lg: '7xl' }}
                 fontWeight="800"
                 color="white"
@@ -309,9 +302,9 @@ export default function FeaturesPageClient() {
                   Features
                 </Text>
               </Heading>
-              <Text 
-                color="surface.400" 
-                fontSize={{ base: 'lg', md: 'xl' }} 
+              <Text
+                color="surface.400"
+                fontSize={{ base: 'lg', md: 'xl' }}
                 maxW="3xl"
                 lineHeight="1.7"
               >
@@ -328,11 +321,11 @@ export default function FeaturesPageClient() {
               const categoryColor = feature.category === 'core'
                 ? 'teal'
                 : feature.category === 'security'
-                ? 'red'
-                : feature.category === 'performance'
-                ? 'purple'
-                : 'blue';
-              
+                  ? 'red'
+                  : feature.category === 'performance'
+                    ? 'purple'
+                    : 'blue';
+
               return (
                 <ScrollReveal
                   key={feature.title}
@@ -359,13 +352,13 @@ export default function FeaturesPageClient() {
                       <VStack spacing={5} align="start" h="100%">
                         <HStack spacing={4} w="full">
                           <motion.div
-                            whileHover={{ 
+                            whileHover={{
                               rotate: [0, -10, 10, -10, 0],
                               scale: 1.1,
                             }}
                             transition={{ duration: 0.5 }}
                           >
-                            <Box 
+                            <Box
                               color={`${categoryColor}.400`}
                               p={3}
                               bgGradient={`linear(to-br, ${categoryColor}.400/20, ${categoryColor}.500/10)`}
@@ -395,19 +388,19 @@ export default function FeaturesPageClient() {
                           </Badge>
                         </HStack>
                         <VStack spacing={3} align="start" flex={1}>
-                          <Heading 
-                            as="h3" 
-                            size="md" 
-                            color="white" 
-                            fontSize={{ base: 'lg', md: 'xl' }} 
+                          <Heading
+                            as="h3"
+                            size="md"
+                            color="white"
+                            fontSize={{ base: 'lg', md: 'xl' }}
                             fontWeight="700"
                           >
                             {feature.title}
                           </Heading>
-                          <Text 
-                            color="surface.300" 
-                            fontSize={{ base: 'sm', md: 'md' }} 
-                            lineHeight="1.7" 
+                          <Text
+                            color="surface.300"
+                            fontSize={{ base: 'sm', md: 'md' }}
+                            lineHeight="1.7"
                             flex={1}
                           >
                             {feature.description}
@@ -461,19 +454,19 @@ export default function FeaturesPageClient() {
                 }}
               />
               <VStack spacing={6} textAlign="center" position="relative" zIndex={1}>
-                <Heading 
-                  as="h2" 
-                  size="lg" 
-                  color="white" 
-                  fontSize={{ base: '2xl', md: '3xl' }} 
+                <Heading
+                  as="h2"
+                  size="lg"
+                  color="white"
+                  fontSize={{ base: '2xl', md: '3xl' }}
                   fontWeight="700"
                 >
                   Ready to Get Started?
                 </Heading>
-                <Text 
-                  color="surface.300" 
-                  maxW="2xl" 
-                  fontSize={{ base: 'md', md: 'lg' }} 
+                <Text
+                  color="surface.300"
+                  maxW="2xl"
+                  fontSize={{ base: 'md', md: 'lg' }}
                   lineHeight="1.7"
                 >
                   Start synchronizing your databases today. No credit card required.

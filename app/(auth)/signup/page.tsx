@@ -18,7 +18,6 @@ import {
   InputRightElement,
   IconButton,
   Link,
-  HStack,
   Divider,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
@@ -30,29 +29,29 @@ const MotionVStack = motion.create(VStack);
 // Icons
 const MailIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-    <polyline points="22,6 12,13 2,6"/>
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+    <polyline points="22,6 12,13 2,6" />
   </svg>
 );
 
 const LockIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
 );
 
 const EyeIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-    <circle cx="12" cy="12" r="3"/>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 );
 
 const EyeOffIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-    <line x1="1" y1="1" x2="23" y2="23"/>
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 );
 
@@ -69,7 +68,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast({
         title: 'Email and password required',
@@ -113,7 +112,7 @@ export default function SignupPage() {
       } else {
         setEmailSent(true);
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Sign up failed',
         description: 'An error occurred',
@@ -127,7 +126,7 @@ export default function SignupPage() {
 
   if (emailSent) {
     return (
-      <Box 
+      <Box
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -150,8 +149,8 @@ export default function SignupPage() {
               boxShadow="0 8px 32px rgba(0, 0, 0, 0.4)"
               textAlign="center"
             >
-              <Box 
-                color="brand.400" 
+              <Box
+                color="brand.400"
                 mb={6}
                 display="flex"
                 justifyContent="center"
@@ -167,14 +166,14 @@ export default function SignupPage() {
                   boxShadow="0 0 20px rgba(62, 207, 142, 0.3)"
                 >
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                    <polyline points="20 6 9 17 4 12"/>
+                    <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </Box>
               </Box>
-              <Heading 
-                size="xl" 
-                mb={3} 
-                color="white" 
+              <Heading
+                size="xl"
+                mb={3}
+                color="white"
                 fontWeight="600"
                 fontFamily="'Outfit', sans-serif"
                 letterSpacing="-0.01em"
@@ -182,13 +181,13 @@ export default function SignupPage() {
                 Check your email
               </Heading>
               <Text color="surface.300" mb={6} fontSize="md" lineHeight="1.6">
-                We've sent a confirmation link to{' '}
+                We&apos;ve sent a confirmation link to{' '}
                 <Text as="span" fontWeight="600" color="white">{email}</Text>.
                 <br />
                 Please check your inbox and click the link to verify your account.
               </Text>
-              <Button 
-                onClick={() => router.push('/login')} 
+              <Button
+                onClick={() => router.push('/login')}
                 size="lg"
                 h="48px"
                 minH="48px"
@@ -196,7 +195,7 @@ export default function SignupPage() {
                 bgGradient="linear(to-r, brand.500, brand.600)"
                 color="white"
                 fontWeight="600"
-                _hover={{ 
+                _hover={{
                   bgGradient: 'linear(to-r, brand.400, brand.500)',
                   transform: 'translateY(-1px)',
                   boxShadow: '0 4px 12px rgba(62, 207, 142, 0.4)'
@@ -214,7 +213,7 @@ export default function SignupPage() {
   }
 
   return (
-    <Box 
+    <Box
       display="flex"
       alignItems="center"
       justifyContent="center"
@@ -237,7 +236,7 @@ export default function SignupPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              <Heading 
+              <Heading
                 size={{ base: 'xl', md: '2xl' }}
                 fontWeight="600"
                 color="white"
@@ -247,9 +246,9 @@ export default function SignupPage() {
               >
                 Create your account
               </Heading>
-              <Text 
-                color="surface.400" 
-                textAlign="center" 
+              <Text
+                color="surface.400"
+                textAlign="center"
                 fontSize="md"
                 maxW="sm"
               >
@@ -275,17 +274,17 @@ export default function SignupPage() {
                 <form onSubmit={handleSubmit}>
                   <VStack spacing={{ base: 4, md: 5 }}>
                     <FormControl>
-                      <FormLabel 
-                        color="surface.200" 
-                        fontSize="sm" 
+                      <FormLabel
+                        color="surface.200"
+                        fontSize="sm"
                         fontWeight="500"
                         mb={2}
                       >
                         Email address
                       </FormLabel>
                       <InputGroup>
-                        <InputLeftElement 
-                          pointerEvents="none" 
+                        <InputLeftElement
+                          pointerEvents="none"
                           color="surface.400"
                           height="100%"
                           pl={3}
@@ -304,7 +303,7 @@ export default function SignupPage() {
                           color="white"
                           _placeholder={{ color: 'surface.500' }}
                           _hover={{ borderColor: 'surface.500' }}
-                          _focus={{ 
+                          _focus={{
                             borderColor: 'brand.500',
                             boxShadow: '0 0 0 3px rgba(62, 207, 142, 0.1)'
                           }}
@@ -314,17 +313,17 @@ export default function SignupPage() {
                     </FormControl>
 
                     <FormControl>
-                      <FormLabel 
-                        color="surface.200" 
-                        fontSize="sm" 
+                      <FormLabel
+                        color="surface.200"
+                        fontSize="sm"
                         fontWeight="500"
                         mb={2}
                       >
                         Password
                       </FormLabel>
                       <InputGroup>
-                        <InputLeftElement 
-                          pointerEvents="none" 
+                        <InputLeftElement
+                          pointerEvents="none"
                           color="surface.400"
                           height="100%"
                           pl={3}
@@ -343,7 +342,7 @@ export default function SignupPage() {
                           color="white"
                           _placeholder={{ color: 'surface.500' }}
                           _hover={{ borderColor: 'surface.500' }}
-                          _focus={{ 
+                          _focus={{
                             borderColor: 'brand.500',
                             boxShadow: '0 0 0 3px rgba(62, 207, 142, 0.1)'
                           }}
@@ -368,17 +367,17 @@ export default function SignupPage() {
                     </FormControl>
 
                     <FormControl>
-                      <FormLabel 
-                        color="surface.200" 
-                        fontSize="sm" 
+                      <FormLabel
+                        color="surface.200"
+                        fontSize="sm"
                         fontWeight="500"
                         mb={2}
                       >
                         Confirm password
                       </FormLabel>
                       <InputGroup>
-                        <InputLeftElement 
-                          pointerEvents="none" 
+                        <InputLeftElement
+                          pointerEvents="none"
                           color="surface.400"
                           height="100%"
                           pl={3}
@@ -397,7 +396,7 @@ export default function SignupPage() {
                           color="white"
                           _placeholder={{ color: 'surface.500' }}
                           _hover={{ borderColor: 'surface.500' }}
-                          _focus={{ 
+                          _focus={{
                             borderColor: 'brand.500',
                             boxShadow: '0 0 0 3px rgba(62, 207, 142, 0.1)'
                           }}
@@ -429,7 +428,7 @@ export default function SignupPage() {
                       bgGradient="linear(to-r, brand.500, brand.600)"
                       color="white"
                       fontWeight="600"
-                      _hover={{ 
+                      _hover={{
                         bgGradient: 'linear(to-r, brand.400, brand.500)',
                         transform: 'translateY(-1px)',
                         boxShadow: '0 4px 12px rgba(62, 207, 142, 0.4)'
@@ -447,9 +446,9 @@ export default function SignupPage() {
 
                 <Text color="surface.400" fontSize="sm" textAlign="center">
                   Already have an account?{' '}
-                  <Link 
-                    href="/login" 
-                    color="brand.400" 
+                  <Link
+                    href="/login"
+                    color="brand.400"
                     fontWeight="500"
                     _hover={{ color: 'brand.300', textDecoration: 'underline' }}
                   >

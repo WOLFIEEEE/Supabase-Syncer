@@ -39,114 +39,114 @@ import CodeBlock from '@/components/guide/CodeBlock';
 // Icons
 const MenuIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="3" y1="12" x2="21" y2="12"/>
-    <line x1="3" y1="6" x2="21" y2="6"/>
-    <line x1="3" y1="18" x2="21" y2="18"/>
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="18" x2="21" y2="18" />
   </svg>
 );
 
 const HomeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-    <polyline points="9 22 9 12 15 12 15 22"/>
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
   </svg>
 );
 
 const RocketIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
-    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
   </svg>
 );
 
 const PackageIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-    <line x1="12" y1="22.08" x2="12" y2="12"/>
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+    <line x1="12" y1="22.08" x2="12" y2="12" />
   </svg>
 );
 
 const SettingsIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M12 1v6m0 6v6m9-9h-6M6 12H1m20.364-6.364l-4.243 4.243M7.879 16.121l-4.243 4.243m14.728 0l-4.243-4.243M7.879 7.879L3.636 3.636"/>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 1v6m0 6v6m9-9h-6M6 12H1m20.364-6.364l-4.243 4.243M7.879 16.121l-4.243 4.243m14.728 0l-4.243-4.243M7.879 7.879L3.636 3.636" />
   </svg>
 );
 
 const LinkIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
   </svg>
 );
 
 const FileTextIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-    <polyline points="14 2 14 8 20 8"/>
-    <line x1="16" y1="13" x2="8" y2="13"/>
-    <line x1="16" y1="17" x2="8" y2="17"/>
-    <polyline points="10 9 9 9 8 9"/>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
   </svg>
 );
 
 const RefreshIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <polyline points="23 4 23 10 17 10"/>
-    <polyline points="1 20 1 14 7 14"/>
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    <polyline points="23 4 23 10 17 10" />
+    <polyline points="1 20 1 14 7 14" />
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
   </svg>
 );
 
 const ShieldIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
 
 const WrenchIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
   </svg>
 );
 
 const CodeIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <polyline points="16 18 22 12 16 6"/>
-    <polyline points="8 6 2 12 8 18"/>
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
   </svg>
 );
 
 const LockIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
 );
 
 const AlertTriangleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-    <line x1="12" y1="9" x2="12" y2="13"/>
-    <line x1="12" y1="17" x2="12.01" y2="17"/>
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <line x1="12" y1="9" x2="12" y2="13" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
   </svg>
 );
 
 const SearchIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <circle cx="11" cy="11" r="8"/>
-    <path d="m21 21-4.35-4.35"/>
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.35-4.35" />
   </svg>
 );
 
 const BarChartIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <line x1="12" y1="20" x2="12" y2="10"/>
-    <line x1="18" y1="20" x2="18" y2="4"/>
-    <line x1="6" y1="20" x2="6" y2="16"/>
+    <line x1="12" y1="20" x2="12" y2="10" />
+    <line x1="18" y1="20" x2="18" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="16" />
   </svg>
 );
 
@@ -188,7 +188,7 @@ export default function GuidePageClient() {
     );
   }, [searchQuery]);
 
-  const Sidebar = () => (
+  const renderSidebar = () => (
     <VStack align="stretch" spacing={3} py={4}>
       <Button
         variant="ghost"
@@ -211,7 +211,7 @@ export default function GuidePageClient() {
       >
         Quick Start Wizard
       </Button>
-      
+
       <InputGroup size="sm" mb={2}>
         <InputLeftElement pointerEvents="none">
           <SearchIcon />
@@ -225,11 +225,11 @@ export default function GuidePageClient() {
           _focus={{ borderColor: 'brand.500' }}
         />
       </InputGroup>
-      
+
       <Text color="surface.500" fontSize="xs" fontWeight="bold" px={3} mb={2}>
         DOCUMENTATION
       </Text>
-      
+
       {filteredSections.length > 0 ? (
         filteredSections.map((section) => {
           const IconComponent = section.icon;
@@ -354,7 +354,7 @@ export default function GuidePageClient() {
         <DrawerContent bg="surface.800">
           <DrawerCloseButton color="white" />
           <DrawerBody>
-            <Sidebar />
+            {renderSidebar()}
           </DrawerBody>
         </DrawerContent>
       </Drawer>
@@ -381,7 +381,7 @@ export default function GuidePageClient() {
                 Documentation
               </Heading>
             </HStack>
-            <Sidebar />
+            {renderSidebar()}
           </Box>
         </Box>
 
@@ -389,7 +389,7 @@ export default function GuidePageClient() {
         <Box flex={1} ml={{ base: 0, lg: '280px' }}>
           <Container maxW="4xl" py={{ base: 6, md: 10 }} px={{ base: 4, md: 8 }}>
             <VStack spacing={16} align="stretch">
-              
+
               {/* Getting Started */}
               <Box id="getting-started">
                 <Badge colorScheme="teal" mb={4}>QUICK START</Badge>
@@ -406,10 +406,10 @@ export default function GuidePageClient() {
                   </Button>
                 </HStack>
                 <Text color="surface.300" fontSize="lg" mb={6}>
-                  suparbase helps you synchronize database schemas and data between 
+                  suparbase helps you synchronize database schemas and data between
                   your Supabase environments (development, staging, production).
                 </Text>
-                
+
                 <Card bg="surface.800" borderColor="surface.700">
                   <CardBody>
                     <VStack align="stretch" spacing={4}>
@@ -434,7 +434,7 @@ export default function GuidePageClient() {
                 <Heading as="h2" size="xl" color="white" mb={4}>
                   Installation
                 </Heading>
-                
+
                 <VStack align="stretch" spacing={6}>
                   <Box>
                     <Heading as="h3" size="sm" color="white" mb={3}>Step 1: Clone the Repository</Heading>
@@ -487,7 +487,7 @@ yarn install`}
                 <Heading as="h2" size="xl" color="white" mb={4}>
                   Configuration
                 </Heading>
-                
+
                 <Text color="surface.300" mb={6}>
                   Create a <Code>.env.local</Code> file with the following variables:
                 </Text>
@@ -584,7 +584,7 @@ REDIS_URL=redis://localhost:6379`}
 
                 <VStack align="stretch" spacing={6}>
                   <Text color="surface.300">
-                    Schema Sync compares table structures between databases and generates 
+                    Schema Sync compares table structures between databases and generates
                     migration scripts to make them match.
                   </Text>
 
@@ -623,7 +623,7 @@ REDIS_URL=redis://localhost:6379`}
 
                 <VStack align="stretch" spacing={6}>
                   <Text color="surface.300">
-                    Data Sync copies rows between databases. It supports one-way sync 
+                    Data Sync copies rows between databases. It supports one-way sync
                     with dry-run preview.
                   </Text>
 
@@ -874,7 +874,7 @@ REDIS_URL=redis://localhost:6379`}
                     <CardBody>
                       <Heading as="h3" size="sm" color="red.300" mb={2}>Schema Loading Slow</Heading>
                       <Text color="surface.300" fontSize="sm">
-                        Large databases may take longer. The system uses estimated row counts 
+                        Large databases may take longer. The system uses estimated row counts
                         for performance. If it's still slow, check your database connection latency.
                       </Text>
                     </CardBody>

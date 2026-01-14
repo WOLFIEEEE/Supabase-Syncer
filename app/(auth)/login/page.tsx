@@ -30,29 +30,29 @@ const MotionVStack = motion.create(VStack);
 // Icons
 const MailIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-    <polyline points="22,6 12,13 2,6"/>
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+    <polyline points="22,6 12,13 2,6" />
   </svg>
 );
 
 const LockIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
 );
 
 const EyeIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-    <circle cx="12" cy="12" r="3"/>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 );
 
 const EyeOffIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-    <line x1="1" y1="1" x2="23" y2="23"/>
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 );
 
@@ -70,7 +70,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast({
         title: 'Email and password required',
@@ -101,7 +101,7 @@ export default function LoginPage() {
         router.push(redirectTo);
         router.refresh();
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Login failed',
         description: 'An error occurred',
@@ -114,7 +114,7 @@ export default function LoginPage() {
   };
 
   return (
-    <Box 
+    <Box
       display="flex"
       alignItems="center"
       justifyContent="center"
@@ -137,7 +137,7 @@ export default function LoginPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              <Heading 
+              <Heading
                 size={{ base: 'xl', md: '2xl' }}
                 fontWeight="600"
                 color="white"
@@ -147,9 +147,9 @@ export default function LoginPage() {
               >
                 Welcome back
               </Heading>
-              <Text 
-                color="surface.400" 
-                textAlign="center" 
+              <Text
+                color="surface.400"
+                textAlign="center"
                 fontSize="md"
                 maxW="sm"
               >
@@ -175,17 +175,17 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit}>
                   <VStack spacing={{ base: 4, md: 5 }}>
                     <FormControl>
-                      <FormLabel 
-                        color="surface.200" 
-                        fontSize="sm" 
+                      <FormLabel
+                        color="surface.200"
+                        fontSize="sm"
                         fontWeight="500"
                         mb={2}
                       >
                         Email address
                       </FormLabel>
                       <InputGroup>
-                        <InputLeftElement 
-                          pointerEvents="none" 
+                        <InputLeftElement
+                          pointerEvents="none"
                           color="surface.400"
                           height="100%"
                           pl={3}
@@ -204,7 +204,7 @@ export default function LoginPage() {
                           color="white"
                           _placeholder={{ color: 'surface.500' }}
                           _hover={{ borderColor: 'surface.500' }}
-                          _focus={{ 
+                          _focus={{
                             borderColor: 'brand.500',
                             boxShadow: '0 0 0 3px rgba(62, 207, 142, 0.1)'
                           }}
@@ -215,17 +215,17 @@ export default function LoginPage() {
 
                     <FormControl>
                       <HStack justify="space-between" mb={2}>
-                        <FormLabel 
-                          color="surface.200" 
-                          fontSize="sm" 
+                        <FormLabel
+                          color="surface.200"
+                          fontSize="sm"
                           fontWeight="500"
                           mb={0}
                         >
                           Password
                         </FormLabel>
-                        <Link 
-                          href="/forgot-password" 
-                          color="brand.400" 
+                        <Link
+                          href="/forgot-password"
+                          color="brand.400"
                           fontSize="sm"
                           fontWeight="500"
                           _hover={{ color: 'brand.300', textDecoration: 'underline' }}
@@ -234,8 +234,8 @@ export default function LoginPage() {
                         </Link>
                       </HStack>
                       <InputGroup>
-                        <InputLeftElement 
-                          pointerEvents="none" 
+                        <InputLeftElement
+                          pointerEvents="none"
                           color="surface.400"
                           height="100%"
                           pl={3}
@@ -254,7 +254,7 @@ export default function LoginPage() {
                           color="white"
                           _placeholder={{ color: 'surface.500' }}
                           _hover={{ borderColor: 'surface.500' }}
-                          _focus={{ 
+                          _focus={{
                             borderColor: 'brand.500',
                             boxShadow: '0 0 0 3px rgba(62, 207, 142, 0.1)'
                           }}
@@ -286,7 +286,7 @@ export default function LoginPage() {
                       bgGradient="linear(to-r, brand.500, brand.600)"
                       color="white"
                       fontWeight="600"
-                      _hover={{ 
+                      _hover={{
                         bgGradient: 'linear(to-r, brand.400, brand.500)',
                         transform: 'translateY(-1px)',
                         boxShadow: '0 4px 12px rgba(62, 207, 142, 0.4)'
@@ -303,10 +303,10 @@ export default function LoginPage() {
                 <Divider borderColor="surface.700" my={6} />
 
                 <Text color="surface.400" fontSize="sm" textAlign="center">
-                  Don't have an account?{' '}
-                  <Link 
-                    href="/signup" 
-                    color="brand.400" 
+                  Don&apos;t have an account?{' '}
+                  <Link
+                    href="/signup"
+                    color="brand.400"
                     fontWeight="500"
                     _hover={{ color: 'brand.300', textDecoration: 'underline' }}
                   >
