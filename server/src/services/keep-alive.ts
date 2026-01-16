@@ -13,16 +13,16 @@
 import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory.js';
 import { decrypt } from './encryption.js';
 import { logger } from '../utils/logger.js';
-import { getSupabaseClient, updateConnectionLastPinged } from './supabase-client.js';
+import { getSupabaseServiceClient, updateConnectionLastPinged } from './supabase-client.js';
 
 // Configuration
 export const KEEP_ALIVE_CONFIG = {
   // Name of the temporary table used for keep-alive pings
   tableName: '_supabase_syncer_keepalive',
-  
+
   // Maximum time to wait for a ping (15 seconds)
   pingTimeout: 15000,
-  
+
   // Minimum interval between pings for the same connection (6 hours)
   minPingInterval: 6 * 60 * 60 * 1000,
 };
@@ -55,14 +55,14 @@ export async function pingDatabase(
 ): Promise<PingResult> {
   const startTime = Date.now();
   let connection: DrizzleConnection | null = null;
-  
+
   try {
     // Decrypt the database URL
     const databaseUrl = decrypt(encryptedUrl);
-    
+
     // Create connection
     connection = createDrizzleClient(databaseUrl);
-    
+
     // Run a lightweight ping query with timeout
     let timeoutId: NodeJS.Timeout | null = null;
     try {
@@ -78,11 +78,11 @@ export async function pingDatabase(
         clearTimeout(timeoutId);
       }
     }
-    
+
     const duration = Date.now() - startTime;
-    
+
     logger.info({ connectionId, connectionName, duration }, 'Keep-alive ping successful');
-    
+
     return {
       connectionId,
       connectionName,
@@ -90,13 +90,13 @@ export async function pingDatabase(
       duration,
       timestamp: new Date(),
     };
-    
+
   } catch (error) {
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
+
     logger.warn({ error, connectionId, connectionName, duration }, 'Keep-alive ping failed');
-    
+
     return {
       connectionId,
       connectionName,
@@ -105,7 +105,7 @@ export async function pingDatabase(
       error: errorMessage,
       timestamp: new Date(),
     };
-    
+
   } finally {
     // Clean up connection
     if (connection) {
@@ -134,7 +134,7 @@ async function performPing(connection: DrizzleConnection): Promise<void> {
   } catch {
     // Fall through to next approach
   }
-  
+
   // Approach 2: Query pg_stat_activity (reads metadata, registers activity)
   try {
     await connection.client`
@@ -144,7 +144,7 @@ async function performPing(connection: DrizzleConnection): Promise<void> {
   } catch {
     // Fall through to next approach
   }
-  
+
   // Approach 3: Create and drop a temp table (more invasive but guaranteed to work)
   const tableName = `${KEEP_ALIVE_CONFIG.tableName}_${Date.now()}`;
   try {
@@ -175,18 +175,20 @@ export function shouldPing(lastPingedAt: Date | null): boolean {
   if (!lastPingedAt) {
     return true; // Never pinged, should ping
   }
-  
+
   const timeSinceLastPing = Date.now() - lastPingedAt.getTime();
   return timeSinceLastPing >= KEEP_ALIVE_CONFIG.minPingInterval;
 }
 
 /**
  * Log a ping result to the database for history tracking
+ * Uses service role client to bypass RLS.
  */
 export async function logPingResult(result: PingResult): Promise<void> {
   try {
-    const supabase = getSupabaseClient();
-    
+    // Use service client to bypass RLS for background operations
+    const supabase = getSupabaseServiceClient();
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
       .from('ping_logs')

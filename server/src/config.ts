@@ -21,6 +21,7 @@ export interface Config {
   // Supabase
   supabaseUrl: string;
   supabaseAnonKey: string;
+  supabaseServiceRoleKey: string | null;
 
   // Database
   databaseUrl: string | null;
@@ -89,6 +90,12 @@ function validateConfig(config: Config): void {
     if (!config.supabaseAnonKey) {
       warnings.push('NEXT_PUBLIC_SUPABASE_ANON_KEY is not set - some features will be disabled');
     }
+    if (!config.supabaseServiceRoleKey) {
+      warnings.push(
+        'SUPABASE_SERVICE_ROLE_KEY is not set - keep-alive and background operations will FAIL. ' +
+        'Get it from Supabase Dashboard → Settings → API → service_role key'
+      );
+    }
   }
 
   // Log warnings
@@ -142,6 +149,7 @@ export function loadConfig(): Config {
     // Supabase
     supabaseUrl: getEnvVar('NEXT_PUBLIC_SUPABASE_URL', ''),
     supabaseAnonKey: getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY', ''),
+    supabaseServiceRoleKey: getEnvVarOptional('SUPABASE_SERVICE_ROLE_KEY'),
 
     // Database
     databaseUrl: getEnvVarOptional('DATABASE_URL'),

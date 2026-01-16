@@ -10,16 +10,17 @@ import { config } from '../config.js';
 import { logger } from '../utils/logger.js';
 
 let supabaseClient: SupabaseClient | null = null;
+let supabaseServiceClient: SupabaseClient | null = null;
 
 /**
- * Get Supabase client instance
+ * Get Supabase client instance (uses anon key, respects RLS)
  */
 export function getSupabaseClient(): SupabaseClient {
   if (!supabaseClient) {
     if (!config.supabaseUrl || !config.supabaseAnonKey) {
       throw new Error('Supabase configuration is missing');
     }
-    
+
     supabaseClient = createClient(config.supabaseUrl, config.supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
@@ -27,8 +28,47 @@ export function getSupabaseClient(): SupabaseClient {
       },
     });
   }
-  
+
   return supabaseClient;
+}
+
+/**
+ * Get Supabase service client instance (uses service role key, bypasses RLS)
+ * This is required for background operations like keep-alive that need to access
+ * all connections regardless of user ownership.
+ * 
+ * Falls back to anon key if service role key is not configured (will be blocked by RLS).
+ */
+export function getSupabaseServiceClient(): SupabaseClient {
+  if (!supabaseServiceClient) {
+    if (!config.supabaseUrl) {
+      throw new Error('Supabase URL is missing');
+    }
+
+    // Prefer service role key, fall back to anon key
+    const key = config.supabaseServiceRoleKey || config.supabaseAnonKey;
+
+    if (!key) {
+      throw new Error('No Supabase key available');
+    }
+
+    // Log warning if using anon key for service operations
+    if (!config.supabaseServiceRoleKey) {
+      logger.warn(
+        'SUPABASE_SERVICE_ROLE_KEY is not set. Keep-alive and other background ' +
+        'operations will fail due to RLS policies. Please set the service role key.'
+      );
+    }
+
+    supabaseServiceClient = createClient(config.supabaseUrl, key, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+  }
+
+  return supabaseServiceClient;
 }
 
 /**
@@ -46,14 +86,14 @@ export async function getConnectionById(
 } | null> {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('connections')
       .select('*')
       .eq('id', connectionId)
       .eq('user_id', userId)
       .single();
-    
+
     if (error) {
       if (error.code === 'PGRST116') {
         return null; // Not found
@@ -61,7 +101,7 @@ export async function getConnectionById(
       logger.error({ error, connectionId, userId }, 'Error fetching connection');
       throw error;
     }
-    
+
     return data as any;
   } catch (error) {
     logger.error({ error, connectionId, userId }, 'Failed to get connection');
@@ -91,14 +131,14 @@ export async function getSyncJobById(
 } | null> {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('sync_jobs')
       .select('*')
       .eq('id', jobId)
       .eq('user_id', userId)
       .single();
-    
+
     if (error) {
       if (error.code === 'PGRST116') {
         return null; // Not found
@@ -106,7 +146,7 @@ export async function getSyncJobById(
       logger.error({ error, jobId, userId }, 'Error fetching sync job');
       throw error;
     }
-    
+
     return data as any;
   } catch (error) {
     logger.error({ error, jobId, userId }, 'Failed to get sync job');
@@ -141,7 +181,7 @@ export async function createSyncJob(
 }> {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data: job, error } = await supabase
       .from('sync_jobs')
       .insert({
@@ -151,12 +191,12 @@ export async function createSyncJob(
       })
       .select()
       .single();
-    
+
     if (error) {
       logger.error({ error, userId }, 'Error creating sync job');
       throw error;
     }
-    
+
     return job as any;
   } catch (error) {
     logger.error({ error, userId }, 'Failed to create sync job');
@@ -180,18 +220,18 @@ export async function updateSyncJob(
 ): Promise<boolean> {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { error } = await supabase
       .from('sync_jobs')
       .update(updates)
       .eq('id', jobId)
       .eq('user_id', userId);
-    
+
     if (error) {
       logger.error({ error, jobId, userId }, 'Error updating sync job');
       return false;
     }
-    
+
     return true;
   } catch (error) {
     logger.error({ error, jobId, userId }, 'Failed to update sync job');
@@ -210,7 +250,7 @@ export async function addSyncLog(
 ): Promise<void> {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { error } = await supabase
       .from('sync_logs')
       .insert({
@@ -219,7 +259,7 @@ export async function addSyncLog(
         message,
         metadata: metadata || null,
       });
-    
+
     if (error) {
       logger.error({ error, jobId }, 'Error adding sync log');
     }
@@ -230,7 +270,10 @@ export async function addSyncLog(
 
 /**
  * Get all connections with keep_alive enabled (for service/cron use)
- * This is used by the backend keep-alive scheduler
+ * This is used by the backend keep-alive scheduler.
+ * 
+ * Uses service role client to bypass RLS - required because scheduled jobs
+ * run without user authentication context.
  */
 export async function getKeepAliveConnections(): Promise<{
   id: string;
@@ -240,18 +283,19 @@ export async function getKeepAliveConnections(): Promise<{
   last_pinged_at: string | null;
 }[]> {
   try {
-    const supabase = getSupabaseClient();
-    
+    // Use service client to bypass RLS for background operations
+    const supabase = getSupabaseServiceClient();
+
     const { data, error } = await supabase
       .from('connections')
       .select('id, name, encrypted_url, keep_alive, last_pinged_at')
       .eq('keep_alive', true);
-    
+
     if (error) {
       logger.error({ error }, 'Error fetching keep-alive connections');
       return [];
     }
-    
+
     return (data || []) as any;
   } catch (error) {
     logger.error({ error }, 'Failed to get keep-alive connections');
@@ -261,27 +305,31 @@ export async function getKeepAliveConnections(): Promise<{
 
 /**
  * Update last_pinged_at for a connection
+ * 
+ * Uses service role client to bypass RLS - required because scheduled jobs
+ * run without user authentication context.
  */
 export async function updateConnectionLastPinged(connectionId: string): Promise<boolean> {
   try {
-    const supabase = getSupabaseClient();
+    // Use service client to bypass RLS for background operations
+    const supabase = getSupabaseServiceClient();
     const timestamp = new Date().toISOString();
-    
+
     const { data, error } = await supabase
       .from('connections')
       .update({ last_pinged_at: timestamp })
       .eq('id', connectionId)
       .select('id, last_pinged_at')
       .single();
-    
+
     if (error) {
       logger.warn({ error, connectionId, timestamp }, 'Failed to update last_pinged_at');
       return false;
     }
-    
+
     // Verify the update was successful
     if (data && data.last_pinged_at) {
-      logger.debug({ connectionId, lastPingedAt: data.last_pinged_at }, 
+      logger.debug({ connectionId, lastPingedAt: data.last_pinged_at },
         'Successfully updated last_pinged_at');
       return true;
     } else {
