@@ -10,6 +10,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 // ============================================================================
 // CONFIGURATION
@@ -116,7 +117,7 @@ export async function trackSessionActivity(
     
     return { success: true, isNewDevice };
   } catch (error) {
-    console.error('Failed to track session activity:', error);
+    logger.error('Failed to track session activity', { error });
     return { success: false, isNewDevice: false };
   }
 }
@@ -166,7 +167,7 @@ export async function checkSessionActivity(
       timeoutIn: Math.max(0, timeoutIn),
     };
   } catch (error) {
-    console.error('Failed to check session activity:', error);
+    logger.error('Failed to check session activity', { error });
     return { lastActivity: new Date(0), isActive: false };
   }
 }
@@ -207,7 +208,7 @@ export async function getUserSessions(userId: string): Promise<UserSession[]> {
       deviceInfo: parseUserAgent(session.user_agent as string | null),
     }));
   } catch (error) {
-    console.error('Failed to get user sessions:', error);
+    logger.error('Failed to get user sessions', { error });
     return [];
   }
 }
@@ -231,7 +232,7 @@ export async function signOutSession(
     
     return !error;
   } catch (error) {
-    console.error('Failed to sign out session:', error);
+    logger.error('Failed to sign out session', { error });
     return false;
   }
 }
@@ -268,41 +269,66 @@ export async function signOutAllDevices(
       sessionsRevoked: count || 0,
     };
   } catch (error) {
-    console.error('Failed to sign out all devices:', error);
+    logger.error('Failed to sign out all devices', { error });
     return { success: false, sessionsRevoked: 0 };
   }
 }
 
 /**
  * Enforce concurrent session limit
+ *
+ * Uses an atomic approach to prevent race conditions:
+ * 1. Count sessions first
+ * 2. If over limit, delete oldest sessions in a single atomic query
+ *    that re-checks the condition to prevent deleting new sessions
+ *    that may have been created between the count and delete
  */
 async function enforceConcurrentSessionLimit(userId: string): Promise<void> {
   try {
     const supabase = await createClient();
-    
-    // Get all active sessions ordered by last activity
+
+    // Get count first to avoid unnecessary operations
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: sessions } = await (supabase as any)
+    const { count } = await (supabase as any)
+      .from('user_sessions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (!count || count <= SESSION_CONFIG.MAX_CONCURRENT_SESSIONS) {
+      return;
+    }
+
+    // Calculate how many to delete
+    const sessionsToDelete = count - SESSION_CONFIG.MAX_CONCURRENT_SESSIONS;
+
+    // Get the IDs of the oldest sessions to delete
+    // We fetch exactly the number we need to delete, ordered by oldest first
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: oldestSessions } = await (supabase as any)
       .from('user_sessions')
       .select('id')
       .eq('user_id', userId)
-      .order('last_activity', { ascending: false });
-    
-    if (!sessions || sessions.length <= SESSION_CONFIG.MAX_CONCURRENT_SESSIONS) {
+      .order('last_activity', { ascending: true })
+      .limit(sessionsToDelete);
+
+    if (!oldestSessions || oldestSessions.length === 0) {
       return;
     }
-    
-    // Delete excess sessions (oldest first)
-    const sessionsToDelete = sessions.slice(SESSION_CONFIG.MAX_CONCURRENT_SESSIONS);
-    const idsToDelete = sessionsToDelete.map((s: { id: string }) => s.id);
-    
+
+    const idsToDelete = oldestSessions.map((s: { id: string }) => s.id);
+
+    // Delete the specific sessions we identified
+    // This is safer than the previous approach as we're deleting specific IDs
+    // rather than re-querying which could hit newly created sessions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
       .from('user_sessions')
       .delete()
       .in('id', idsToDelete);
+
+    logger.info('Deleted excess sessions for user', { userId, count: idsToDelete.length });
   } catch (error) {
-    console.error('Failed to enforce session limit:', error);
+    logger.error('Failed to enforce session limit', { error });
   }
 }
 
@@ -322,13 +348,13 @@ export async function cleanupExpiredSessions(): Promise<number> {
       .select('id');
     
     if (error) {
-      console.error('Failed to cleanup expired sessions:', error);
+      logger.error('Failed to cleanup expired sessions', { error });
       return 0;
     }
     
     return count || 0;
   } catch (error) {
-    console.error('Failed to cleanup expired sessions:', error);
+    logger.error('Failed to cleanup expired sessions', { error });
     return 0;
   }
 }

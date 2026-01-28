@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase/server';
 import { getUserUsageLimits } from '@/lib/services/usage-limits';
 import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
+import { logger } from '@/lib/services/logger';
 
 // GET - Get current usage statistics for the authenticated user
 export async function GET() {
@@ -75,7 +76,7 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('Error fetching usage:', error);
+    logger.error('Error fetching usage', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch usage statistics' },
       { status: 500 }

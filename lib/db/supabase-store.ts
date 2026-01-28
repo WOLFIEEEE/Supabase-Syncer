@@ -6,13 +6,14 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import type { 
-  Connection, 
-  SyncJob, 
-  SyncLog, 
+import type {
+  Connection,
+  SyncJob,
+  SyncLog,
   UserSettings,
   Json
 } from '@/types/supabase';
+import { logger } from '@/lib/services/logger';
 
 // ============================================
 // Connection Store (Supabase)
@@ -30,7 +31,7 @@ export const supabaseConnectionStore = {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching connections:', error);
+      logger.error('Error fetching connections', error);
       throw new Error(`Failed to fetch connections: ${error.message}`);
     }
     
@@ -53,7 +54,7 @@ export const supabaseConnectionStore = {
         // No rows returned
         return null;
       }
-      console.error('Error fetching connection:', error);
+      logger.error('Error fetching connection', error);
       throw new Error(`Failed to fetch connection: ${error.message}`);
     }
     
@@ -82,7 +83,7 @@ export const supabaseConnectionStore = {
       .single();
     
     if (error) {
-      console.error('Error creating connection:', error);
+      logger.error('Error creating connection', error);
       throw new Error(`Failed to create connection: ${error.message}`);
     }
     
@@ -116,7 +117,7 @@ export const supabaseConnectionStore = {
       if (error.code === 'PGRST116') {
         return null;
       }
-      console.error('Error updating connection:', error);
+      logger.error('Error updating connection', error);
       throw new Error(`Failed to update connection: ${error.message}`);
     }
     
@@ -134,7 +135,7 @@ export const supabaseConnectionStore = {
       .eq('user_id', userId);
     
     if (error) {
-      console.error('Error deleting connection:', error);
+      logger.error('Error deleting connection', error);
       return false;
     }
     
@@ -150,7 +151,7 @@ export const supabaseConnectionStore = {
       .select('environment');
     
     if (error) {
-      console.error('Error fetching stats:', error);
+      logger.error('Error fetching stats', error);
       return { total: 0, production: 0, development: 0 };
     }
     
@@ -180,7 +181,7 @@ export const supabaseConnectionStore = {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching all connections:', error);
+      logger.error('Error fetching all connections', error);
       return [];
     }
     
@@ -209,7 +210,7 @@ export const supabaseConnectionStore = {
       if (error.code === 'PGRST116') {
         return null;
       }
-      console.error('Error fetching connection:', error);
+      logger.error('Error fetching connection', error);
       return null;
     }
     
@@ -226,7 +227,7 @@ export const supabaseConnectionStore = {
    * Includes detailed logging and error handling
    */
   async updateKeepAlive(id: string, userId: string, keepAlive: boolean): Promise<Connection | null> {
-    console.log('[SUPABASE_STORE] Updating keep_alive:', {
+    logger.info('[SUPABASE_STORE] Updating keep_alive', {
       connectionId: id,
       userId,
       keepAlive,
@@ -237,7 +238,7 @@ export const supabaseConnectionStore = {
       const supabase = await createClient();
       
       // First, verify the column exists by checking the schema
-      console.log('[SUPABASE_STORE] Verifying keep_alive column exists...');
+      logger.info('[SUPABASE_STORE] Verifying keep_alive column exists...');
       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: connection, error } = await (supabase as any)
@@ -252,7 +253,7 @@ export const supabaseConnectionStore = {
         .single();
       
       if (error) {
-        console.error('[SUPABASE_STORE] Error updating keep_alive:', {
+        logger.error('[SUPABASE_STORE] Error updating keep_alive', {
           error: error.message,
           code: error.code,
           details: error.details,
@@ -261,11 +262,11 @@ export const supabaseConnectionStore = {
           userId,
           timestamp: new Date().toISOString()
         });
-        
+
         // Check if error is about missing column
         if (error.message?.includes('keep_alive') || error.message?.includes('column')) {
-          console.error('[SUPABASE_STORE] CRITICAL: keep_alive column is missing from database!');
-          console.error('[SUPABASE_STORE] Please run migration: supabase/migrations/009_ensure_all_tables_and_columns.sql');
+          logger.error('[SUPABASE_STORE] CRITICAL: keep_alive column is missing from database!');
+          logger.error('[SUPABASE_STORE] Please run migration: supabase/migrations/009_ensure_all_tables_and_columns.sql');
           throw new Error(
             `The 'keep_alive' column is missing from the 'connections' table. ` +
             `Please run the migration script: supabase/migrations/009_ensure_all_tables_and_columns.sql`
@@ -275,7 +276,7 @@ export const supabaseConnectionStore = {
         throw new Error(`Failed to update keep_alive: ${error.message}`);
       }
       
-      console.log('[SUPABASE_STORE] Successfully updated keep_alive:', {
+      logger.info('[SUPABASE_STORE] Successfully updated keep_alive', {
         connectionId: id,
         keepAlive,
         timestamp: new Date().toISOString()
@@ -283,7 +284,7 @@ export const supabaseConnectionStore = {
       
       return connection;
     } catch (error) {
-      console.error('[SUPABASE_STORE] Exception in updateKeepAlive:', {
+      logger.error('[SUPABASE_STORE] Exception in updateKeepAlive', {
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
         connectionId: id,
@@ -309,7 +310,7 @@ export const supabaseConnectionStore = {
       .eq('id', id);
     
     if (error) {
-      console.error('Error updating last_pinged_at:', error);
+      logger.error('Error updating last_pinged_at', error);
     }
   },
 };
@@ -331,7 +332,7 @@ export const supabaseSyncJobStore = {
       .range(offset, offset + limit - 1);
     
     if (error) {
-      console.error('Error fetching sync jobs:', error);
+      logger.error('Error fetching sync jobs', error);
       throw new Error(`Failed to fetch sync jobs: ${error.message}`);
     }
     
@@ -353,7 +354,7 @@ export const supabaseSyncJobStore = {
       if (error.code === 'PGRST116') {
         return null;
       }
-      console.error('Error fetching sync job:', error);
+      logger.error('Error fetching sync job', error);
       throw new Error(`Failed to fetch sync job: ${error.message}`);
     }
     
@@ -385,7 +386,7 @@ export const supabaseSyncJobStore = {
       .single();
     
     if (error) {
-      console.error('Error creating sync job:', error);
+      logger.error('Error creating sync job', error);
       throw new Error(`Failed to create sync job: ${error.message}`);
     }
     
@@ -422,7 +423,7 @@ export const supabaseSyncJobStore = {
       if (error.code === 'PGRST116') {
         return null;
       }
-      console.error('Error updating sync job:', error);
+      logger.error('Error updating sync job', error);
       throw new Error(`Failed to update sync job: ${error.message}`);
     }
     
@@ -440,7 +441,7 @@ export const supabaseSyncJobStore = {
       .eq('user_id', userId);
     
     if (error) {
-      console.error('Error deleting sync job:', error);
+      logger.error('Error deleting sync job', error);
       return false;
     }
     
@@ -465,7 +466,7 @@ export const supabaseSyncLogStore = {
       .limit(limit);
     
     if (error) {
-      console.error('Error fetching sync logs:', error);
+      logger.error('Error fetching sync logs', error);
       return [];
     }
     
@@ -490,7 +491,7 @@ export const supabaseSyncLogStore = {
       .single();
     
     if (error) {
-      console.error('Error adding sync log:', error);
+      logger.error('Error adding sync log', error);
       return null;
     }
     
@@ -517,7 +518,7 @@ export const supabaseUserSettingsStore = {
       if (error.code === 'PGRST116') {
         return null;
       }
-      console.error('Error fetching user settings:', error);
+      logger.error('Error fetching user settings', error);
       return null;
     }
     
@@ -541,7 +542,7 @@ export const supabaseUserSettingsStore = {
       .single();
     
     if (error) {
-      console.error('Error upserting user settings:', error);
+      logger.error('Error upserting user settings', error);
       return null;
     }
     

@@ -2,6 +2,7 @@
 
 import { Box, Flex, HStack, VStack, Text, Badge, IconButton, Tooltip, useToast, Kbd, Button, useDisclosure } from '@chakra-ui/react';
 import { useRouter, usePathname, useParams } from 'next/navigation';
+import { logger } from '@/lib/services/logger';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -106,7 +107,7 @@ export default function ExplorerLayout({
             setConnectionInfo(data.data.connection);
           }
         })
-        .catch(console.error);
+        .catch((error) => logger.error('Failed to fetch explorer connection info', { error }));
     } else {
       setConnectionInfo(null);
     }

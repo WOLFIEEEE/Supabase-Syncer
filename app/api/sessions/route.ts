@@ -11,6 +11,7 @@ import { getUserSessions, signOutAllDevices } from '@/lib/services/session-secur
 import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
 import { checkDistributedRateLimit, createDistributedRateLimitHeaders } from '@/lib/services/rate-limiter-redis';
 import { sanitizeErrorMessage } from '@/lib/services/security-utils';
+import { logger } from '@/lib/services/logger';
 
 /**
  * GET /api/sessions
@@ -55,8 +56,8 @@ export async function GET() {
       count: sanitizedSessions.length,
     });
   } catch (error) {
-    console.error('Failed to get sessions:', error);
-    
+    logger.error('Failed to get sessions', { error });
+
     return NextResponse.json(
       { success: false, error: sanitizeErrorMessage((error as Error).message) },
       { status: 500 }
@@ -118,8 +119,8 @@ export async function DELETE(request: NextRequest) {
       sessionsRevoked: result.sessionsRevoked,
     });
   } catch (error) {
-    console.error('Failed to sign out all devices:', error);
-    
+    logger.error('Failed to sign out all devices', { error });
+
     return NextResponse.json(
       { success: false, error: sanitizeErrorMessage((error as Error).message) },
       { status: 500 }

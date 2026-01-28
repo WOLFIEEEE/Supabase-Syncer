@@ -10,6 +10,7 @@ import { requireAdmin } from '@/lib/middleware/admin-auth';
 import { createImpersonationToken } from '@/lib/services/admin-user-actions';
 import { logSecurityEvent } from '@/lib/services/security-logger';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +60,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('[ADMIN_USERS] Error creating impersonation token:', error);
+    logger.error('[ADMIN_USERS] Error creating impersonation token', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to create impersonation token' },
       { status: 500 }

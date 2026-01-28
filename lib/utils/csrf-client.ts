@@ -1,9 +1,11 @@
 /**
  * Client-side CSRF Token Utility
- * 
+ *
  * Provides utilities for managing CSRF tokens in client-side code.
  * Works with the server-side csrf-protection.ts service.
  */
+
+import { logger } from '@/lib/services/logger';
 
 const CSRF_HEADER_NAME = 'x-csrf-token';
 const CSRF_STORAGE_KEY = 'csrf_token';
@@ -74,7 +76,7 @@ export async function refreshCSRFToken(): Promise<string> {
     
     return token;
   } catch (error) {
-    console.error('Failed to refresh CSRF token:', error);
+    logger.error('Failed to refresh CSRF token', { error: error instanceof Error ? error.message : 'Unknown error' });
     throw error;
   }
 }
@@ -181,7 +183,7 @@ export async function initializeCSRF(): Promise<void> {
   try {
     await getCSRFToken();
   } catch (error) {
-    console.warn('Failed to initialize CSRF token:', error);
+    logger.warn('Failed to initialize CSRF token', { error: error instanceof Error ? error.message : 'Unknown error' });
   }
 }
 

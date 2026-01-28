@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { getUser } from '@/lib/supabase/server';
 import { createProxyGET } from '@/lib/utils/proxy-handler';
+import { logger } from '@/lib/services/logger';
 
 export const GET = async (
   request: NextRequest,
@@ -56,7 +57,7 @@ export const GET = async (
     return proxyHandler(request);
     
   } catch (error) {
-    console.error('Explorer rows proxy error:', error);
+    logger.error('Explorer rows proxy error', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to proxy rows request' },
       { status: 500 }

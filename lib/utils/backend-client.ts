@@ -1,6 +1,6 @@
 /**
  * Backend Client
- * 
+ *
  * HTTP client for making authenticated requests to the backend server.
  * Features:
  * - Shared secret authentication
@@ -9,6 +9,8 @@
  * - Retry logic with exponential backoff
  * - Circuit breaker pattern
  */
+
+import { logger } from '@/lib/services/logger';
 
 // Configuration
 // Use NEXT_PUBLIC_BACKEND_URL for client-side (browser) requests
@@ -100,7 +102,7 @@ function recordFailure(): void {
   
   if (circuitBreaker.failures >= CIRCUIT_BREAKER_THRESHOLD) {
     circuitBreaker.state = 'open';
-    console.warn('[BackendClient] Circuit breaker opened due to repeated failures');
+    logger.warn('Circuit breaker opened due to repeated failures', { failures: circuitBreaker.failures, threshold: CIRCUIT_BREAKER_THRESHOLD });
   }
 }
 
@@ -232,10 +234,12 @@ export async function backendRequest<T = unknown>(
       // Retry with exponential backoff
       if (attempt < retries) {
         const delay = RETRY_DELAY_BASE * Math.pow(2, attempt);
-        console.warn(
-          `[BackendClient] Request failed (attempt ${attempt + 1}/${retries + 1}), ` +
-          `retrying in ${delay}ms: ${lastError.message}`
-        );
+        logger.warn(`Request failed, retrying`, {
+          attempt: attempt + 1,
+          maxAttempts: retries + 1,
+          retryDelayMs: delay,
+          error: lastError.message
+        });
         await sleep(delay);
       }
     }

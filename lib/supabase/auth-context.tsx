@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { isSupabaseConfigured, createClient } from './client';
 import type { User, Session, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
+import { logger } from '@/lib/services/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -37,11 +38,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const client = createClient();
         setSupabase(client);
       } catch (error) {
-        console.error('Failed to create Supabase client:', error);
+        logger.error('Failed to create Supabase client', { error });
         setIsLoading(false);
       }
     } else {
-      console.warn('Supabase not configured. Authentication features are disabled.');
+      logger.warn('Supabase not configured. Authentication features are disabled.');
       setIsLoading(false);
     }
   }, []);
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
-        console.error('Error getting session:', error);
+        logger.error('Error getting session', { error });
       } finally {
         setIsLoading(false);
       }

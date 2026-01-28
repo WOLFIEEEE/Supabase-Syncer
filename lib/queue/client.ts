@@ -1,6 +1,7 @@
 import { Queue, Worker, Job, QueueEvents } from 'bullmq';
 import IORedis from 'ioredis';
 import type { SyncJobData } from '@/types';
+import { logger } from '@/lib/services/logger';
 
 // Redis connection
 const getRedisConnection = () => {
@@ -26,16 +27,50 @@ const getRedisConnection = () => {
   });
 };
 
-// Singleton instances
-let syncQueue: Queue<SyncJobData> | null = null;
-let queueEvents: QueueEvents | null = null;
+// Promise-based singleton instances to prevent race conditions
+// Multiple concurrent calls will share the same promise
+let syncQueuePromise: Promise<Queue<SyncJobData>> | null = null;
+let queueEventsPromise: Promise<QueueEvents> | null = null;
+
+// Cached instances for synchronous access after initialization
+let syncQueueInstance: Queue<SyncJobData> | null = null;
+let queueEventsInstance: QueueEvents | null = null;
 
 /**
- * Get the sync job queue (creates if not exists)
+ * Get the sync job queue (creates if not exists) - async version with race protection
+ */
+export async function getSyncQueueAsync(): Promise<Queue<SyncJobData>> {
+  if (!syncQueuePromise) {
+    syncQueuePromise = Promise.resolve().then(() => {
+      const queue = new Queue<SyncJobData>('sync-jobs', {
+        connection: getRedisConnection(),
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 5000,
+          },
+          removeOnComplete: {
+            count: 100, // Keep last 100 completed jobs
+          },
+          removeOnFail: {
+            count: 50, // Keep last 50 failed jobs
+          },
+        },
+      });
+      syncQueueInstance = queue;
+      return queue;
+    });
+  }
+  return syncQueuePromise;
+}
+
+/**
+ * Get the sync job queue (creates if not exists) - sync version for backward compatibility
  */
 export function getSyncQueue(): Queue<SyncJobData> {
-  if (!syncQueue) {
-    syncQueue = new Queue<SyncJobData>('sync-jobs', {
+  if (!syncQueueInstance) {
+    syncQueueInstance = new Queue<SyncJobData>('sync-jobs', {
       connection: getRedisConnection(),
       defaultJobOptions: {
         attempts: 3,
@@ -51,20 +86,38 @@ export function getSyncQueue(): Queue<SyncJobData> {
         },
       },
     });
+    syncQueuePromise = Promise.resolve(syncQueueInstance);
   }
-  return syncQueue;
+  return syncQueueInstance;
 }
 
 /**
- * Get queue events for listening to job updates
+ * Get queue events for listening to job updates - async version with race protection
  */
-export function getQueueEvents(): QueueEvents {
-  if (!queueEvents) {
-    queueEvents = new QueueEvents('sync-jobs', {
-      connection: getRedisConnection(),
+export async function getQueueEventsAsync(): Promise<QueueEvents> {
+  if (!queueEventsPromise) {
+    queueEventsPromise = Promise.resolve().then(() => {
+      const events = new QueueEvents('sync-jobs', {
+        connection: getRedisConnection(),
+      });
+      queueEventsInstance = events;
+      return events;
     });
   }
-  return queueEvents;
+  return queueEventsPromise;
+}
+
+/**
+ * Get queue events for listening to job updates - sync version for backward compatibility
+ */
+export function getQueueEvents(): QueueEvents {
+  if (!queueEventsInstance) {
+    queueEventsInstance = new QueueEvents('sync-jobs', {
+      connection: getRedisConnection(),
+    });
+    queueEventsPromise = Promise.resolve(queueEventsInstance);
+  }
+  return queueEventsInstance;
 }
 
 /**
@@ -131,13 +184,18 @@ export async function pauseSyncJob(jobId: string): Promise<boolean> {
  */
 export async function resumeSyncJob(data: SyncJobData): Promise<Job<SyncJobData>> {
   const queue = getSyncQueue();
-  
+
   // Remove the old job if exists
   const existingJob = await queue.getJob(data.jobId);
   if (existingJob) {
-    await existingJob.remove();
+    try {
+      await existingJob.remove();
+    } catch (error) {
+      // Log but don't fail - the job might have already been removed
+      logger.warn(`Failed to remove existing job ${data.jobId}`, { jobId: data.jobId, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
   }
-  
+
   // Add new job with checkpoint
   return queue.add('sync', data, {
     jobId: `${data.jobId}-resumed-${Date.now()}`,
@@ -195,13 +253,15 @@ export function createSyncWorker(
  * Gracefully close queue connections
  */
 export async function closeQueues(): Promise<void> {
-  if (syncQueue) {
-    await syncQueue.close();
-    syncQueue = null;
+  if (syncQueueInstance) {
+    await syncQueueInstance.close();
+    syncQueueInstance = null;
+    syncQueuePromise = null;
   }
-  if (queueEvents) {
-    await queueEvents.close();
-    queueEvents = null;
+  if (queueEventsInstance) {
+    await queueEventsInstance.close();
+    queueEventsInstance = null;
+    queueEventsPromise = null;
   }
 }
 

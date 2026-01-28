@@ -447,22 +447,24 @@ export default function HomePageClient() {
               <Heading
                 as="h1"
                 fontSize={{ base: '3xl', sm: '4xl', md: '6xl', lg: '8xl' }}
-                fontWeight="700"
-                lineHeight={{ base: '1.1', md: '0.95' }}
-                letterSpacing={{ base: '-0.01em', md: '-0.04em' }}
+                fontWeight="800"
+                lineHeight={{ base: '1.05', md: '0.92' }}
+                letterSpacing={{ base: '-0.02em', md: '-0.045em' }}
                 color="white"
                 fontFamily="'Outfit', sans-serif"
                 px={{ base: 2, sm: 0 }}
                 textAlign="center"
                 w="full"
+                className="heading-display"
               >
                 Sync your <br />
                 <Box
                   as="span"
                   color="transparent"
                   sx={{
-                    WebkitTextStroke: { base: '1.5px #3ECF8E', md: '2px #3ECF8E' },
-                    WebkitTextFillColor: 'transparent'
+                    WebkitTextStroke: { base: '1.5px hsl(166, 72%, 50%)', md: '2px hsl(166, 72%, 50%)' },
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'drop-shadow(0 0 20px hsla(166, 72%, 50%, 0.3))'
                   }}
                 >
                   databases
@@ -470,14 +472,16 @@ export default function HomePageClient() {
                 {' '}safely.
               </Heading>
               <Text
-                fontSize={{ base: 'md', sm: 'lg', md: '2xl' }}
+                fontSize={{ base: 'md', sm: 'lg', md: 'xl' }}
                 color="surface.300"
                 maxW="2xl"
-                lineHeight={{ base: '1.5', md: '1.4' }}
+                lineHeight={{ base: '1.6', md: '1.5' }}
                 fontWeight="400"
+                letterSpacing="0.01em"
                 px={{ base: 2, sm: 0 }}
                 textAlign="center"
                 w="full"
+                className="text-body"
               >
                 Production-grade synchronization for Supabase with automatic rollback, parallel processing, and real-time monitoring.
               </Text>
@@ -521,15 +525,27 @@ export default function HomePageClient() {
                   color="black"
                   fontSize={{ base: 'md', sm: 'lg' }}
                   fontWeight="700"
+                  letterSpacing="0.02em"
                   borderRadius="2xl"
-                  _hover={{ bg: 'teal.400', color: 'white' }}
+                  className="btn-glow"
+                  _hover={{
+                    bg: 'hsl(166, 72%, 50%)',
+                    color: 'white',
+                    transform: 'translateY(-3px)',
+                    boxShadow: '0 8px 30px hsla(166, 72%, 50%, 0.5)'
+                  }}
+                  _active={{
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 15px hsla(166, 72%, 50%, 0.4)'
+                  }}
+                  transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                   onClick={() => router.push('/login')}
                   onMouseEnter={() => setIsHovered(true)}
                   onMouseLeave={() => setIsHovered(false)}
                   rightIcon={
                     <MotionBox
-                      animate={{ x: isHovered ? 5 : 0 }}
-                      transition={{ type: "spring", stiffness: 300 }}
+                      animate={{ x: isHovered ? 6 : 0 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 15 }}
                     >
                       <ArrowRightIcon />
                     </MotionBox>
@@ -546,7 +562,28 @@ export default function HomePageClient() {
                   color="surface.300"
                   fontSize={{ base: 'md', sm: 'lg' }}
                   fontWeight="600"
-                  _hover={{ color: 'white' }}
+                  letterSpacing="0.01em"
+                  position="relative"
+                  _hover={{
+                    color: 'white',
+                    _after: {
+                      transform: 'scaleX(1)',
+                      transformOrigin: 'left'
+                    }
+                  }}
+                  _after={{
+                    content: '""',
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    bg: 'hsla(166, 72%, 50%, 0.6)',
+                    transform: 'scaleX(0)',
+                    transformOrigin: 'right',
+                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                  transition="color 0.2s ease"
                   onClick={() => router.push('/getting-started')}
                   minH="44px"
                 >
@@ -559,7 +596,28 @@ export default function HomePageClient() {
                   color="surface.300"
                   fontSize={{ base: 'md', sm: 'lg' }}
                   fontWeight="600"
-                  _hover={{ color: 'white' }}
+                  letterSpacing="0.01em"
+                  position="relative"
+                  _hover={{
+                    color: 'white',
+                    _after: {
+                      transform: 'scaleX(1)',
+                      transformOrigin: 'left'
+                    }
+                  }}
+                  _after={{
+                    content: '""',
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    bg: 'hsla(166, 72%, 50%, 0.6)',
+                    transform: 'scaleX(0)',
+                    transformOrigin: 'right',
+                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                  transition="color 0.2s ease"
                   onClick={() => router.push('/how-it-works')}
                   minH="44px"
                 >
@@ -579,10 +637,10 @@ export default function HomePageClient() {
               {/* 1. One-Click Sync - Featured Large */}
               <GridItem colSpan={{ base: 1, md: 8 }} rowSpan={1}>
                 <MotionBox
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.98 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.6, delay: 0, ease: [0.16, 1, 0.3, 1] }}
                   h="full"
                 >
                   <Card
@@ -593,7 +651,13 @@ export default function HomePageClient() {
                     borderRadius="3xl"
                     overflow="hidden"
                     position="relative"
-                    _hover={{ borderColor: 'teal.400/30', bg: 'rgba(255,255,255,0.02)', transform: 'translateY(-2px)' }}
+                    className="interactive-card"
+                    _hover={{
+                      borderColor: 'hsla(166, 72%, 50%, 0.35)',
+                      bg: 'rgba(255,255,255,0.025)',
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.2), 0 0 40px hsla(166, 72%, 50%, 0.1)'
+                    }}
                     transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
                     boxShadow="0 4px 20px rgba(0,0,0,0.1)"
                   >
@@ -713,10 +777,10 @@ export default function HomePageClient() {
               {/* 2. Schema Guard - Vertical Side */}
               <GridItem colSpan={{ base: 1, md: 4 }} rowSpan={{ base: 1, md: 2 }}>
                 <MotionBox
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.98 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                   h="full"
                 >
                   <Card
@@ -727,7 +791,13 @@ export default function HomePageClient() {
                     borderRadius="3xl"
                     overflow="hidden"
                     position="relative"
-                    _hover={{ borderColor: 'purple.400/30', bg: 'rgba(255,255,255,0.02)', transform: 'translateY(-2px)' }}
+                    className="interactive-card"
+                    _hover={{
+                      borderColor: 'hsla(280, 65%, 60%, 0.35)',
+                      bg: 'rgba(255,255,255,0.025)',
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.2), 0 0 40px hsla(280, 65%, 60%, 0.1)'
+                    }}
                     transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
                     boxShadow="0 4px 20px rgba(0,0,0,0.1)"
                   >
@@ -803,10 +873,10 @@ export default function HomePageClient() {
               {/* 3. Idempotent SQL - Medium Row */}
               <GridItem colSpan={{ base: 1, md: 4 }} rowSpan={1}>
                 <MotionBox
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.98 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                   h="full"
                 >
                   <Card
@@ -817,7 +887,13 @@ export default function HomePageClient() {
                     borderRadius="3xl"
                     overflow="hidden"
                     position="relative"
-                    _hover={{ borderColor: 'cyan.400/30', bg: 'rgba(255,255,255,0.02)', transform: 'translateY(-2px)' }}
+                    className="interactive-card"
+                    _hover={{
+                      borderColor: 'hsla(188, 94%, 53%, 0.35)',
+                      bg: 'rgba(255,255,255,0.025)',
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.2), 0 0 40px hsla(188, 94%, 53%, 0.1)'
+                    }}
                     transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
                     boxShadow="0 4px 20px rgba(0,0,0,0.1)"
                   >
@@ -851,10 +927,10 @@ export default function HomePageClient() {
               {/* 4. Keep-Alive - Medium Row */}
               <GridItem colSpan={{ base: 1, md: 4 }} rowSpan={1}>
                 <MotionBox
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.98 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   h="full"
                 >
                   <Card
@@ -865,7 +941,13 @@ export default function HomePageClient() {
                     borderRadius="3xl"
                     overflow="hidden"
                     position="relative"
-                    _hover={{ borderColor: 'brand.400/30', bg: 'rgba(255,255,255,0.02)', transform: 'translateY(-2px)' }}
+                    className="interactive-card"
+                    _hover={{
+                      borderColor: 'hsla(245, 58%, 61%, 0.35)',
+                      bg: 'rgba(255,255,255,0.025)',
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.2), 0 0 40px hsla(245, 58%, 61%, 0.1)'
+                    }}
                     transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
                     boxShadow="0 4px 20px rgba(0,0,0,0.1)"
                   >

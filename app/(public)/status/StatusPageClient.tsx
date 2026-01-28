@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { logger } from '@/lib/services/logger';
 import {
   Box,
   Container,
@@ -139,7 +140,7 @@ export default function StatusPageClient() {
         setStatus(data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch status:', error);
+      logger.error('Failed to fetch status', { error });
     } finally {
       setIsLoading(false);
       setLastChecked(new Date());

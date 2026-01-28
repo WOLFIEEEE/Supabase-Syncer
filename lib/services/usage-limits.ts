@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 export interface UsageLimits {
   maxConnections: number;
@@ -52,7 +53,7 @@ export async function getUserUsageLimits(userId: string): Promise<UsageLimits> {
     .single();
   
   if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-    console.error('Error fetching usage limits:', error);
+    logger.error('Error fetching usage limits', { error });
     throw new Error('Failed to fetch usage limits');
   }
   
@@ -102,7 +103,7 @@ export async function getUserUsageLimits(userId: string): Promise<UsageLimits> {
     .single();
   
   if (createError) {
-    console.error('Error creating/updating usage limits:', createError);
+    logger.error('Error creating/updating usage limits', { error: createError });
     // If it's a unique constraint error, try to fetch again (race condition)
     if (createError.code === '23505' || createError.message?.includes('duplicate')) {
       const { data: retryData, error: retryError } = await (supabase as any)
@@ -278,7 +279,7 @@ export async function updateConnectionCount(userId: string, count: number): Prom
     .eq('user_id', userId);
   
   if (error) {
-    console.error('Error updating connection count:', error);
+    logger.error('Error updating connection count', { error });
     // Don't throw - this is not critical enough to fail the connection creation
   }
 }
@@ -294,7 +295,7 @@ async function getCurrentConnectionCount(userId: string): Promise<number> {
     .eq('user_id', userId);
   
   if (error) {
-    console.error('Error counting connections:', error);
+    logger.error('Error counting connections', { error });
     return 0;
   }
   

@@ -13,6 +13,7 @@ import {
   CardBody,
   HStack,
 } from '@chakra-ui/react';
+import { logger } from '@/lib/services/logger';
 
 // Icons
 const AlertIcon = () => (
@@ -60,8 +61,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.setState({ errorInfo });
-    // Log error to console in development
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log error
+    logger.error('ErrorBoundary caught an error', {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack
+    });
   }
 
   handleReload = () => {

@@ -82,8 +82,16 @@ export interface ParallelSyncResult {
 // DEFAULT CONFIGURATION
 // ============================================================================
 
+/**
+ * Default configuration for parallel sync.
+ *
+ * IMPORTANT: maxConcurrency should not exceed the database connection pool size.
+ * Each worker uses the shared connection, but concurrent transactions can
+ * exhaust pool connections. The default pool size in drizzle-factory is 10,
+ * so maxConcurrency should stay well below that to leave room for other operations.
+ */
 const DEFAULT_CONFIG: ParallelSyncConfig = {
-  maxConcurrency: 4,
+  maxConcurrency: 3, // Reduced from 4 to prevent pool exhaustion (pool size is 10)
   respectForeignKeys: true,
   batchSize: 1000,
   isolationLevel: 'REPEATABLE READ',
@@ -272,8 +280,12 @@ async function syncTableWorker(
       }
       
       // Fetch batch from source
+      // SECURITY: Use parameterized query for LIMIT/OFFSET to prevent SQL injection
+      const safeBatchSize = Math.min(Math.max(1, config.batchSize), 10000);
+      const safeOffset = Math.max(0, offset);
       const rows = await sourceConn.client.unsafe(
-        `SELECT * FROM "${tableName}" ORDER BY "${pkColumn}" LIMIT ${config.batchSize} OFFSET ${offset}`
+        `SELECT * FROM "${tableName}" ORDER BY "${pkColumn}" LIMIT $1 OFFSET $2`,
+        [safeBatchSize, safeOffset]
       );
       
       if (rows.length === 0) {
@@ -281,8 +293,10 @@ async function syncTableWorker(
         break;
       }
       
-      // Process batch in transaction with isolation level
+      // Process batch in transaction with isolation level and timeout
       await targetConn.client.begin(async (tx) => {
+        // Set statement timeout to prevent deadlocks (30 seconds per batch)
+        await tx.unsafe('SET LOCAL statement_timeout = 30000');
         await tx.unsafe(`SET TRANSACTION ISOLATION LEVEL ${config.isolationLevel}`);
         
         for (const row of rows) {

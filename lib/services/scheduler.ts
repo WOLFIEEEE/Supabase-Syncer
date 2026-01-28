@@ -1,9 +1,11 @@
 /**
  * Scheduler Service
- * 
+ *
  * In-memory cron-like scheduler for sync jobs.
  * Supports recurring schedules with timezone handling.
  */
+
+import { logger } from '@/lib/services/logger';
 
 export interface ScheduledJob {
   id: string;
@@ -313,7 +315,7 @@ function scheduleNextRun(job: ScheduledJob): void {
  */
 async function executeScheduledJob(job: ScheduledJob): Promise<void> {
   if (!onScheduledJobRun) {
-    console.error('No scheduled job handler registered');
+    logger.error('No scheduled job handler registered');
     return;
   }
   
@@ -326,7 +328,7 @@ async function executeScheduledJob(job: ScheduledJob): Promise<void> {
     await onScheduledJobRun(job);
     job.lastRunStatus = 'success';
   } catch (error) {
-    console.error(`Scheduled job ${job.id} failed:`, error);
+    logger.error('Scheduled job failed', { jobId: job.id, error });
     job.lastRunStatus = 'failed';
   }
   

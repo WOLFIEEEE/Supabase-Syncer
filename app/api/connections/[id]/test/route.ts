@@ -10,6 +10,7 @@ import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { getUser } from '@/lib/supabase/server';
 import { createProxyPOST } from '@/lib/utils/proxy-handler';
 import { getRouteParams } from '@/lib/utils/proxy-handler';
+import { logger } from '@/lib/services/logger';
 
 // Use proxy handler but first fetch connection to get encrypted URL
 export const POST = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
@@ -52,7 +53,7 @@ export const POST = async (request: NextRequest, { params }: { params: Promise<{
     return proxyHandler(modifiedRequest);
     
   } catch (error) {
-    console.error('Connection test proxy error:', error);
+    logger.error('Connection test proxy error', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to proxy connection test' },
       { status: 500 }

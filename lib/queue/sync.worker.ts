@@ -75,9 +75,17 @@ async function processSyncJob(job: Job<SyncJobData>): Promise<void> {
       checkpoint,
       batchSize: 1000,
       onProgress: async (progress: SyncProgress) => {
-        // Update job progress
-        await job.updateProgress(progress);
-        await updateSyncJobStatus(jobId, 'running', progress);
+        // Update job progress with error handling
+        try {
+          await job.updateProgress(progress);
+        } catch (error) {
+          jobLogger.warn('Failed to update job progress', { error: error instanceof Error ? error.message : 'Unknown error' });
+        }
+        try {
+          await updateSyncJobStatus(jobId, 'running', progress);
+        } catch (error) {
+          jobLogger.warn('Failed to update sync job status', { error: error instanceof Error ? error.message : 'Unknown error' });
+        }
       },
       onLog: async (level, message, metadata) => {
         await addSyncLog(jobId, level, message, metadata);

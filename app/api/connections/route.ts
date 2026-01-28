@@ -8,6 +8,7 @@ import { ConnectionInputSchema, validateInput } from '@/lib/validations/schemas'
 import { checkConnectionLimit, updateConnectionCount } from '@/lib/services/usage-limits';
 import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
 import { sanitizeErrorMessage } from '@/lib/services/security-utils';
+import { logger } from '@/lib/services/logger';
 
 // GET - List all connections for the authenticated user
 export async function GET() {
@@ -50,7 +51,7 @@ export async function GET() {
     
   } catch (error) {
     // SECURITY: Log full error server-side, sanitize for client
-    console.error('Error fetching connections:', error);
+    logger.error('Error fetching connections', { error });
     return NextResponse.json(
       { success: false, error: sanitizeErrorMessage(error) || 'Failed to fetch connections' },
       { status: 500 }
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest) {
       const allConnections = await supabaseConnectionStore.getAll(user.id);
       await updateConnectionCount(user.id, allConnections.length);
     } catch (updateError) {
-      console.error('Error updating connection count (non-critical):', updateError);
+      logger.error('Error updating connection count (non-critical)', { error: updateError });
       // Continue - connection was created successfully
     }
     
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error creating connection:', error);
+    logger.error('Error creating connection', { error });
     const message = error instanceof Error ? error.message : 'Failed to create connection';
     return NextResponse.json(
       { success: false, error: message },
@@ -229,7 +230,7 @@ export async function DELETE(request: NextRequest) {
       const allConnections = await supabaseConnectionStore.getAll(user.id);
       await updateConnectionCount(user.id, allConnections.length);
     } catch (updateError) {
-      console.error('Error updating connection count after deletion (non-critical):', updateError);
+      logger.error('Error updating connection count after deletion (non-critical)', { error: updateError });
       // Continue - connection was deleted successfully
     }
     
@@ -239,7 +240,7 @@ export async function DELETE(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error deleting connection:', error);
+    logger.error('Error deleting connection', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to delete connection' },
       { status: 500 }

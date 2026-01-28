@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/middleware/admin-auth';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { logSecurityEvent } from '@/lib/services/security-logger';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,7 +112,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[ADMIN_CONNECTIONS] Error listing connections:', error);
+    logger.error('[ADMIN_CONNECTIONS] Error listing connections', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch connections' },
       { status: 500 }

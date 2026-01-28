@@ -6,6 +6,7 @@ import {
   escapeIdentifier,
   SecurityError,
 } from './security-utils';
+import { logger } from '@/lib/services/logger';
 
 // ============================================================================
 // SAFE TYPE COERCION HELPERS
@@ -249,7 +250,7 @@ async function getTableColumns(
       isNullable: row.is_nullable === true || row.is_nullable === 'YES',
     })).filter(col => col.name); // Filter out entries without valid names
   } catch (error) {
-    console.error(`Error getting columns for table: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    logger.error('Error getting columns for table', { error: error instanceof Error ? error.message : 'Unknown error' });
     return [];
   }
 }
@@ -317,11 +318,14 @@ async function calculateTableDiff(
   // Get sample insert rows
   let sampleInserts: Record<string, unknown>[] = [];
   if (insertIds.length > 0) {
-    const sampleIds = insertIds.slice(0, sampleSize);
+    // SECURITY: Validate sampleSize to prevent abuse
+    const safeSampleSize = Math.min(Math.max(1, sampleSize), 100);
+    const sampleIds = insertIds.slice(0, safeSampleSize);
     const placeholders = sampleIds.map((_, i) => `$${i + 1}`).join(', ');
+    // SECURITY: Use parameterized query for LIMIT
     const insertSampleResult = await sourceConn.client.unsafe(
-      `SELECT * FROM ${safeTableName} WHERE id IN (${placeholders}) LIMIT ${sampleSize}`,
-      sampleIds
+      `SELECT * FROM ${safeTableName} WHERE id IN (${placeholders}) LIMIT $${sampleIds.length + 1}`,
+      [...sampleIds, safeSampleSize]
     );
     sampleInserts = insertSampleResult as Record<string, unknown>[];
   }
@@ -407,7 +411,7 @@ async function getRowCount(conn: DrizzleConnection, tableName: string): Promise<
     );
     return safeParseInt(result[0]?.count);
   } catch (error) {
-    console.error(`Error getting row count for ${tableName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    logger.error('Error getting row count for table', { tableName, error: error instanceof Error ? error.message : 'Unknown error' });
     return 0;
   }
 }
@@ -452,11 +456,12 @@ export async function getRowsToSync(
   if (conditions.length > 0) {
     query += ` WHERE ${conditions.join(' AND ')}`;
   }
-  
-  // SECURITY: Ensure batch size is within safe limits
+
+  // SECURITY: Ensure batch size is within safe limits and use parameterized query
   const safeBatchSize = Math.min(Math.max(1, batchSize), 10000);
-  query += ` ORDER BY id ASC LIMIT ${safeBatchSize + 1}`;
-  
+  params.push(String(safeBatchSize + 1));
+  query += ` ORDER BY id ASC LIMIT $${params.length}`;
+
   const rows = await sourceConn.client.unsafe(query, params);
   
   const hasMore = rows.length > safeBatchSize;

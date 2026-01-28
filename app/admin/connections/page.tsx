@@ -7,6 +7,7 @@
 import { requireAdminAccess } from '@/lib/middleware/admin-auth';
 import { logSecurityEvent } from '@/lib/services/security-logger';
 import ConnectionsManagementClient from './ConnectionsManagementClient';
+import { logger } from '@/lib/services/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export default async function AdminConnectionsPage() {
   const pageLoadStart = Date.now();
   const requestId = `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
-  console.log('[ADMIN_CONNECTIONS_PAGE] Page load started:', {
+  logger.info('[ADMIN_CONNECTIONS_PAGE] Page load started', {
     requestId,
     timestamp: new Date().toISOString(),
     path: '/admin/connections'
@@ -37,10 +38,10 @@ export default async function AdminConnectionsPage() {
         requestId
       },
       requestId
-    }).catch(err => console.error('[ADMIN_CONNECTIONS_PAGE] Failed to log security event:', err));
+    }).catch(err => logger.error('[ADMIN_CONNECTIONS_PAGE] Failed to log security event', { error: err }));
     
   } catch (error) {
-    console.error('[ADMIN_CONNECTIONS_PAGE] Admin access check failed:', {
+    logger.error('[ADMIN_CONNECTIONS_PAGE] Admin access check failed', {
       requestId,
       error: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
@@ -57,14 +58,14 @@ export default async function AdminConnectionsPage() {
         requestId
       },
       requestId
-    }).catch(err => console.error('[ADMIN_CONNECTIONS_PAGE] Failed to log security event:', err));
-    
+    }).catch(err => logger.error('[ADMIN_CONNECTIONS_PAGE] Failed to log security event', { error: err }));
+
     throw error;
   }
   
   const totalPageLoadDuration = Date.now() - pageLoadStart;
   
-  console.log('[ADMIN_CONNECTIONS_PAGE] Page load completed:', {
+  logger.info('[ADMIN_CONNECTIONS_PAGE] Page load completed', {
     requestId,
     userId: adminUser.id,
     userEmail: adminUser.email,

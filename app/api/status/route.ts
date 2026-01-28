@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Redis } from 'ioredis';
+import { logger } from '@/lib/services/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -88,7 +89,7 @@ export async function GET() {
         ).length;
       }
     } catch (e) {
-      console.error('Error fetching connection stats:', e);
+      logger.error('Error fetching connection stats', { error: e });
     }
     
     // Check encryption
@@ -194,7 +195,7 @@ export async function GET() {
     
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Status API] Error:', message);
+    logger.error('[Status API] Error', { message, error });
     
     return NextResponse.json({
       success: false,

@@ -1,8 +1,61 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { logger } from '@/lib/services/logger';
 
 // Timeout for Supabase auth calls (5 seconds)
 const AUTH_TIMEOUT_MS = 5000;
+
+// ============================================================================
+// PUBLIC ROUTES CONFIGURATION (Single source of truth)
+// ============================================================================
+
+/**
+ * Public page routes that don't require authentication
+ */
+const PUBLIC_ROUTES = [
+  '/login',
+  '/signup',
+  '/auth/callback',
+  '/auth/confirm',
+  '/forgot-password',
+  '/reset-password',
+  '/',
+  '/guide',
+  '/status',
+  '/docs',
+] as const;
+
+/**
+ * Public API routes that don't require authentication
+ */
+const PUBLIC_API_ROUTES = [
+  '/api/auth',
+  '/api/status',
+  '/api/health',
+  '/api/version',
+  '/api/features',
+  '/api/docs',
+] as const;
+
+/**
+ * Check if the request path is a public route
+ */
+function isPublicRoutePath(pathname: string): boolean {
+  return PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+}
+
+/**
+ * Check if the request path is a public API route
+ */
+function isPublicApiRoutePath(pathname: string): boolean {
+  return PUBLIC_API_ROUTES.some((route) =>
+    route === pathname || pathname.startsWith(route + '/')
+  ) || pathname.startsWith('/api/auth');
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
 
 /**
  * Create a timeout promise that rejects after specified milliseconds
@@ -13,29 +66,33 @@ function createTimeoutPromise<T>(ms: number): Promise<T> {
   });
 }
 
+// ============================================================================
+// MAIN MIDDLEWARE
+// ============================================================================
+
 export async function updateSession(request: NextRequest) {
   // Check if Supabase is configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   // If Supabase is not configured, allow access to all routes
   // This enables the app to work in development without Supabase setup
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase not configured. Authentication is disabled.');
+    logger.warn('Supabase not configured. Authentication is disabled.');
     return NextResponse.next({ request });
   }
-  
+
   // Early return for static files to avoid unnecessary Supabase calls
   const isStaticFile =
     request.nextUrl.pathname.startsWith('/_next') ||
     request.nextUrl.pathname.startsWith('/favicon') ||
     request.nextUrl.pathname.startsWith('/public') ||
     request.nextUrl.pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$/i);
-  
+
   if (isStaticFile) {
     return NextResponse.next({ request });
   }
-  
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -72,55 +129,31 @@ export async function updateSession(request: NextRequest) {
   try {
     const getUserPromise = supabase.auth.getUser();
     const timeoutPromise = createTimeoutPromise<never>(AUTH_TIMEOUT_MS);
-    
+
     const result = await Promise.race([getUserPromise, timeoutPromise]);
     user = result?.data?.user || null;
   } catch (error) {
     // If Supabase is slow or unreachable, log but don't block the request
     // Allow public routes to continue, but require auth for protected routes
-    console.error('[Middleware] Supabase auth check failed:', error instanceof Error ? error.message : 'Unknown error');
-    
-    // For public routes, allow access even if auth check fails
-    const publicRoutes = [
-      '/login',
-      '/signup',
-      '/auth/callback',
-      '/auth/confirm',
-      '/forgot-password',
-      '/reset-password',
-      '/',
-      '/guide',
-      '/status',
-      '/docs',
-    ];
-    
-    const isPublicRoute = publicRoutes.some(
-      (route) => request.nextUrl.pathname.startsWith(route)
-    );
-    
-    const isPublicApiRoute = 
-      request.nextUrl.pathname.startsWith('/api/auth') ||
-      request.nextUrl.pathname === '/api/status' ||
-      request.nextUrl.pathname === '/api/health' ||
-      request.nextUrl.pathname === '/api/version' ||
-      request.nextUrl.pathname === '/api/features' ||
-      request.nextUrl.pathname === '/api/docs';
-    
+    logger.error('[Middleware] Supabase auth check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+
+    const pathname = request.nextUrl.pathname;
+
     // If it's a public route, allow access
-    if (isPublicRoute || isPublicApiRoute) {
+    if (isPublicRoutePath(pathname) || isPublicApiRoutePath(pathname)) {
       return supabaseResponse;
     }
-    
+
     // For protected routes, if auth check fails, redirect to login
     // This prevents unauthorized access when Supabase is down
-    if (!request.nextUrl.pathname.startsWith('/api/')) {
+    if (!pathname.startsWith('/api/')) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
-      url.searchParams.set('redirect', request.nextUrl.pathname);
+      url.searchParams.set('redirect', pathname);
       url.searchParams.set('error', 'auth_timeout');
       return NextResponse.redirect(url);
     }
-    
+
     // For API routes, return 503 (Service Unavailable) instead of timing out
     return NextResponse.json(
       { success: false, error: 'Authentication service temporarily unavailable' },
@@ -128,44 +161,21 @@ export async function updateSession(request: NextRequest) {
     );
   }
 
-  // Define public routes that don't require authentication
-  const publicRoutes = [
-    '/login',
-    '/signup',
-    '/auth/callback',
-    '/auth/confirm',
-    '/forgot-password',
-    '/reset-password',
-    '/',
-    '/guide',
-    '/status',
-    '/docs', // Documentation is public
-  ];
-
-  const isPublicRoute = publicRoutes.some(
-    (route) => request.nextUrl.pathname.startsWith(route)
-  );
-
-  // Allow public API routes
-  const isPublicApiRoute = 
-    request.nextUrl.pathname.startsWith('/api/auth') ||
-    request.nextUrl.pathname === '/api/status' ||
-    request.nextUrl.pathname === '/api/health' ||
-    request.nextUrl.pathname === '/api/version' ||
-    request.nextUrl.pathname === '/api/features' ||
-    request.nextUrl.pathname === '/api/docs';
+  const pathname = request.nextUrl.pathname;
+  const isPublicRoute = isPublicRoutePath(pathname);
+  const isPublicApiRoute = isPublicApiRoutePath(pathname);
 
   // Static files already handled above
 
   if (!user && !isPublicRoute && !isPublicApiRoute) {
     // Redirect to login for page requests
-    if (!request.nextUrl.pathname.startsWith('/api/')) {
+    if (!pathname.startsWith('/api/')) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
-      url.searchParams.set('redirect', request.nextUrl.pathname);
+      url.searchParams.set('redirect', pathname);
       return NextResponse.redirect(url);
     }
-    
+
     // Return 401 for API requests
     return NextResponse.json(
       { success: false, error: 'Authentication required' },
@@ -188,4 +198,3 @@ export async function updateSession(request: NextRequest) {
 
   return supabaseResponse;
 }
-

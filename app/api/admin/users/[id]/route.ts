@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/middleware/admin-auth';
 import { getUserDetails } from '@/lib/services/admin-user-actions';
 import { logSecurityEvent } from '@/lib/services/security-logger';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +53,7 @@ export async function GET(
       data: userDetails,
     });
   } catch (error) {
-    console.error('[ADMIN_USERS] Error fetching user details:', error);
+    logger.error('[ADMIN_USERS] Error fetching user details', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch user details' },
       { status: 500 }

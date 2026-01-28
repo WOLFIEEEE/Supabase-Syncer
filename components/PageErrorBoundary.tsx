@@ -17,6 +17,7 @@ import {
   AlertTitle,
   AlertDescription,
 } from '@chakra-ui/react';
+import { logger } from '@/lib/services/logger';
 
 // Icons
 const AlertCircleIcon = () => (
@@ -79,8 +80,13 @@ export class PageErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.setState({ errorInfo });
-    // Log error to console in development
-    console.error(`PageErrorBoundary [${this.props.pageName || 'Unknown'}]:`, error, errorInfo);
+    // Log error
+    logger.error(`PageErrorBoundary caught an error`, {
+      pageName: this.props.pageName || 'Unknown',
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack
+    });
   }
 
   handleReload = () => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/services/logger';
 import {
   Modal,
   ModalOverlay,
@@ -137,7 +138,7 @@ export default function CommandBar({ isOpen, onClose, currentConnectionId }: Com
         setConnections(data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch connections:', error);
+      logger.error('Failed to fetch connections', { error });
     }
   };
 
@@ -155,7 +156,7 @@ export default function CommandBar({ isOpen, onClose, currentConnectionId }: Com
         setTables(tableItems);
       }
     } catch (error) {
-      console.error('Failed to fetch tables:', error);
+      logger.error('Failed to fetch tables', { error });
     } finally {
       setIsLoading(false);
     }

@@ -27,7 +27,8 @@ process.env = {
   ...process.env,
   NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
   NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
-  ENCRYPTION_KEY: 'test-encryption-key-32chars!!',
+  // AES-256 requires 32 bytes = 64 hex characters
+  ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
 };
 
 // Mock fetch globally

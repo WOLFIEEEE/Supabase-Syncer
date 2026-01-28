@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/services/logger';
 
 // ============================================================================
 // TYPES
@@ -311,7 +312,7 @@ export class SyncTracer {
         error_message: span.errorMessage,
       });
     } catch (error) {
-      console.warn('Failed to save trace span to database:', error);
+      logger.warn('Failed to save trace span to database', { error });
     }
   }
 }
@@ -388,7 +389,7 @@ export async function getTrace(traceId: string): Promise<TraceSpan[]> {
       errorMessage: row.error_message,
     }));
   } catch (error) {
-    console.warn('Failed to get trace from database:', error);
+    logger.warn('Failed to get trace from database', { error });
     return [];
   }
 }
@@ -420,7 +421,7 @@ export async function getTracesForJob(syncJobId: string): Promise<string[]> {
     // Get unique trace IDs
     return [...new Set(data.map((row) => row.trace_id))];
   } catch (error) {
-    console.warn('Failed to get traces for job:', error);
+    logger.warn('Failed to get traces for job', { error });
     return [];
   }
 }

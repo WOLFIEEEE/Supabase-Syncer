@@ -24,6 +24,7 @@ import {
 } from '@chakra-ui/react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { logger } from '@/lib/services/logger';
 
 const MotionBox = motion.create(Box);
 
@@ -205,7 +206,7 @@ export default function AdminSidebar({ adminUser, isOpen, onClose, isMobile = fa
         router.push('/login');
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('Logout error', { error });
     }
   };
 

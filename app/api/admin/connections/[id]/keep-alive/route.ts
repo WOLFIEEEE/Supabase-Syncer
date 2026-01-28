@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/middleware/admin-auth';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { logSecurityEvent } from '@/lib/services/security-logger';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,7 @@ export async function POST(
       try {
         await supabaseConnectionStore.updateLastPinged(id);
       } catch (error) {
-        console.error('[ADMIN_CONNECTIONS] Failed to update last_pinged_at:', error);
+        logger.error('[ADMIN_CONNECTIONS] Failed to update last_pinged_at', { error });
         // Don't fail the request if update fails, but log it
       }
     }
@@ -77,11 +78,11 @@ export async function POST(
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('[ADMIN_CONNECTIONS] Error pinging connection:', error);
+    logger.error('[ADMIN_CONNECTIONS] Error pinging connection', { error });
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to ping connection' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to ping connection'
       },
       { status: 500 }
     );

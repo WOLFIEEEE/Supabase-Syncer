@@ -11,6 +11,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 // ============================================================================
 // TYPES
@@ -134,12 +135,12 @@ class SecurityLogger {
     // For critical events, flush immediately
     if (severity === 'critical') {
       await this.flush();
-      console.error('[SECURITY CRITICAL]', JSON.stringify(sanitizedEvent));
+      logger.error('[SECURITY CRITICAL]', { event: sanitizedEvent });
     }
     
     // Also log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[SECURITY ${severity.toUpperCase()}]`, event.eventType, sanitizedDetails);
+      logger.info(`[SECURITY ${severity.toUpperCase()}] ${event.eventType}`, { details: sanitizedDetails });
     }
   }
   
@@ -173,12 +174,12 @@ class SecurityLogger {
         .insert(records);
       
       if (error) {
-        console.error('Failed to save security events:', error);
+        logger.error('Failed to save security events', { error });
         // Put events back in queue for retry
         this.queue.unshift(...events);
       }
     } catch (error) {
-      console.error('Failed to flush security events:', error);
+      logger.error('Failed to flush security events', { error });
       // Put events back in queue for retry
       this.queue.unshift(...events);
     }
@@ -191,7 +192,7 @@ class SecurityLogger {
     if (this.flushInterval) return;
     
     this.flushInterval = setInterval(() => {
-      this.flush().catch(console.error);
+      this.flush().catch((err) => logger.error('Flush interval error', { error: err }));
     }, this.FLUSH_INTERVAL_MS);
     
     // Don't prevent Node.js from exiting

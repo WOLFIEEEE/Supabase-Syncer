@@ -19,23 +19,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logSecurityEvent } from '@/lib/services/security-logger';
+import { logger } from '@/lib/services/logger';
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
 /**
- * Admin email address - must match exactly (case-insensitive)
- * Can be overridden via ADMIN_EMAIL environment variable
- * Default: kgpkhushwant1@gmail.com
+ * Get admin email from environment variable
+ * Returns undefined if not configured
+ * Validation happens at runtime when admin access is checked
  */
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kgpkhushwant1@gmail.com';
+function getAdminEmail(): string | undefined {
+  return process.env.ADMIN_EMAIL;
+}
 
-console.log('[ADMIN_AUTH] Admin authentication initialized:', {
-  adminEmail: ADMIN_EMAIL,
-  source: process.env.ADMIN_EMAIL ? 'environment variable' : 'default',
-  timestamp: new Date().toISOString()
-});
+/**
+ * Validate admin email is configured
+ * Called at runtime, not module initialization
+ */
+function validateAdminConfig(): void {
+  const adminEmail = getAdminEmail();
+  if (!adminEmail && process.env.NODE_ENV === 'production') {
+    logger.error('[ADMIN_AUTH] CRITICAL: ADMIN_EMAIL environment variable is not set!');
+    throw new Error('ADMIN_EMAIL environment variable must be set in production');
+  }
+}
 
 // ============================================================================
 // TYPES
@@ -59,34 +68,24 @@ export interface AdminAuthResult {
 
 /**
  * Check if an email is the admin email
- * Logs detailed information about the check
+ * Performs case-insensitive comparison
  */
 export function isAdmin(email: string | null | undefined): boolean {
-  console.log('[ADMIN_AUTH] Checking admin status for email:', {
-    providedEmail: email || 'null/undefined',
-    adminEmail: ADMIN_EMAIL,
-    timestamp: new Date().toISOString()
-  });
-  
-  if (!email) {
-    console.log('[ADMIN_AUTH] Email check failed: No email provided');
+  const adminEmail = getAdminEmail();
+
+  // If admin email is not configured, deny all admin access
+  if (!adminEmail) {
+    logger.error('[ADMIN_AUTH] Admin email not configured - denying access');
     return false;
   }
-  
+
+  if (!email) {
+    return false;
+  }
+
   const normalizedProvided = email.toLowerCase().trim();
-  const normalizedAdmin = ADMIN_EMAIL.toLowerCase().trim();
-  const isMatch = normalizedProvided === normalizedAdmin;
-  
-  console.log('[ADMIN_AUTH] Email comparison result:', {
-    providedEmail: email,
-    normalizedProvided,
-    normalizedAdmin,
-    isMatch,
-    exactMatch: email === ADMIN_EMAIL,
-    timestamp: new Date().toISOString()
-  });
-  
-  return isMatch;
+  const normalizedAdmin = adminEmail.toLowerCase().trim();
+  return normalizedProvided === normalizedAdmin;
 }
 
 /**
@@ -94,27 +93,25 @@ export function isAdmin(email: string | null | undefined): boolean {
  * Includes detailed logging for all authentication steps
  */
 export async function getAdminUser(request: NextRequest): Promise<AdminAuthResult> {
+  // Validate admin config at runtime (throws in production if not configured)
+  validateAdminConfig();
+
   const startTime = Date.now();
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
-  console.log('[ADMIN_AUTH] Starting admin user check:', {
+
+  logger.info('[ADMIN_AUTH] Starting admin user check', {
     requestId,
     path: request.nextUrl.pathname,
     method: request.method,
-    ip: getClientIP(request),
-    userAgent: getUserAgent(request),
     timestamp: new Date().toISOString()
   });
-  
+
   try {
-    console.log('[ADMIN_AUTH] Creating Supabase client...', { requestId });
     const supabase = await createClient();
-    
-    console.log('[ADMIN_AUTH] Fetching user from Supabase...', { requestId });
     const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error) {
-      console.error('[ADMIN_AUTH] Supabase auth error:', {
+      logger.error('[ADMIN_AUTH] Supabase auth error', {
         requestId,
         error: error.message,
         errorCode: error.status,
@@ -136,7 +133,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
           requestId
         },
         requestId
-      }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
+      }).catch(err => logger.error('[ADMIN_AUTH] Failed to log security event', err));
       
       return {
         isAdmin: false,
@@ -145,7 +142,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
     }
     
     if (!user) {
-      console.warn('[ADMIN_AUTH] No user found in session:', {
+      logger.warn('[ADMIN_AUTH] No user found in session', {
         requestId,
         ip: getClientIP(request),
         timestamp: new Date().toISOString()
@@ -164,7 +161,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
           requestId
         },
         requestId
-      }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
+      }).catch(err => logger.error('[ADMIN_AUTH] Failed to log security event', err));
       
       return {
         isAdmin: false,
@@ -172,26 +169,14 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
       };
     }
     
-    console.log('[ADMIN_AUTH] User found in session:', {
-      requestId,
-      userId: user.id,
-      userEmail: user.email,
-      emailVerified: user.email_confirmed_at ? true : false,
-      timestamp: new Date().toISOString()
-    });
+    // User found - proceed with admin check (avoid logging email for security)
     
     // Strict email check - must match exactly
     const emailCheckResult = isAdmin(user.email);
     
     if (!emailCheckResult) {
-      console.warn('[ADMIN_AUTH] Admin access denied - email mismatch:', {
-        requestId,
-        userId: user.id,
-        providedEmail: user.email,
-        requiredEmail: ADMIN_EMAIL,
-        timestamp: new Date().toISOString()
-      });
-      
+      logger.warn('[ADMIN_AUTH] Admin access denied - unauthorized user', { requestId });
+
       // Non-blocking log - don't await to prevent timeouts
       logSecurityEvent({
         eventType: 'permission_denied',
@@ -202,15 +187,13 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
         endpoint: request.nextUrl.pathname,
         method: request.method,
         details: {
-          reason: 'User email does not match admin email',
-          providedEmail: user.email,
-          requiredEmail: ADMIN_EMAIL,
+          reason: 'User is not an admin',
           attemptedPath: request.nextUrl.pathname,
           requestId
         },
         requestId
-      }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
-      
+      }).catch(err => logger.error('[ADMIN_AUTH] Failed to log security event', err));
+
       return {
         isAdmin: false,
         error: 'Insufficient permissions'
@@ -218,14 +201,8 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
     }
     
     const duration = Date.now() - startTime;
-    console.log('[ADMIN_AUTH] Admin access granted:', {
-      requestId,
-      userId: user.id,
-      userEmail: user.email,
-      duration: `${duration}ms`,
-      timestamp: new Date().toISOString()
-    });
-    
+    logger.info('[ADMIN_AUTH] Admin access granted', { requestId, durationMs: duration });
+
     // Non-blocking log - don't await to prevent timeouts
     logSecurityEvent({
       eventType: 'auth_success',
@@ -237,13 +214,12 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
       method: request.method,
       details: {
         reason: 'Admin access granted',
-        email: user.email,
         requestId,
         duration
       },
       requestId
-    }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
-    
+    }).catch(err => logger.error('[ADMIN_AUTH] Failed to log security event', err));
+
     return {
       isAdmin: true,
       user: {
@@ -254,11 +230,11 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
     };
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error('[ADMIN_AUTH] Error checking admin auth:', {
+    logger.error('[ADMIN_AUTH] Error checking admin auth', {
       requestId,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      duration: `${duration}ms`,
+      durationMs: duration,
       timestamp: new Date().toISOString()
     });
     
@@ -277,8 +253,8 @@ export async function getAdminUser(request: NextRequest): Promise<AdminAuthResul
         duration
       },
       requestId
-    }).catch(err => console.error('[ADMIN_AUTH] Failed to log security event:', err));
-    
+    }).catch(err => logger.error('[ADMIN_AUTH] Failed to log security event', err));
+
     return {
       isAdmin: false,
       error: 'Authentication check failed'
@@ -319,26 +295,23 @@ export async function requireAdmin(request: NextRequest): Promise<NextResponse |
 
 /**
  * Check if user is admin (for use in server components)
- * Includes detailed logging
  */
 export async function checkAdminAccess(): Promise<AdminAuthResult> {
+  // Validate admin config at runtime
+  validateAdminConfig();
+
   const startTime = Date.now();
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
-  console.log('[ADMIN_AUTH] Checking admin access (server component):', {
-    requestId,
-    timestamp: new Date().toISOString()
-  });
-  
   try {
-    console.log('[ADMIN_AUTH] Creating Supabase client (server component)...', { requestId });
+    logger.info('[ADMIN_AUTH] Creating Supabase client (server component)', { requestId });
     const supabase = await createClient();
-    
-    console.log('[ADMIN_AUTH] Fetching user from Supabase (server component)...', { requestId });
+
+    logger.info('[ADMIN_AUTH] Fetching user from Supabase (server component)', { requestId });
     const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error) {
-      console.error('[ADMIN_AUTH] Supabase auth error (server component):', {
+      logger.error('[ADMIN_AUTH] Supabase auth error (server component)', {
         requestId,
         error: error.message,
         errorCode: error.status,
@@ -352,7 +325,7 @@ export async function checkAdminAccess(): Promise<AdminAuthResult> {
     }
     
     if (!user) {
-      console.warn('[ADMIN_AUTH] No user found in session (server component):', {
+      logger.warn('[ADMIN_AUTH] No user found in session (server component)', {
         requestId,
         timestamp: new Date().toISOString()
       });
@@ -363,40 +336,22 @@ export async function checkAdminAccess(): Promise<AdminAuthResult> {
       };
     }
     
-    console.log('[ADMIN_AUTH] User found in session (server component):', {
-      requestId,
-      userId: user.id,
-      userEmail: user.email,
-      emailVerified: user.email_confirmed_at ? true : false,
-      timestamp: new Date().toISOString()
-    });
+    // User found - proceed with admin check
     
     // Strict email check - must match exactly
     const emailCheckResult = isAdmin(user.email);
     
     if (!emailCheckResult) {
-      console.warn('[ADMIN_AUTH] Admin access denied - email mismatch (server component):', {
-        requestId,
-        userId: user.id,
-        providedEmail: user.email,
-        requiredEmail: ADMIN_EMAIL,
-        timestamp: new Date().toISOString()
-      });
-      
+      logger.warn('[ADMIN_AUTH] Admin access denied (server component)', { requestId });
+
       return {
         isAdmin: false,
         error: 'Insufficient permissions'
       };
     }
-    
+
     const duration = Date.now() - startTime;
-    console.log('[ADMIN_AUTH] Admin access granted (server component):', {
-      requestId,
-      userId: user.id,
-      userEmail: user.email,
-      duration: `${duration}ms`,
-      timestamp: new Date().toISOString()
-    });
+    logger.info('[ADMIN_AUTH] Admin access granted (server component)', { requestId, durationMs: duration });
     
     return {
       isAdmin: true,
@@ -408,11 +363,11 @@ export async function checkAdminAccess(): Promise<AdminAuthResult> {
     };
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error('[ADMIN_AUTH] Error checking admin access (server component):', {
+    logger.error('[ADMIN_AUTH] Error checking admin access (server component)', {
       requestId,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      duration: `${duration}ms`,
+      durationMs: duration,
       timestamp: new Date().toISOString()
     });
     
@@ -431,7 +386,7 @@ export async function checkAdminAccess(): Promise<AdminAuthResult> {
 export async function requireAdminAccess(): Promise<AdminUser> {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
-  console.log('[ADMIN_AUTH] Requiring admin access:', {
+  logger.info('[ADMIN_AUTH] Requiring admin access', {
     requestId,
     timestamp: new Date().toISOString()
   });
@@ -439,7 +394,7 @@ export async function requireAdminAccess(): Promise<AdminUser> {
   const result = await checkAdminAccess();
   
   if (!result.isAdmin || !result.user) {
-    console.error('[ADMIN_AUTH] Admin access requirement failed:', {
+    logger.error('[ADMIN_AUTH] Admin access requirement failed', {
       requestId,
       error: result.error,
       timestamp: new Date().toISOString()
@@ -448,12 +403,7 @@ export async function requireAdminAccess(): Promise<AdminUser> {
     throw new Error(result.error || 'Admin access required');
   }
   
-  console.log('[ADMIN_AUTH] Admin access requirement satisfied:', {
-    requestId,
-    userId: result.user.id,
-    userEmail: result.user.email,
-    timestamp: new Date().toISOString()
-  });
+  logger.info('[ADMIN_AUTH] Admin access requirement satisfied', { requestId });
   
   return result.user;
 }
@@ -537,5 +487,5 @@ export function parseUserAgent(userAgent: string | undefined): {
 // EXPORTS
 // ============================================================================
 
-export { ADMIN_EMAIL };
+// Note: ADMIN_EMAIL is intentionally not exported for security reasons
 

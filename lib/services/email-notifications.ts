@@ -6,6 +6,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
+import { logger } from '@/lib/services/logger';
 
 export type EmailNotificationType =
   | 'sync_started'
@@ -50,8 +51,8 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
       .eq('user_id', data.userId)
       .single();
 
-    if (limits && !(limits as any).email_notifications_enabled) {
-      console.log(`Email notifications disabled for user ${data.userId}`);
+    if (limits && !(limits as { email_notifications_enabled?: boolean }).email_notifications_enabled) {
+      logger.info('Email notifications disabled for user', { userId: data.userId });
       return false;
     }
 
@@ -68,7 +69,7 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
           text: data.body,
         });
 
-        console.log(`[Email Sent] ${data.type} to ${data.userEmail}: ${data.subject}`);
+        logger.info('Email sent', { type: data.type, userEmail: data.userEmail, subject: data.subject });
 
         // Log success
         await (supabase as any)
@@ -83,14 +84,14 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
 
         return true;
       } catch (emailError) {
-        console.error('Error sending email via Resend:', emailError);
+        logger.error('Error sending email via Resend', { error: emailError });
         throw emailError;
       }
     } else {
       // Fallback: Log to console (email service not configured)
-      console.log(`[Email Logged] ${data.type} to ${data.userEmail}: ${data.subject}`);
-      console.log(`Body: ${data.body}`);
-      console.warn('⚠️  Email service not configured. Set RESEND_API_KEY to send actual emails.');
+      logger.info('Email logged (service not configured)', { type: data.type, userEmail: data.userEmail, subject: data.subject });
+      logger.info('Email body', { body: data.body });
+      logger.warn('Email service not configured. Set RESEND_API_KEY to send actual emails.');
 
       // Log as "logged" status
       await (supabase as any)
@@ -106,7 +107,7 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
       return true;
     }
   } catch (error) {
-    console.error('Error sending email notification:', error);
+    logger.error('Error sending email notification', { error });
 
     // Log failure
     try {
@@ -122,7 +123,7 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
           error_message: error instanceof Error ? error.message : 'Unknown error',
         });
     } catch (logError) {
-      console.error('Error logging failed email:', logError);
+      logger.error('Error logging failed email', { error: logError });
     }
 
     return false;

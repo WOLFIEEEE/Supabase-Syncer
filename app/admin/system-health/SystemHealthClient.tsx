@@ -1,9 +1,21 @@
 'use client';
 
-import { VStack, Card, CardBody, HStack, Box, Text, SimpleGrid } from '@chakra-ui/react';
+import { VStack, SimpleGrid } from '@chakra-ui/react';
 import MetricCard from '@/components/admin/charts/MetricCard';
 
-export default function SystemHealthClient({ adminUser, systemStatus }: { adminUser: { id: string; email: string }; systemStatus: any }) {
+interface SystemStatus {
+  api: string;
+  database: string;
+  queue: string;
+  cache: string;
+}
+
+interface SystemHealthClientProps {
+  adminUser: { id: string; email: string };
+  systemStatus: SystemStatus;
+}
+
+export default function SystemHealthClient({ adminUser, systemStatus }: SystemHealthClientProps) {
   const statusColors: Record<string, 'green' | 'yellow' | 'red'> = {
     operational: 'green',
     degraded: 'yellow',

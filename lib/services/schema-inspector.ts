@@ -18,6 +18,7 @@ import type {
   DatabaseSchema,
   EnumType,
 } from '@/types';
+import { logger } from '@/lib/services/logger';
 
 /**
  * Inspect the full schema of a database - OPTIMIZED VERSION
@@ -29,7 +30,7 @@ export async function inspectDatabaseSchema(databaseUrl: string): Promise<Databa
   try {
     connection = createDrizzleClient(databaseUrl);
     
-    console.log('[Schema Inspector] Starting optimized bulk inspection...');
+    logger.info('Schema Inspector: Starting optimized bulk inspection');
     const startTime = Date.now();
     
     // Run ALL bulk queries in parallel for maximum speed
@@ -57,8 +58,8 @@ export async function inspectDatabaseSchema(databaseUrl: string): Promise<Databa
     
     const version = (versionResult[0]?.version as string) || 'Unknown';
     
-    console.log(`[Schema Inspector] Bulk queries completed in ${Date.now() - startTime}ms`);
-    console.log(`[Schema Inspector] Processing ${tableNames.length} tables...`);
+    logger.info('Schema Inspector: Bulk queries completed', { durationMs: Date.now() - startTime });
+    logger.info('Schema Inspector: Processing tables', { tableCount: tableNames.length });
     
     // Build lookup maps for O(1) access
     const columnsMap = groupByTable(allColumns, 'table_name');
@@ -116,7 +117,7 @@ export async function inspectDatabaseSchema(databaseUrl: string): Promise<Databa
       }
     }
     
-    console.log(`[Schema Inspector] Total time: ${Date.now() - startTime}ms`);
+    logger.info('Schema Inspector: Total time', { durationMs: Date.now() - startTime });
     
     return {
       tables,

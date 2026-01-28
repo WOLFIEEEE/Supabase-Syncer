@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/services/logger';
 import {
   Box,
   Container,
@@ -109,7 +110,7 @@ export default function SettingsPage() {
       try {
         setSettings({ ...defaultSettings, ...JSON.parse(saved) });
       } catch (e) {
-        console.error('Failed to load settings:', e);
+        logger.error('Failed to load settings', { error: e });
       }
     }
   }, []);

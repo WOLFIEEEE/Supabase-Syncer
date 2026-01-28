@@ -8,6 +8,7 @@
  */
 
 import IORedis from 'ioredis';
+import { logger } from '@/lib/services/logger';
 import { RATE_LIMITS, RateLimitType, checkRateLimit as checkInMemoryRateLimit, createRateLimitHeaders as createInMemoryHeaders } from './rate-limiter';
 
 // ============================================================================
@@ -218,9 +219,9 @@ export async function checkDistributedRateLimit(
       };
     }
   } catch (error) {
-    console.error('Redis rate limit error, falling back to in-memory:', error);
+    logger.error('Redis rate limit error, falling back to in-memory', { error });
     redisAvailable = false;
-    
+
     // Fallback to in-memory
     const result = checkInMemoryRateLimit(identifier, type);
     return { ...result, source: 'memory' };

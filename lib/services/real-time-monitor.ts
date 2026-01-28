@@ -5,6 +5,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 export interface LiveMetrics {
   activeUsersCount: number;
@@ -94,7 +95,7 @@ export async function getLiveMetrics(): Promise<LiveMetrics> {
       errorRate,
     };
   } catch (error) {
-    console.error('[REAL_TIME_MONITOR] Error getting live metrics:', error);
+    logger.error('[REAL_TIME_MONITOR] Error getting live metrics', { error });
     return {
       activeUsersCount: 0,
       activeSyncsCount: 0,
@@ -128,7 +129,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
       cache: 'operational',
     };
   } catch (error) {
-    console.error('[REAL_TIME_MONITOR] Error getting system status:', error);
+    logger.error('[REAL_TIME_MONITOR] Error getting system status', { error });
     return {
       api: 'degraded',
       database: 'degraded',

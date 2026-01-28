@@ -80,10 +80,14 @@ function getAllowedOrigins(): string[] {
     origins.push('http://127.0.0.1:3000');
   }
   
-  // Add production domain
+  // Add production domain (HTTPS only for security)
   origins.push('https://suparbase.com');
-  origins.push('http://suparbase.com');
-  
+
+  // Only allow HTTP in development (not for production)
+  if (process.env.NODE_ENV === 'development') {
+    origins.push('http://suparbase.com');
+  }
+
   return origins;
 }
 

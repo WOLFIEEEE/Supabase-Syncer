@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/services/logger';
 import {
   Box,
   Container,
@@ -335,7 +336,7 @@ export default function ConnectionsPage() {
         setKeepAliveStatus(data);
       }
     } catch (error) {
-      console.error('Failed to fetch keep-alive status:', error);
+      logger.error('Failed to fetch keep-alive status', { error });
     }
   };
 

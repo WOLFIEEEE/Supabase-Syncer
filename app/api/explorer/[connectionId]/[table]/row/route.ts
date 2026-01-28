@@ -9,6 +9,7 @@ import { getUser } from '@/lib/supabase/server';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { createDrizzleClient, type DrizzleConnection } from '@/lib/services/drizzle-factory';
+import { logger } from '@/lib/services/logger';
 
 function sanitizeIdentifier(name: string): string {
   const cleaned = name.replace(/[^\w\s]/g, '').trim();
@@ -127,7 +128,7 @@ export async function GET(
     });
     
   } catch (error) {
-    console.error('[Explorer Row GET]', error);
+    logger.error('[Explorer Row GET]', { error });
     const message = error instanceof Error ? error.message : 'Failed to fetch row';
     return NextResponse.json(
       { success: false, error: message },
@@ -224,7 +225,7 @@ export async function POST(
     });
     
   } catch (error) {
-    console.error('[Explorer Row POST]', error);
+    logger.error('[Explorer Row POST]', { error });
     const message = error instanceof Error ? error.message : 'Failed to insert row';
     return NextResponse.json(
       { success: false, error: message },
@@ -352,7 +353,7 @@ export async function PUT(
     });
     
   } catch (error) {
-    console.error('[Explorer Row PUT]', error);
+    logger.error('[Explorer Row PUT]', { error });
     const message = error instanceof Error ? error.message : 'Failed to update row';
     return NextResponse.json(
       { success: false, error: message },
@@ -453,7 +454,7 @@ export async function DELETE(
     });
     
   } catch (error) {
-    console.error('[Explorer Row DELETE]', error);
+    logger.error('[Explorer Row DELETE]', { error });
     const message = error instanceof Error ? error.message : 'Failed to delete row';
     return NextResponse.json(
       { success: false, error: message },

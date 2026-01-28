@@ -38,6 +38,11 @@ export const RATE_LIMITS = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 10,          // 10 attempts per 15 minutes
   },
+  // Public endpoints (health, status) - allow more but still limit
+  public: {
+    windowMs: 60 * 1000,  // 1 minute
+    maxRequests: 60,      // 60 requests per minute (1/second average)
+  },
 } as const;
 
 export type RateLimitType = keyof typeof RATE_LIMITS;
@@ -194,7 +199,7 @@ export function getRateLimitStatus(
   const config = RATE_LIMITS[type];
   const key = `${identifier}_${type}`;
   const entry = rateLimitStore.get(key);
-  
+
   if (!entry) {
     return {
       count: 0,
@@ -202,16 +207,34 @@ export function getRateLimitStatus(
       resetAt: null,
     };
   }
-  
+
   const now = Date.now();
   const windowStart = now - config.windowMs;
   const validRequests = entry.requests.filter(timestamp => timestamp > windowStart);
-  
+
   return {
     count: validRequests.length,
     remaining: Math.max(0, config.maxRequests - validRequests.length),
     resetAt: validRequests.length > 0 ? validRequests[0] + config.windowMs : null,
   };
+}
+
+/**
+ * Stop the cleanup timer - call this on graceful shutdown
+ */
+export function stopCleanup(): void {
+  if (cleanupTimer) {
+    clearInterval(cleanupTimer);
+    cleanupTimer = null;
+  }
+}
+
+/**
+ * Clear all rate limit data - useful for testing and shutdown
+ */
+export function clearAllRateLimits(): void {
+  rateLimitStore.clear();
+  stopCleanup();
 }
 
 /**

@@ -7,6 +7,7 @@
 
 import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/services/logger';
 import {
   isValidTableName,
   validateTableNames,
@@ -171,7 +172,7 @@ async function saveBackupMetadata(metadata: BackupMetadata): Promise<void> {
     }
   } catch (error) {
     // Log but don't fail - metadata is in memory
-    console.warn('Failed to save backup metadata to Supabase:', error);
+    logger.warn('Failed to save backup metadata to Supabase', { error });
   }
 }
 
@@ -219,9 +220,9 @@ async function getBackupMetadata(backupId: string): Promise<BackupMetadata | nul
       };
     }
   } catch (error) {
-    console.warn('Failed to get backup metadata from Supabase:', error);
+    logger.warn('Failed to get backup metadata from Supabase', { error });
   }
-  
+
   return null;
 }
 
@@ -242,7 +243,7 @@ async function storeBackupContent(
     
     if (!supabaseUrl || !supabaseKey) {
       // Fallback: store in memory for development
-      console.warn('Supabase not configured, storing backup in memory');
+      logger.warn('Supabase not configured, storing backup in memory');
       backupContentStore.set(backupPath, content);
       return { success: true };
     }
@@ -259,7 +260,7 @@ async function storeBackupContent(
     
     if (error) {
       // Bucket might not exist, fallback to memory
-      console.warn('Storage upload failed, using memory fallback:', error.message);
+      logger.warn('Storage upload failed, using memory fallback', { error: error.message });
       backupContentStore.set(backupPath, content);
       return { success: true };
     }
@@ -666,9 +667,9 @@ export async function deleteBackup(backupId: string): Promise<void> {
         .eq('id', backupId);
     }
   } catch (error) {
-    console.warn('Failed to delete backup:', error);
+    logger.warn('Failed to delete backup', { error });
   }
-  
+
   // Remove from memory
   backupStore.delete(backupId);
   backupContentStore.delete(metadata.backupPath);
@@ -717,9 +718,9 @@ export async function cleanupOldBackups(userId: string): Promise<number> {
       deletedCount = oldBackups.length;
     }
   } catch (error) {
-    console.warn('Failed to cleanup old backups:', error);
+    logger.warn('Failed to cleanup old backups', { error });
   }
-  
+
   return deletedCount;
 }
 
@@ -770,9 +771,9 @@ export async function getBackupBySyncJobId(syncJobId: string): Promise<BackupMet
       };
     }
   } catch (error) {
-    console.warn('Failed to get backup from Supabase:', error);
+    logger.warn('Failed to get backup from Supabase', { error });
   }
-  
+
   return null;
 }
 

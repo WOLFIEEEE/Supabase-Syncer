@@ -33,6 +33,7 @@ import { useDashboardWidgets } from '@/lib/hooks/useDashboardWidgets';
 import DashboardWidget from '@/components/admin/DashboardWidget';
 import WidgetSettings from '@/components/admin/WidgetSettings';
 import { useDisclosure } from '@chakra-ui/react';
+import { logger } from '@/lib/services/logger';
 
 const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card);
@@ -182,7 +183,7 @@ export default function AdminDashboardClient({
           setAnalytics(result.data);
         }
       } catch (error) {
-        console.error('Failed to fetch analytics:', error);
+        logger.error('Failed to fetch analytics', { error });
       }
     };
 

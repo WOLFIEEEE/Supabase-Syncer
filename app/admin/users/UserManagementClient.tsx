@@ -45,6 +45,7 @@ import {
 } from '@chakra-ui/react';
 import { useState, useEffect, useRef } from 'react';
 import MetricCard from '@/components/admin/charts/MetricCard';
+import { logger } from '@/lib/services/logger';
 
 interface User {
   userId: string;
@@ -291,7 +292,7 @@ export default function UserManagementClient({ adminUser }: UserManagementClient
           duration: 5000,
         });
         // In production, you'd handle the token differently
-        console.log('Impersonation token:', result.data.token);
+        logger.info('Impersonation token created', { token: result.data.token });
       } else {
         toast({
           title: 'Error',

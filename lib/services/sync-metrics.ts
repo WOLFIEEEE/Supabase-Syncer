@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/services/logger';
 
 // ============================================================================
 // TYPES
@@ -392,7 +393,7 @@ export class MetricsCollector {
         status: this.metrics.status,
       });
     } catch (error) {
-      console.warn('Failed to save metrics to database:', error);
+      logger.warn('Failed to save metrics to database', { error });
     }
   }
 }
@@ -493,7 +494,7 @@ export async function getHistoricalMetrics(
       avgThrottleFactor: 1.0,
     }));
   } catch (error) {
-    console.warn('Failed to get historical metrics:', error);
+    logger.warn('Failed to get historical metrics', { error });
     return [];
   }
 }

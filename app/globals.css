@@ -5,6 +5,15 @@
 :root {
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Outfit', system-ui, sans-serif;
+  
+  /* Refined color palette with softer HSL-based accents */
+  --color-teal-soft: hsl(166, 72%, 50%);
+  --color-teal-glow: hsla(166, 72%, 50%, 0.4);
+  --color-purple-soft: hsl(245, 58%, 61%);
+  --color-purple-glow: hsla(245, 58%, 61%, 0.4);
+  --color-cyan-soft: hsl(188, 94%, 53%);
+  --color-cyan-glow: hsla(188, 94%, 53%, 0.4);
 }
 
 * {
@@ -23,6 +32,8 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+  /* Smooth scrolling for modern feel */
+  scroll-behavior: smooth;
 }
 
 /* Prevent horizontal scrolling on all devices */
@@ -58,7 +69,48 @@ body {
   background: #52525b;
 }
 
-/* Animation utilities */
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+
+/* Display headings - tight letter-spacing */
+.heading-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* Large headlines - tighter tracking */
+.heading-tight {
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+/* Body text - optimal reading */
+.text-body {
+  letter-spacing: 0.01em;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Small labels & badges - wider spacing */
+.text-label {
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Subtle text - slightly wider */
+.text-subtle {
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+
+/* ============================================
+   ANIMATION UTILITIES
+   ============================================ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -74,6 +126,30 @@ body {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
+/* Staggered fade-in for list items */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger delays for list animations */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+
 @keyframes pulse-glow {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(49, 151, 149, 0.4);
@@ -87,7 +163,108 @@ body {
   animation: pulse-glow 2s infinite;
 }
 
-/* Gradient backgrounds */
+/* Subtle float animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ============================================
+   MICRO-INTERACTION UTILITIES
+   ============================================ */
+
+/* Smooth hover lift effect */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Subtle hover glow */
+.hover-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 30px var(--color-teal-glow);
+}
+
+/* Press effect */
+.press-effect {
+  transition: transform 0.15s ease;
+}
+
+.press-effect:active {
+  transform: scale(0.98);
+}
+
+/* Interactive card */
+.interactive-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(62, 207, 142, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Button with glow on hover */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+
+.btn-glow:hover::before {
+  transform: translateX(100%);
+}
+
+.btn-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--color-teal-glow);
+}
+
+/* ============================================
+   GRADIENT BACKGROUNDS
+   ============================================ */
+
 .gradient-mesh {
   background: 
     radial-gradient(at 40% 20%, rgba(49, 151, 149, 0.15) 0px, transparent 50%),
@@ -97,7 +274,25 @@ body {
     radial-gradient(at 0% 100%, rgba(49, 151, 149, 0.1) 0px, transparent 50%);
 }
 
-/* Mobile responsive utilities */
+/* Refined gradient with softer colors */
+.gradient-refined {
+  background: 
+    radial-gradient(ellipse at 20% 0%, hsla(166, 72%, 50%, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, hsla(245, 58%, 61%, 0.08) 0%, transparent 50%);
+}
+
+/* Text gradient for accent text */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-teal-soft), var(--color-cyan-soft));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE UTILITIES
+   ============================================ */
+
 @media (max-width: 768px) {
   /* Prevent text overflow on mobile */
   .truncate-mobile {
@@ -179,3 +374,4 @@ body {
     display: none !important;
   }
 }
+

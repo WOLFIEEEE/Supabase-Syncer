@@ -7,6 +7,7 @@
 
 import IORedis from 'ioredis';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/services/logger';
 
 // ============================================================================
 // TYPES
@@ -66,10 +67,10 @@ function getRedisClient(): IORedis | null {
       });
       
       redisClient.on('error', (err) => {
-        console.warn('Redis connection error (idempotency):', err.message);
+        logger.warn('Redis connection error (idempotency)', { error: err.message });
       });
     } catch (error) {
-      console.warn('Failed to create Redis client for idempotency:', error);
+      logger.warn('Failed to create Redis client for idempotency', { error });
       return null;
     }
   }
@@ -119,7 +120,7 @@ export async function markRowProcessed(row: ProcessedRow): Promise<void> {
       
       await redis.setex(key, IDEMPOTENCY_CONFIG.redisExpireSeconds, value);
     } catch (error) {
-      console.warn('Failed to store in Redis:', error);
+      logger.warn('Failed to store in Redis', { error });
     }
   }
   
@@ -145,7 +146,7 @@ export async function markRowProcessed(row: ProcessedRow): Promise<void> {
       }
     } catch (error) {
       // Log but don't fail - Redis is primary
-      console.warn('Failed to store in database:', error);
+      logger.warn('Failed to store in database', { error });
     }
   }
 }
@@ -176,7 +177,7 @@ export async function markRowsProcessed(rows: ProcessedRow[]): Promise<void> {
       
       await pipeline.exec();
     } catch (error) {
-      console.warn('Failed to batch store in Redis:', error);
+      logger.warn('Failed to batch store in Redis', { error });
     }
   }
   
@@ -208,7 +209,7 @@ export async function markRowsProcessed(rows: ProcessedRow[]): Promise<void> {
         }
       }
     } catch (error) {
-      console.warn('Failed to batch store in database:', error);
+      logger.warn('Failed to batch store in database', { error });
     }
   }
 }
@@ -231,7 +232,7 @@ export async function isRowProcessed(
         return true;
       }
     } catch (error) {
-      console.warn('Failed to check Redis:', error);
+      logger.warn('Failed to check Redis', { error });
     }
   }
   
@@ -291,7 +292,7 @@ export async function getProcessedRowIds(
         }
       });
     } catch (error) {
-      console.warn('Failed to batch check Redis:', error);
+      logger.warn('Failed to batch check Redis', { error });
     }
   }
   
@@ -318,7 +319,7 @@ export async function getProcessedRowIds(
         }
       }
     } catch (error) {
-      console.warn('Failed to batch check database:', error);
+      logger.warn('Failed to batch check database', { error });
     }
   }
   
@@ -349,7 +350,7 @@ export async function getRowOperation(
         };
       }
     } catch (error) {
-      console.warn('Failed to get from Redis:', error);
+      logger.warn('Failed to get from Redis', { error });
     }
   }
   
@@ -419,7 +420,7 @@ export async function getIdempotencyStats(syncJobId: string): Promise<Idempotenc
         }
       }
     } catch (error) {
-      console.warn('Failed to get stats from database:', error);
+      logger.warn('Failed to get stats from database', { error });
     }
   }
   
@@ -441,7 +442,7 @@ export async function clearProcessedRows(syncJobId: string): Promise<void> {
         await redis.del(...keys);
       }
     } catch (error) {
-      console.warn('Failed to clear Redis:', error);
+      logger.warn('Failed to clear Redis', { error });
     }
   }
   
@@ -460,7 +461,7 @@ export async function clearProcessedRows(syncJobId: string): Promise<void> {
           .eq('sync_job_id', syncJobId);
       }
     } catch (error) {
-      console.warn('Failed to clear database:', error);
+      logger.warn('Failed to clear database', { error });
     }
   }
 }
@@ -492,7 +493,7 @@ export async function cleanupOldRecords(maxAgeHours: number = 24): Promise<numbe
         deletedCount = error ? 0 : (data?.length || 0);
       }
     } catch (error) {
-      console.warn('Failed to cleanup database:', error);
+      logger.warn('Failed to cleanup database', { error });
     }
   }
   

@@ -16,6 +16,7 @@ import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
 import { getRowsToSync } from './diff-engine';
 import { withRetry, withTimeout, sleep } from './retry-handler';
 import type { SyncProgress, SyncCheckpoint, ConflictStrategy, Conflict } from '@/types';
+import { logger } from '@/lib/services/logger';
 
 // Import new production-grade services
 import { createBackup, restoreBackup, type BackupMetadata } from './backup-service';
@@ -530,7 +531,7 @@ function serializeValue(value: unknown): string | number | boolean | null {
   if (typeof value === 'number') {
     if (Number.isNaN(value) || !Number.isFinite(value)) {
       // Infinity and NaN can't be stored in PostgreSQL numeric columns
-      console.warn(`[Sync] Converting special number value (${value}) to null`);
+      logger.warn('Converting special number value to null', { value: String(value) });
       return null;
     }
     return value;
@@ -550,7 +551,7 @@ function serializeValue(value: unknown): string | number | boolean | null {
   if (value instanceof Date) {
     // Check for invalid dates
     if (isNaN(value.getTime())) {
-      console.warn('[Sync] Converting invalid Date to null');
+      logger.warn('Converting invalid Date to null');
       return null;
     }
     return value.toISOString();
@@ -590,7 +591,7 @@ function serializeValue(value: unknown): string | number | boolean | null {
     try {
       return JSON.stringify(value);
     } catch (e) {
-      console.warn('[Sync] Failed to serialize object, converting to null:', e);
+      logger.warn('Failed to serialize object, converting to null', { error: e instanceof Error ? e.message : 'Unknown error' });
       return null;
     }
   }
@@ -601,7 +602,7 @@ function serializeValue(value: unknown): string | number | boolean | null {
   }
   
   if (typeof value === 'function') {
-    console.warn('[Sync] Function values cannot be stored, converting to null');
+    logger.warn('Function values cannot be stored, converting to null');
     return null;
   }
   
@@ -1372,12 +1373,12 @@ export async function executeSyncRealtime(options: RealtimeSyncOptions): Promise
     try {
       if (sourceConn) await sourceConn.close();
     } catch (e) {
-      console.error('Error closing source connection:', e);
+      logger.error('Error closing source connection', { error: e instanceof Error ? e.message : 'Unknown error' });
     }
     try {
       if (targetConn) await targetConn.close();
     } catch (e) {
-      console.error('Error closing target connection:', e);
+      logger.error('Error closing target connection', { error: e instanceof Error ? e.message : 'Unknown error' });
     }
     // Clean up job tracking
     cancelledJobs.delete(jobId);

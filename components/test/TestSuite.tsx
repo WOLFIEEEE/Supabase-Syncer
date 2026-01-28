@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { TestCategory } from './TestCategory';
 import { TestResult, TestStatus } from './types';
+import { logger } from '@/lib/services/logger';
 
 export function TestSuite() {
   const [results, setResults] = useState<Record<string, TestResult[]>>({});
@@ -90,7 +91,7 @@ export function TestSuite() {
       setSummary(summary);
       setOverallStatus(summary.failed === 0 ? 'passed' : 'failed');
     } catch (error) {
-      console.error('Test suite error:', error);
+      logger.error('Test suite error', { error: error instanceof Error ? error.message : 'Unknown error' });
       setOverallStatus('failed');
     } finally {
       setIsRunning(false);

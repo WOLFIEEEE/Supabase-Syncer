@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/middleware/admin-auth';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { testConnection } from '@/lib/services/drizzle-factory';
 import { decrypt } from '@/lib/services/encryption';
+import { logger } from '@/lib/services/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +60,7 @@ export async function POST(
       });
     }
   } catch (error) {
-    console.error('[ADMIN_CONNECTIONS] Error testing connection:', error);
+    logger.error('[ADMIN_CONNECTIONS] Error testing connection', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to test connection' },
       { status: 500 }

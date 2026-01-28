@@ -9,6 +9,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { supabaseSyncJobStore } from '@/lib/db/supabase-store';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -118,7 +119,7 @@ export async function getUserDetails(userId: string): Promise<UserDetails | null
       })),
     };
   } catch (error) {
-    console.error('[ADMIN_USER_ACTIONS] Error getting user details:', error);
+    logger.error('[ADMIN_USER_ACTIONS] Error getting user details', { error });
     return null;
   }
 }
@@ -171,7 +172,7 @@ export async function banUser(
       });
 
     if (error) {
-      console.error('[ADMIN_USER_ACTIONS] Error banning user:', error);
+      logger.error('[ADMIN_USER_ACTIONS] Error banning user', { error });
       return {
         success: false,
         banned: false,
@@ -184,7 +185,7 @@ export async function banUser(
       banned,
     };
   } catch (error) {
-    console.error('[ADMIN_USER_ACTIONS] Error in banUser:', error);
+    logger.error('[ADMIN_USER_ACTIONS] Error in banUser', { error });
     return {
       success: false,
       banned: false,
@@ -232,13 +233,13 @@ export async function forceLogout(userId: string): Promise<boolean> {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('[ADMIN_USER_ACTIONS] Error forcing logout:', error);
+      logger.error('[ADMIN_USER_ACTIONS] Error forcing logout', { error });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[ADMIN_USER_ACTIONS] Error in forceLogout:', error);
+    logger.error('[ADMIN_USER_ACTIONS] Error in forceLogout', { error });
     return false;
   }
 }
@@ -287,13 +288,13 @@ export async function createImpersonationToken(userId: string): Promise<string |
       });
 
     if (error) {
-      console.error('[ADMIN_USER_ACTIONS] Error creating impersonation token:', error);
+      logger.error('[ADMIN_USER_ACTIONS] Error creating impersonation token', { error });
       return null;
     }
 
     return token;
   } catch (error) {
-    console.error('[ADMIN_USER_ACTIONS] Error in createImpersonationToken:', error);
+    logger.error('[ADMIN_USER_ACTIONS] Error in createImpersonationToken', { error });
     return null;
   }
 }

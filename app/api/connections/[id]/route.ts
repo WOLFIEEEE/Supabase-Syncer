@@ -3,6 +3,7 @@ import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { getSyncableTables, testConnection } from '@/lib/services/drizzle-factory';
 import { getUser } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 interface RouteParams {
   params: Promise<{
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
     
   } catch (error) {
-    console.error('Error fetching connection:', error);
+    logger.error('Error fetching connection', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch connection' },
       { status: 500 }
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
     
   } catch (error) {
-    console.error('Error testing connection:', error);
+    logger.error('Error testing connection', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to test connection' },
       { status: 500 }
@@ -141,7 +142,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
     
   } catch (error) {
-    console.error('Error deleting connection:', error);
+    logger.error('Error deleting connection', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to delete connection' },
       { status: 500 }

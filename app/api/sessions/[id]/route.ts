@@ -10,6 +10,7 @@ import { signOutSession } from '@/lib/services/session-security';
 import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
 import { checkDistributedRateLimit, createDistributedRateLimitHeaders } from '@/lib/services/rate-limiter-redis';
 import { sanitizeErrorMessage, isValidUUID } from '@/lib/services/security-utils';
+import { logger } from '@/lib/services/logger';
 
 interface RouteParams {
   params: Promise<{
@@ -71,8 +72,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       message: 'Session signed out successfully',
     });
   } catch (error) {
-    console.error('Failed to sign out session:', error);
-    
+    logger.error('Failed to sign out session', { error });
+
     return NextResponse.json(
       { success: false, error: sanitizeErrorMessage((error as Error).message) },
       { status: 500 }

@@ -1,10 +1,11 @@
 /**
  * Dashboard Widgets Hook
- * 
+ *
  * Manages widget visibility and order for the admin dashboard
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/services/logger';
 
 export type WidgetId = 
   | 'system-health'
@@ -53,7 +54,7 @@ export function useDashboardWidgets() {
         setWidgets(validWidgets);
       }
     } catch (error) {
-      console.error('Failed to load widget preferences:', error);
+      logger.error('Failed to load widget preferences', { error });
     } finally {
       setIsLoaded(true);
     }
@@ -65,7 +66,7 @@ export function useDashboardWidgets() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(widgets));
       } catch (error) {
-        console.error('Failed to save widget preferences:', error);
+        logger.error('Failed to save widget preferences', { error });
       }
     }
   }, [widgets, isLoaded]);

@@ -6,6 +6,7 @@
  */
 
 import { Redis } from 'ioredis';
+import { logger } from '@/lib/services/logger';
 
 // Cache configuration
 const DEFAULT_TTL = 60; // 60 seconds
@@ -59,19 +60,19 @@ function getRedisClient(): Redis | null {
       
       redisClient.on('connect', () => {
         redisAvailable = true;
-        console.log('[Cache] Redis connected');
+        logger.info('[Cache] Redis connected');
       });
-      
+
       redisClient.on('error', (err) => {
         redisAvailable = false;
-        console.warn('[Cache] Redis error:', err.message);
+        logger.warn('[Cache] Redis error', { error: err.message });
       });
       
       redisClient.on('close', () => {
         redisAvailable = false;
       });
     } catch (error) {
-      console.warn('[Cache] Failed to create Redis client:', error);
+      logger.warn('[Cache] Failed to create Redis client', { error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }
@@ -115,7 +116,7 @@ async function getFromCache<T>(key: string): Promise<T | null> {
         return JSON.parse(value) as T;
       }
     } catch (error) {
-      console.warn('[Cache] Redis get error:', error);
+      logger.warn('[Cache] Redis get error', { error: error instanceof Error ? error.message : String(error) });
     }
   }
   
@@ -143,7 +144,7 @@ async function setInCache<T>(key: string, value: T, ttl: number): Promise<void> 
     try {
       await redis.setex(key, ttl, JSON.stringify(value));
     } catch (error) {
-      console.warn('[Cache] Redis set error:', error);
+      logger.warn('[Cache] Redis set error', { error: error instanceof Error ? error.message : String(error) });
     }
   }
   
@@ -165,7 +166,7 @@ async function deleteFromCache(key: string): Promise<void> {
     try {
       await redis.del(key);
     } catch (error) {
-      console.warn('[Cache] Redis del error:', error);
+      logger.warn('[Cache] Redis del error', { error: error instanceof Error ? error.message : String(error) });
     }
   }
   
@@ -186,7 +187,7 @@ async function deleteByPattern(pattern: string): Promise<void> {
         await redis.del(...keys);
       }
     } catch (error) {
-      console.warn('[Cache] Redis pattern del error:', error);
+      logger.warn('[Cache] Redis pattern del error', { error: error instanceof Error ? error.message : String(error) });
     }
   }
   
@@ -284,7 +285,7 @@ export async function clearAllCache(): Promise<void> {
     try {
       await redis.flushdb();
     } catch (error) {
-      console.warn('[Cache] Redis flush error:', error);
+      logger.warn('[Cache] Redis flush error', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 }

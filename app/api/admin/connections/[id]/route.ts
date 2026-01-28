@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/middleware/admin-auth';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { logSecurityEvent } from '@/lib/services/security-logger';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,7 +45,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('[ADMIN_CONNECTIONS] Error fetching connection:', error);
+    logger.error('[ADMIN_CONNECTIONS] Error fetching connection', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to fetch connection' },
       { status: 500 }
@@ -125,7 +126,7 @@ export async function PATCH(
       },
     });
   } catch (error) {
-    console.error('[ADMIN_CONNECTIONS] Error updating connection:', error);
+    logger.error('[ADMIN_CONNECTIONS] Error updating connection', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to update connection' },
       { status: 500 }
@@ -184,7 +185,7 @@ export async function DELETE(
       message: 'Connection deleted successfully',
     });
   } catch (error) {
-    console.error('[ADMIN_CONNECTIONS] Error deleting connection:', error);
+    logger.error('[ADMIN_CONNECTIONS] Error deleting connection', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to delete connection' },
       { status: 500 }

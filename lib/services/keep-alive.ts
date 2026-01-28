@@ -11,6 +11,7 @@
 import { createDrizzleClient, type DrizzleConnection } from './drizzle-factory';
 import { decrypt } from './encryption';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 // Configuration
 export const KEEP_ALIVE_CONFIG = {
@@ -75,7 +76,7 @@ export async function pingDatabase(
     
     const duration = Date.now() - startTime;
     
-    console.log(`[Keep Alive] ✅ Pinged "${connectionName}" successfully (${duration}ms)`);
+    logger.info('Keep Alive: Pinged successfully', { connectionName, durationMs: duration });
     
     return {
       connectionId,
@@ -89,7 +90,7 @@ export async function pingDatabase(
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
-    console.error(`[Keep Alive] ❌ Failed to ping "${connectionName}": ${errorMessage}`);
+    logger.error('Keep Alive: Failed to ping', { connectionName, error: errorMessage });
     
     return {
       connectionId,
@@ -237,7 +238,7 @@ export async function logPingResult(result: PingResult): Promise<void> {
       });
   } catch (error) {
     // Don't throw - logging should not break the ping flow
-    console.error('[Keep Alive] Failed to log ping result:', error);
+    logger.error('Keep Alive: Failed to log ping result', { error });
   }
 }
 
@@ -265,7 +266,7 @@ export async function getPingHistory(
       .limit(limit);
     
     if (error) {
-      console.error('[Keep Alive] Failed to get ping history:', error);
+      logger.error('Keep Alive: Failed to get ping history', { error });
       return [];
     }
     
@@ -281,7 +282,7 @@ export async function getPingHistory(
       timestamp: new Date(row.created_at),
     }));
   } catch (error) {
-    console.error('[Keep Alive] Failed to get ping history:', error);
+    logger.error('Keep Alive: Failed to get ping history', { error });
     return [];
   }
 }
@@ -322,7 +323,7 @@ export async function getPingStats(connectionId: string): Promise<{
     
     return { total, successful, failed, avgDuration, uptime };
   } catch (error) {
-    console.error('[Keep Alive] Failed to get ping stats:', error);
+    logger.error('Keep Alive: Failed to get ping stats', { error });
     return { total: 0, successful: 0, failed: 0, avgDuration: 0, uptime: 0 };
   }
 }

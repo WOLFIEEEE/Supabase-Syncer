@@ -1,6 +1,6 @@
 /**
  * Health Check Endpoint
- * 
+ *
  * Provides detailed health status including:
  * - Database connectivity
  * - Backend server status
@@ -9,9 +9,10 @@
  * - Uptime
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Redis } from 'ioredis';
+import { checkRateLimit, createRateLimitHeaders } from '@/lib/services/rate-limiter';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -225,7 +226,26 @@ function determineOverallStatus(checks: HealthResponse['checks']): 'healthy' | '
   return 'healthy';
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Rate limit by IP to prevent abuse
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+             request.headers.get('x-real-ip') ||
+             'unknown';
+  const rateLimitResult = checkRateLimit(ip, 'public');
+
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      {
+        status: 'error',
+        message: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.`,
+      },
+      {
+        status: 429,
+        headers: createRateLimitHeaders(rateLimitResult, 'public'),
+      }
+    );
+  }
+
   try {
     // Run all checks in parallel
     const [supabaseCheck, backendCheck, redisCheck] = await Promise.all([
@@ -254,8 +274,10 @@ export async function GET() {
       },
     };
     
-    const httpStatus = response.status === 'healthy' ? 200 : 
-                       response.status === 'degraded' ? 200 : 503;
+    // Return appropriate HTTP status for monitoring systems
+    // 200 = healthy, 207 = degraded (partial success), 503 = unhealthy
+    const httpStatus = response.status === 'healthy' ? 200 :
+                       response.status === 'degraded' ? 207 : 503;
     
     return NextResponse.json(response, {
       status: httpStatus,

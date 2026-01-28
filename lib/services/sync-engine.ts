@@ -211,14 +211,18 @@ export async function executeSync(options: SyncOptions): Promise<SyncResult> {
         await onLog?.('error', `Error syncing table ${tableName}: ${message}`);
         result.errors++;
         progress.errors++;
-        
-        // Save checkpoint for resuming
+
+        // Save checkpoint for resuming - do NOT add failed table to processedTables
+        // so it will be retried on resume
         result.checkpoint = {
           lastTable: tableName,
           lastRowId: '',
           lastUpdatedAt: new Date().toISOString(),
           processedTables,
         };
+
+        // Continue to next table without marking this one as processed
+        continue;
       }
     }
     
@@ -325,8 +329,11 @@ async function syncTable(options: TableSyncOptions): Promise<TableSyncResult> {
       break;
     }
     
-    // Process batch within a transaction
+    // Process batch within a transaction with timeout protection
     await targetConn.client.begin(async (tx) => {
+      // Set statement timeout to prevent deadlocks (30 seconds per batch)
+      await tx.unsafe('SET LOCAL statement_timeout = 30000');
+
       for (const row of batch.rows) {
         const rowId = safeString(row.id);
         if (!rowId) {

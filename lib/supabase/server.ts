@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/supabase';
+import { logger } from '@/lib/services/logger';
 
 // Check if Supabase is configured
 function isSupabaseConfigured() {
@@ -45,7 +46,7 @@ export async function createClient() {
 export async function getUser() {
   // If Supabase is not configured, return null
   if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured. Authentication is disabled.');
+    logger.warn('Supabase not configured. Authentication is disabled.');
     return null;
   }
   
@@ -59,7 +60,7 @@ export async function getUser() {
     
     return user;
   } catch (error) {
-    console.error('Error getting user:', error);
+    logger.error('Error getting user', error);
     return null;
   }
 }

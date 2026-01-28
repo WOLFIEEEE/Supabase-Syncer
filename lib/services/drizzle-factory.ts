@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { Sql } from 'postgres';
+import { logger } from '@/lib/services/logger';
 
 // ============================================================================
 // SAFE TYPE COERCION HELPERS
@@ -136,7 +137,7 @@ export async function testConnection(databaseUrl: string): Promise<{ success: tr
     return { success: true, version, tableCount };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown connection error';
-    console.error('Connection test failed:', maskDatabaseUrlForLogs(databaseUrl), message);
+    logger.error('Connection test failed', { url: maskDatabaseUrlForLogs(databaseUrl), error: message });
     return { success: false, error: message };
   } finally {
     if (connection) {
@@ -257,7 +258,7 @@ export async function getTableRowCount(databaseUrl: string, tableName: string): 
     
     return parseInt(result[0]?.count as string || '0', 10);
   } catch (error) {
-    console.error('Error getting row count:', error);
+    logger.error('Error getting row count', error);
     return 0;
   } finally {
     if (connection) {

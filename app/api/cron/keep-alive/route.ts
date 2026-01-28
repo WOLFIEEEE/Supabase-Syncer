@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pingDatabase, shouldPing, logPingResult, type KeepAliveStats } from '@/lib/services/keep-alive';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
+import { logger } from '@/lib/services/logger';
 
 // Vercel Cron configuration
 export const runtime = 'nodejs';
@@ -36,14 +37,14 @@ export async function GET(request: NextRequest) {
   const isManualTrigger = request.headers.get('x-manual-trigger') === 'true';
   
   if (!isDev && cronSecret && !isVercelCron && !isManualTrigger) {
-    console.log('[Keep Alive Cron] ❌ Unauthorized request');
+    logger.warn('[Keep Alive Cron] Unauthorized request');
     return NextResponse.json(
       { error: 'Unauthorized' },
       { status: 401 }
     );
   }
-  
-  console.log('[Keep Alive Cron] Starting keep-alive ping cycle...');
+
+  logger.info('[Keep Alive Cron] Starting keep-alive ping cycle...');
   
   const stats: KeepAliveStats = {
     totalPinged: 0,
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
     const connections = await supabaseConnectionStore.getAllForService();
     const keepAliveConnections = connections.filter(c => c.keepAlive);
     
-    console.log(`[Keep Alive Cron] Found ${keepAliveConnections.length} connections with keep_alive enabled`);
+    logger.info('[Keep Alive Cron] Found connections with keep_alive enabled', { count: keepAliveConnections.length });
     
     if (keepAliveConnections.length === 0) {
       return NextResponse.json({
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
     for (const connection of keepAliveConnections) {
       // Check if we should ping based on last ping time
       if (!shouldPing(connection.lastPingedAt)) {
-        console.log(`[Keep Alive Cron] ⏭️ Skipping "${connection.name}" - recently pinged`);
+        logger.info('[Keep Alive Cron] Skipping connection - recently pinged', { connectionName: connection.name });
         stats.skipped++;
         continue;
       }
@@ -98,9 +99,9 @@ export async function GET(request: NextRequest) {
         // Update last_pinged_at timestamp
         try {
           await supabaseConnectionStore.updateLastPinged(connection.id);
-          console.log(`[Keep Alive Cron] ✅ Updated last_pinged_at for "${connection.name}"`);
+          logger.info('[Keep Alive Cron] Updated last_pinged_at', { connectionName: connection.name });
         } catch (error) {
-          console.error(`[Keep Alive Cron] ⚠️ Failed to update last_pinged_at for "${connection.name}":`, error);
+          logger.error('[Keep Alive Cron] Failed to update last_pinged_at', { connectionName: connection.name, error });
           // Don't fail the ping - logging is more important than timestamp update
         }
       } else {
@@ -112,8 +113,8 @@ export async function GET(request: NextRequest) {
     }
     
     const duration = Date.now() - startTime;
-    
-    console.log(`[Keep Alive Cron] Completed: ${stats.successful}/${stats.totalPinged} successful (${duration}ms)`);
+
+    logger.info('[Keep Alive Cron] Completed', { successful: stats.successful, totalPinged: stats.totalPinged, duration });
     
     return NextResponse.json({
       success: stats.failed === 0,
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[Keep Alive Cron] ❌ Error: ${message}`);
+    logger.error('[Keep Alive Cron] Error', { message, error });
     
     return NextResponse.json(
       {
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log(`[Keep Alive] 🔔 Manual ping requested for "${connection.name}"`);
+    logger.info('[Keep Alive] Manual ping requested', { connectionName: connection.name });
     
     // Ping the database
     const result = await pingDatabase(
@@ -179,9 +180,9 @@ export async function POST(request: NextRequest) {
       // Update last_pinged_at timestamp
       try {
         await supabaseConnectionStore.updateLastPinged(connection.id);
-        console.log(`[Keep Alive] ✅ Updated last_pinged_at for "${connection.name}"`);
+        logger.info('[Keep Alive] Updated last_pinged_at', { connectionName: connection.name });
       } catch (error) {
-        console.error(`[Keep Alive] ⚠️ Failed to update last_pinged_at for "${connection.name}":`, error);
+        logger.error('[Keep Alive] Failed to update last_pinged_at', { connectionName: connection.name, error });
         // Don't fail the ping - logging is more important than timestamp update
       }
     }
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[Keep Alive] ❌ Manual ping error: ${message}`);
+    logger.error('[Keep Alive] Manual ping error', { message, error });
     
     return NextResponse.json(
       { error: message },

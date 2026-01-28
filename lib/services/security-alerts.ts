@@ -10,9 +10,10 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { 
-  SecurityEventType, 
-  SecuritySeverity, 
+import { logger } from '@/lib/services/logger';
+import {
+  SecurityEventType,
+  SecuritySeverity,
   getSecurityEventsByType,
   countSecurityEventsBySeverity,
 } from './security-logger';
@@ -95,7 +96,7 @@ export async function createSecurityAlert(alert: SecurityAlert): Promise<string 
       .single();
     
     if (error || !data) {
-      console.error('Failed to create security alert:', error);
+      logger.error('Failed to create security alert', { error });
       return null;
     }
     
@@ -106,7 +107,7 @@ export async function createSecurityAlert(alert: SecurityAlert): Promise<string 
     
     return data.id;
   } catch (error) {
-    console.error('Failed to create security alert:', error);
+    logger.error('Failed to create security alert', { error });
     return null;
   }
 }
@@ -186,8 +187,8 @@ export async function createRateLimitAbuseAlert(
  * Send notification for a security alert
  */
 async function sendAlertNotification(alert: SecurityAlert): Promise<void> {
-  // Log to console for now
-  console.warn(`[SECURITY ALERT - ${alert.severity.toUpperCase()}]`, {
+  // Log for now
+  logger.warn(`[SECURITY ALERT - ${alert.severity.toUpperCase()}]`, {
     type: alert.alertType,
     title: alert.title,
     description: alert.description,
@@ -223,7 +224,7 @@ async function sendAlertNotification(alert: SecurityAlert): Promise<void> {
         }),
       });
     } catch (error) {
-      console.error('Failed to send webhook notification:', error);
+      logger.error('Failed to send webhook notification', { error });
     }
   }
 }
@@ -279,7 +280,7 @@ export async function checkForBruteForce(): Promise<void> {
       }
     }
   } catch (error) {
-    console.error('Failed to check for brute force:', error);
+    logger.error('Failed to check for brute force', { error });
   }
 }
 
@@ -318,7 +319,7 @@ export async function checkForRateLimitAbuse(): Promise<void> {
       }
     }
   } catch (error) {
-    console.error('Failed to check for rate limit abuse:', error);
+    logger.error('Failed to check for rate limit abuse', { error });
   }
 }
 

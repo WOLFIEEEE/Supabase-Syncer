@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { logger } from '@/lib/services/logger';
 import {
   Box,
   Container,
@@ -291,7 +292,7 @@ export default function TableDataPage() {
           setConnectionName(data.data.connection.name);
         }
       })
-      .catch(console.error);
+      .catch((error) => logger.error('Failed to fetch connection info', { error }));
   }, [connectionId]);
 
   // Log view activity when page loads

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { logger } from '@/lib/services/logger';
 import {
   Box,
   Container,
@@ -256,7 +257,7 @@ export default function SyncDetailPage() {
                 }
               }
             } catch (err) {
-              console.error('Stream read error:', err);
+              logger.error('Stream read error', { error: err });
             } finally {
               setIsActioning(false);
             }

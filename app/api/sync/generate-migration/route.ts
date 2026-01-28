@@ -10,6 +10,7 @@ import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { getUser } from '@/lib/supabase/server';
 import { createProxyPOST } from '@/lib/utils/proxy-handler';
 import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
+import { logger } from '@/lib/services/logger';
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -67,7 +68,7 @@ export const POST = async (request: NextRequest) => {
     return proxyHandler(modifiedRequest);
     
   } catch (error) {
-    console.error('Generate migration proxy error:', error);
+    logger.error('Generate migration proxy error', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to proxy migration generation' },
       { status: 500 }

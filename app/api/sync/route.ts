@@ -14,6 +14,7 @@ import { createProxyPOST } from '@/lib/utils/proxy-handler';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
 import { sanitizeErrorMessage } from '@/lib/services/security-utils';
+import { logger } from '@/lib/services/logger';
 
 // GET - List all sync jobs for the authenticated user (lightweight, stays in frontend)
 export async function GET(request: NextRequest) {
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error fetching sync jobs:', error);
+    logger.error('Error fetching sync jobs', { error });
     return NextResponse.json(
       { success: false, error: sanitizeErrorMessage(error) || 'Failed to fetch sync jobs' },
       { status: 500 }
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
     return proxyHandler(modifiedRequest);
     
   } catch (error) {
-    console.error('Error creating sync job:', error);
+    logger.error('Error creating sync job', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to create sync job' },
       { status: 500 }

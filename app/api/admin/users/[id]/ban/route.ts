@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/middleware/admin-auth';
 import { banUser } from '@/lib/services/admin-user-actions';
 import { logSecurityEvent } from '@/lib/services/security-logger';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,7 +67,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('[ADMIN_USERS] Error updating ban status:', error);
+    logger.error('[ADMIN_USERS] Error updating ban status', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to update ban status' },
       { status: 500 }

@@ -1,5 +1,12 @@
 'use client';
 
+// Extend Window interface for command palette
+declare global {
+  interface Window {
+    __openCommandPalette?: () => void;
+  }
+}
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -307,7 +314,7 @@ export default function DashboardPage() {
                   color="surface.400"
                   _hover={{ bg: 'surface.700' }}
                   leftIcon={<CommandIcon />}
-                  onClick={() => (window as any).__openCommandPalette?.()}
+                  onClick={() => window.__openCommandPalette?.()}
                 >
                   <HStack spacing={1}>
                     <Kbd bg="surface.700" fontSize="xs">Cmd</Kbd>

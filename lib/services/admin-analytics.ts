@@ -5,6 +5,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/services/logger';
 
 export interface UserStats {
   totalUsers: number;
@@ -60,7 +61,7 @@ export async function getUserStats(): Promise<UserStats> {
       .select('user_id, created_at, last_activity');
     
     if (connectionsError && sessionsError) {
-      console.error('[ADMIN_ANALYTICS] Error getting user data:', { connectionsError, sessionsError });
+      logger.error('[ADMIN_ANALYTICS] Error getting user data', { connectionsError, sessionsError });
       return {
         totalUsers: 0,
         newUsers24h: 0,
@@ -145,7 +146,7 @@ export async function getUserStats(): Promise<UserStats> {
       activeUsers24h,
     };
   } catch (error) {
-    console.error('[ADMIN_ANALYTICS] Error getting user stats:', error);
+    logger.error('[ADMIN_ANALYTICS] Error getting user stats', { error });
     return {
       totalUsers: 0,
       newUsers24h: 0,
@@ -169,7 +170,7 @@ export async function getSyncStats(): Promise<SyncStats> {
       .select('status, created_at, completed_at, started_at');
     
     if (error || !syncJobs) {
-      console.error('[ADMIN_ANALYTICS] Error getting sync stats:', error);
+      logger.error('[ADMIN_ANALYTICS] Error getting sync stats', { error });
       return {
         totalSyncs: 0,
         completedSyncs: 0,
@@ -224,7 +225,7 @@ export async function getSyncStats(): Promise<SyncStats> {
       avgDurationSeconds,
     };
   } catch (error) {
-    console.error('[ADMIN_ANALYTICS] Error getting sync stats:', error);
+    logger.error('[ADMIN_ANALYTICS] Error getting sync stats', { error });
     return {
       totalSyncs: 0,
       completedSyncs: 0,
@@ -253,7 +254,7 @@ export async function getSecurityStats(hours: number = 24): Promise<SecurityStat
       .order('created_at', { ascending: false });
     
     if (error || !events) {
-      console.error('[ADMIN_ANALYTICS] Error getting security stats:', error);
+      logger.error('[ADMIN_ANALYTICS] Error getting security stats', { error });
       return {
         eventsBySeverity: {
           critical: 0,
@@ -325,7 +326,7 @@ export async function getSecurityStats(hours: number = 24): Promise<SecurityStat
       recentEvents: recentEvents.slice(0, 10),
     };
   } catch (error) {
-    console.error('[ADMIN_ANALYTICS] Error getting security stats:', error);
+    logger.error('[ADMIN_ANALYTICS] Error getting security stats', { error });
     return {
       eventsBySeverity: {
         critical: 0,
@@ -457,7 +458,7 @@ export async function getUserGrowthData(days: number = 30): Promise<UserGrowthDa
     
     return { data, total, growthRate };
   } catch (error) {
-    console.error('[ADMIN_ANALYTICS] Error getting user growth data:', error);
+    logger.error('[ADMIN_ANALYTICS] Error getting user growth data', { error });
     return { data: [], total: 0, growthRate: 0 };
   }
 }
@@ -533,7 +534,7 @@ export async function getSyncPerformanceData(days: number = 30): Promise<SyncPer
     
     return { data, avgDuration, successRate };
   } catch (error) {
-    console.error('[ADMIN_ANALYTICS] Error getting sync performance data:', error);
+    logger.error('[ADMIN_ANALYTICS] Error getting sync performance data', { error });
     return { data: [], avgDuration: 0, successRate: 0 };
   }
 }
@@ -588,7 +589,7 @@ export async function getAPIUsageData(days: number = 30): Promise<APIUsageData> 
     
     return { data, totalRequests, avgPerMinute };
   } catch (error) {
-    console.error('[ADMIN_ANALYTICS] Error getting API usage data:', error);
+    logger.error('[ADMIN_ANALYTICS] Error getting API usage data', { error });
     return { data: [], totalRequests: 0, avgPerMinute: 0 };
   }
 }
@@ -658,7 +659,7 @@ export async function getTopUsers(limit: number = 10): Promise<TopUser[]> {
     
     return topUsers;
   } catch (error) {
-    console.error('[ADMIN_ANALYTICS] Error getting top users:', error);
+    logger.error('[ADMIN_ANALYTICS] Error getting top users', { error });
     return [];
   }
 }
@@ -717,7 +718,7 @@ export async function getTopConnections(limit: number = 10): Promise<TopConnecti
     
     return topConnections;
   } catch (error) {
-    console.error('[ADMIN_ANALYTICS] Error getting top connections:', error);
+    logger.error('[ADMIN_ANALYTICS] Error getting top connections', { error });
     return [];
   }
 }
@@ -779,7 +780,7 @@ export async function getErrorTrends(days: number = 30): Promise<TimeSeriesDataP
     
     return data;
   } catch (error) {
-    console.error('[ADMIN_ANALYTICS] Error getting error trends:', error);
+    logger.error('[ADMIN_ANALYTICS] Error getting error trends', { error });
     return [];
   }
 }
