@@ -57,15 +57,15 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^10.0.0",
-    "dotenv": "^17.2.3",
-    "drizzle-kit": "^0.31.8",
+    "dotenv": "^17.3.1",
+    "drizzle-kit": "^0.31.9",
     "eslint": "^9.39.2",
     "eslint-config-next": "16.1.6",
     "jest": "30.2.0",
@@ -73,6 +73,6 @@
     "tailwindcss": "^4",
     "ts-jest": "^29.4.6",
     "tsx": "^4.21.0",
-    "typescript": "5.7.3"
+    "typescript": "5.9.3"
   }
 }
