@@ -1,7 +1,7 @@
 'use client';
 
-import { Box, Text } from '@chakra-ui/react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { ChartShell, useChartTokens } from './ChartShell';
 
 interface PieChartProps {
   data: Array<{ name: string; value: number }>;
@@ -10,16 +10,12 @@ interface PieChartProps {
   height?: number;
 }
 
-const DEFAULT_COLORS = ['#3182ce', '#38a169', '#d69e2e', '#e53e3e', '#805ad5', '#d53f8c'];
+export default function PieChart({ data, title, colors, height = 300 }: PieChartProps) {
+  const tokens = useChartTokens();
+  const palette = colors && colors.length > 0 ? colors : tokens.palette;
 
-export default function PieChart({ data, title, colors = DEFAULT_COLORS, height = 300 }: PieChartProps) {
   return (
-    <Box>
-      {title && (
-        <Text fontSize="lg" fontWeight="600" color="white" mb={4}>
-          {title}
-        </Text>
-      )}
+    <ChartShell title={title}>
       <ResponsiveContainer width="100%" height={height}>
         <RechartsPieChart>
           <Pie
@@ -29,25 +25,17 @@ export default function PieChart({ data, title, colors = DEFAULT_COLORS, height 
             labelLine={false}
             label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
             outerRadius={80}
-            fill="#8884d8"
+            fill={tokens.brand}
             dataKey="value"
           >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+            {data.map((_, index) => (
+              <Cell key={`cell-${index}`} fill={palette[index % palette.length]} />
             ))}
           </Pie>
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1F2937',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#F9FAFB',
-            }}
-          />
+          <Tooltip contentStyle={tokens.tooltipStyle} />
           <Legend />
         </RechartsPieChart>
       </ResponsiveContainer>
-    </Box>
+    </ChartShell>
   );
 }
-

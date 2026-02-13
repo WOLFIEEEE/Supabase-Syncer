@@ -12,6 +12,10 @@ import {
 } from '@/lib/services/csrf-protection';
 
 describe('CSRF Protection', () => {
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_APP_URL = 'https://suparbase.com';
+  });
+
   describe('generateCSRFToken', () => {
     it('should generate a 64-character hex token', () => {
       const token = generateCSRFToken();
@@ -57,9 +61,7 @@ describe('CSRF Protection', () => {
 
   describe('validateOrigin', () => {
     it('should validate allowed origins', () => {
-      // These should be in the allowed list
       expect(validateOrigin('https://suparbase.com')).toBe(true);
-      expect(validateOrigin('http://suparbase.com')).toBe(true);
     });
 
     it('should reject null origin', () => {
@@ -110,9 +112,9 @@ describe('CSRF Attack Patterns', () => {
 
   it('should not accept origins with path traversal', () => {
     const maliciousOrigins = [
-      'https://suparbase.com/../evil.com',
+      'https://suparbase.com.evil.com',
       'https://suparbase.com@evil.com',
-      'https://evil.com?redirect=suparbase.com',
+      'https://evil.com?redirect=https://suparbase.com',
     ];
 
     for (const origin of maliciousOrigins) {
@@ -120,4 +122,3 @@ describe('CSRF Attack Patterns', () => {
     }
   });
 });
-

@@ -46,95 +46,107 @@ export function isValidCSRFTokenFormat(token: string | null | undefined): boolea
 // ORIGIN VALIDATION
 // ============================================================================
 
+function normalizeOrigin(input: string | null | undefined): string | null {
+  if (!input) return null;
+  try {
+    return new URL(input).origin;
+  } catch {
+    return null;
+  }
+}
+
+function parseOriginList(input: string | undefined): string[] {
+  if (!input) return [];
+
+  const origins = input
+    .split(',')
+    .map((origin) => normalizeOrigin(origin.trim()))
+    .filter((origin): origin is string => Boolean(origin));
+
+  return Array.from(new Set(origins));
+}
+
 /**
- * Get allowed origins from environment
+ * Build the same-origin value from forwarding headers when available.
  */
-function getAllowedOrigins(): string[] {
-  const origins: string[] = [];
-  
-  // Add app URL if configured
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (appUrl) {
-    try {
-      const url = new URL(appUrl);
-      origins.push(url.origin);
-    } catch {
-      // Invalid URL, skip
-    }
-  }
-  
-  // Add Supabase URL origin (for auth callbacks)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (supabaseUrl) {
-    try {
-      const url = new URL(supabaseUrl);
-      origins.push(url.origin);
-    } catch {
-      // Invalid URL, skip
-    }
-  }
-  
-  // Always allow localhost in development
-  if (process.env.NODE_ENV === 'development') {
-    origins.push('http://localhost:3000');
-    origins.push('http://127.0.0.1:3000');
-  }
-  
-  // Add production domain (HTTPS only for security)
-  origins.push('https://suparbase.com');
+function getForwardedOrigin(request: NextRequest): string | null {
+  const rawHost = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
+  if (!rawHost) return null;
 
-  // Only allow HTTP in development (not for production)
-  if (process.env.NODE_ENV === 'development') {
-    origins.push('http://suparbase.com');
+  const host = rawHost.split(',')[0]?.trim();
+  if (!host) return null;
+
+  const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
+  const protocol =
+    forwardedProto ||
+    (request.nextUrl.protocol ? request.nextUrl.protocol.replace(':', '') : undefined) ||
+    (process.env.NODE_ENV === 'development' ? 'http' : 'https');
+
+  return normalizeOrigin(`${protocol}://${host}`);
+}
+
+/**
+ * Get allowed origins from the active request and environment.
+ *
+ * Priority:
+ * 1. Current request origin (same-origin protection)
+ * 2. Explicit app URL and allowed-origin env lists
+ * 3. Localhost in development
+ */
+function getAllowedOrigins(request?: NextRequest): string[] {
+  const origins = new Set<string>();
+
+  if (request) {
+    const requestOrigin = normalizeOrigin(request.nextUrl.origin);
+    if (requestOrigin) origins.add(requestOrigin);
+
+    const forwardedOrigin = getForwardedOrigin(request);
+    if (forwardedOrigin) origins.add(forwardedOrigin);
   }
 
-  return origins;
+  const appOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  if (appOrigin) origins.add(appOrigin);
+
+  for (const origin of parseOriginList(process.env.ALLOWED_ORIGINS)) {
+    origins.add(origin);
+  }
+
+  for (const origin of parseOriginList(process.env.NEXT_PUBLIC_ALLOWED_ORIGINS)) {
+    origins.add(origin);
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    origins.add('http://localhost:3000');
+    origins.add('http://127.0.0.1:3000');
+  }
+
+  return Array.from(origins);
 }
 
 /**
  * Validate Origin header against allowed origins
  */
-export function validateOrigin(origin: string | null): boolean {
+export function validateOrigin(origin: string | null, request?: NextRequest): boolean {
   if (!origin) return false;
   
-  const allowedOrigins = getAllowedOrigins();
+  const allowedOrigins = getAllowedOrigins(request);
+  const parsedOrigin = normalizeOrigin(origin);
+  if (!parsedOrigin) return false;
   
-  try {
-    const originUrl = new URL(origin);
-    return allowedOrigins.some(allowed => {
-      try {
-        const allowedUrl = new URL(allowed);
-        return allowedUrl.origin === originUrl.origin;
-      } catch {
-        return false;
-      }
-    });
-  } catch {
-    return false;
-  }
+  return allowedOrigins.includes(parsedOrigin);
 }
 
 /**
  * Validate Referer header against allowed origins
  */
-export function validateReferer(referer: string | null): boolean {
+export function validateReferer(referer: string | null, request?: NextRequest): boolean {
   if (!referer) return false;
   
-  const allowedOrigins = getAllowedOrigins();
+  const allowedOrigins = getAllowedOrigins(request);
+  const refererOrigin = normalizeOrigin(referer);
+  if (!refererOrigin) return false;
   
-  try {
-    const refererUrl = new URL(referer);
-    return allowedOrigins.some(allowed => {
-      try {
-        const allowedUrl = new URL(allowed);
-        return refererUrl.origin === allowedUrl.origin;
-      } catch {
-        return false;
-      }
-    });
-  } catch {
-    return false;
-  }
+  return allowedOrigins.includes(refererOrigin);
 }
 
 // ============================================================================
@@ -180,8 +192,8 @@ export async function validateCSRFProtection(
     const origin = request.headers.get('origin');
     const referer = request.headers.get('referer');
     
-    const originValid = validateOrigin(origin);
-    const refererValid = validateReferer(referer);
+    const originValid = validateOrigin(origin, request);
+    const refererValid = validateReferer(referer, request);
     
     // If Origin is present, it must be valid
     if (origin && !originValid) {
@@ -349,4 +361,3 @@ export function hasRequiredCustomHeaders(request: NextRequest): boolean {
   
   return false;
 }
-

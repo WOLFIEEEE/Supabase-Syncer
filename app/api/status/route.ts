@@ -40,7 +40,7 @@ export async function GET() {
     // Check database connection
     let dbStatus: 'connected' | 'not_configured' | 'error' = 'not_configured';
     let dbMessage = 'Using Supabase for storage';
-    let dbType = 'PostgreSQL (Supabase)';
+    const dbType = 'PostgreSQL (Supabase)';
     let dbResponseTime = 0;
     
     try {

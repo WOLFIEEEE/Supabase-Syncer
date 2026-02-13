@@ -9,6 +9,7 @@ import { logger } from '@/lib/services/logger';
 
 const CSRF_HEADER_NAME = 'x-csrf-token';
 const CSRF_STORAGE_KEY = 'csrf_token';
+const CSRF_ERROR_HEADER = 'x-csrf-error';
 
 // In-memory cache for the CSRF token
 let cachedToken: string | null = null;
@@ -16,6 +17,14 @@ let tokenExpiresAt: number | null = null;
 
 // Token validity period (23 hours to refresh before server expires at 24h)
 const TOKEN_VALIDITY_MS = 23 * 60 * 60 * 1000;
+
+function isMutatingMethod(method: string): boolean {
+  return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+}
+
+function isValidTokenFormat(token: string): boolean {
+  return /^[a-f0-9]{64}$/i.test(token);
+}
 
 /**
  * Get the current CSRF token from cache or fetch a new one
@@ -32,7 +41,12 @@ export async function getCSRFToken(): Promise<string> {
     const stored = sessionStorage.getItem(CSRF_STORAGE_KEY);
     const storedExpiry = sessionStorage.getItem(`${CSRF_STORAGE_KEY}_expiry`);
     
-    if (stored && storedExpiry && now < parseInt(storedExpiry, 10)) {
+    if (
+      stored &&
+      isValidTokenFormat(stored) &&
+      storedExpiry &&
+      now < parseInt(storedExpiry, 10)
+    ) {
       cachedToken = stored;
       tokenExpiresAt = parseInt(storedExpiry, 10);
       return stored;
@@ -60,7 +74,7 @@ export async function refreshCSRFToken(): Promise<string> {
     const data = await response.json();
     const token = data.token;
     
-    if (!token) {
+    if (!token || !isValidTokenFormat(token)) {
       throw new Error('No token in response');
     }
     
@@ -109,24 +123,40 @@ export async function getCSRFHeaders(): Promise<Record<string, string>> {
  */
 export async function csrfFetch(
   url: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  isRetry = false
 ): Promise<Response> {
   const method = options.method?.toUpperCase() || 'GET';
+  const fetchOptions: RequestInit = { ...options };
   
   // Only add CSRF token for state-changing methods
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+  if (isMutatingMethod(method)) {
     const csrfHeaders = await getCSRFHeaders();
     
-    options.headers = {
-      ...options.headers,
+    fetchOptions.headers = {
+      ...fetchOptions.headers,
       ...csrfHeaders,
     };
   }
   
   // Always include credentials for cookies
-  options.credentials = options.credentials || 'include';
+  fetchOptions.credentials = fetchOptions.credentials || 'include';
   
-  return fetch(url, options);
+  const response = await fetch(url, fetchOptions);
+
+  // Retry once with a fresh token if server reports CSRF validation failure.
+  if (
+    !isRetry &&
+    isMutatingMethod(method) &&
+    response.status === 403 &&
+    response.headers.get(CSRF_ERROR_HEADER)
+  ) {
+    clearCSRFToken();
+    await refreshCSRFToken();
+    return csrfFetch(url, options, true);
+  }
+
+  return response;
 }
 
 /**
@@ -153,7 +183,7 @@ export async function apiRequest<T>(
   };
   
   // Add CSRF token for state-changing methods
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+  if (isMutatingMethod(method)) {
     const csrfHeaders = await getCSRFHeaders();
     fetchOptions.headers = {
       ...fetchOptions.headers,
@@ -186,4 +216,3 @@ export async function initializeCSRF(): Promise<void> {
     logger.warn('Failed to initialize CSRF token', { error: error instanceof Error ? error.message : 'Unknown error' });
   }
 }
-

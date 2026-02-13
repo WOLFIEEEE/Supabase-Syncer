@@ -506,7 +506,7 @@ export async function getSyncPerformanceData(days: number = 30): Promise<SyncPer
     const data: TimeSeriesDataPoint[] = [];
     let totalCompleted = 0;
     let totalFailed = 0;
-    let allDurations: number[] = [];
+    const allDurations: number[] = [];
     
     for (let i = 0; i < days; i++) {
       const date = new Date(startDate);
@@ -784,4 +784,3 @@ export async function getErrorTrends(days: number = 30): Promise<TimeSeriesDataP
     return [];
   }
 }
-

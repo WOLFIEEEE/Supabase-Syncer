@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -56,7 +56,7 @@ const EyeOffIcon = () => (
   </svg>
 );
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -101,7 +101,7 @@ export default function LoginPage() {
         router.push(redirectTo);
         router.refresh();
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: 'Login failed',
         description: 'An error occurred',
@@ -319,5 +319,38 @@ export default function LoginPage() {
         </MotionBox>
       </Container>
     </Box>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          minH="calc(100vh - 80px)"
+          px={{ base: 4, md: 6 }}
+          py={{ base: 8, md: 12 }}
+        >
+          <Container maxW={{ base: '100%', sm: 'md' }} px={0}>
+            <Box
+              bg="surface.800"
+              p={{ base: 6, md: 8 }}
+              borderRadius="2xl"
+              borderWidth="1px"
+              borderColor="surface.700"
+              boxShadow="0 8px 32px rgba(0, 0, 0, 0.4)"
+              textAlign="center"
+            >
+              <Text color="surface.300">Loading login...</Text>
+            </Box>
+          </Container>
+        </Box>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

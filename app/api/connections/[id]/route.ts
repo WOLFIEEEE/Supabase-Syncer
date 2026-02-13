@@ -3,6 +3,7 @@ import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { decrypt } from '@/lib/services/encryption';
 import { getSyncableTables, testConnection } from '@/lib/services/drizzle-factory';
 import { getUser } from '@/lib/supabase/server';
+import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
 import { logger } from '@/lib/services/logger';
 
 interface RouteParams {
@@ -57,6 +58,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // POST - Test connection and get tables
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+
     const user = await getUser();
     
     if (!user) {
@@ -114,6 +120,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 // DELETE - Delete connection
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+
     const user = await getUser();
     
     if (!user) {

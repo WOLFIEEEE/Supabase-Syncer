@@ -179,6 +179,11 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove a connection for the authenticated user
 export async function DELETE(request: NextRequest) {
   try {
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+
     const user = await getUser();
     
     if (!user) {

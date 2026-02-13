@@ -196,34 +196,30 @@ export function createSyncWorker(
     return syncWorker;
   }
 
-  try {
-    syncWorker = new Worker<SyncJobData>('sync-jobs', processor, {
-      connection: getRedisOptions(),
-      concurrency: 2,
-      limiter: {
-        max: 10,
-        duration: 1000,
-      },
-    });
+  syncWorker = new Worker<SyncJobData>('sync-jobs', processor, {
+    connection: getRedisOptions(),
+    concurrency: 2,
+    limiter: {
+      max: 10,
+      duration: 1000,
+    },
+  });
 
-    syncWorker.on('completed', (job) => {
-      logger.info({ jobId: job.id }, 'Sync job completed');
-    });
+  syncWorker.on('completed', (job) => {
+    logger.info({ jobId: job.id }, 'Sync job completed');
+  });
 
-    syncWorker.on('failed', (job, err) => {
-      logger.error({ jobId: job?.id, error: err }, 'Sync job failed');
-    });
+  syncWorker.on('failed', (job, err) => {
+    logger.error({ jobId: job?.id, error: err }, 'Sync job failed');
+  });
 
-    syncWorker.on('error', (err) => {
-      logger.error({ error: err }, 'Sync worker error');
-    });
+  syncWorker.on('error', (err) => {
+    logger.error({ error: err }, 'Sync worker error');
+  });
 
-    logger.info('Sync worker started');
+  logger.info('Sync worker started');
 
-    return syncWorker;
-  } catch (error) {
-    throw error;
-  }
+  return syncWorker;
 }
 
 /**
@@ -263,4 +259,3 @@ export async function closeQueues(): Promise<void> {
   await Promise.all(closePromises);
   logger.info('All queue connections closed');
 }
-

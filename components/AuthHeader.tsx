@@ -1,37 +1,33 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { Box, Container, Flex } from '@chakra-ui/react';
+import Link from 'next/link';
+import { Box, Container, Flex, Link as ChakraLink } from '@chakra-ui/react';
 import { SuparbaseLogo } from '@/components/Logo';
 
 export default function AuthHeader() {
-  const router = useRouter();
-
   return (
     <Box
       as="nav"
       position="sticky"
       top={0}
-      bg="surface.900"
+      bg="rgba(8, 10, 15, 0.88)"
       borderBottomWidth="1px"
-      borderColor="surface.700"
+      borderColor="border.default"
       zIndex={100}
       backdropFilter="blur(10px)"
-      bgColor="rgba(9, 9, 11, 0.9)"
     >
-      <Container maxW="6xl" py={3}>
+      <Container maxW="6xl" py={{ base: 2, md: 3 }} px={{ base: 4, md: 6 }}>
         <Flex justify="flex-start" align="center">
-          <Box
-            cursor="pointer"
-            onClick={() => router.push('/')}
-            _hover={{ opacity: 0.8 }}
-            transition="opacity 0.2s"
+          <ChakraLink
+            as={Link}
+            href="/"
+            aria-label="Back to homepage"
+            _hover={{ textDecoration: 'none', opacity: 0.92 }}
           >
-            <SuparbaseLogo size="2xl" showText={true} variant="full" />
-          </Box>
+            <SuparbaseLogo size="lg" variant="full" />
+          </ChakraLink>
         </Flex>
       </Container>
     </Box>
   );
 }
-

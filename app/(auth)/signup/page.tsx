@@ -112,7 +112,7 @@ export default function SignupPage() {
       } else {
         setEmailSent(true);
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: 'Sign up failed',
         description: 'An error occurred',

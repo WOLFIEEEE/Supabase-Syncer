@@ -9,12 +9,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
 import { getUser } from '@/lib/supabase/server';
 import { createProxyPOST } from '@/lib/utils/proxy-handler';
-import { getRouteParams } from '@/lib/utils/proxy-handler';
+import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
 import { logger } from '@/lib/services/logger';
 
 // Use proxy handler but first fetch connection to get encrypted URL
 export const POST = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+
     const user = await getUser();
     
     if (!user) {
@@ -37,7 +42,7 @@ export const POST = async (request: NextRequest, { params }: { params: Promise<{
     }
     
     // Forward to backend with encrypted URL
-    const proxyHandler = createProxyPOST((req) => `/api/connections/${id}/test`);
+    const proxyHandler = createProxyPOST(() => `/api/connections/${id}/test`);
     
     // Create a new request with the encrypted URL in the body
     const body = await request.json().catch(() => ({}));

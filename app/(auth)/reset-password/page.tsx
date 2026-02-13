@@ -106,7 +106,7 @@ export default function ResetPasswordPage() {
         });
         router.push('/');
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: 'Failed to reset password',
         description: 'An error occurred',

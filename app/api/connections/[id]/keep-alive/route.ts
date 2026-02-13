@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase/server';
 import { supabaseConnectionStore } from '@/lib/db/supabase-store';
+import { validateCSRFProtection, createCSRFErrorResponse } from '@/lib/services/csrf-protection';
 
 /**
  * GET /api/connections/[id]/keep-alive
@@ -63,6 +64,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+
     const user = await getUser();
     
     if (!user) {
@@ -120,6 +126,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const csrfValidation = await validateCSRFProtection(request);
+    if (!csrfValidation.valid) {
+      return createCSRFErrorResponse(csrfValidation.error || 'CSRF validation failed');
+    }
+
     const user = await getUser();
     
     if (!user) {
@@ -143,7 +154,7 @@ export async function POST(
     
     // Forward to backend with encrypted URL
     const { createProxyPOST } = await import('@/lib/utils/proxy-handler');
-    const proxyHandler = createProxyPOST((req) => `/api/connections/${id}/keep-alive`);
+    const proxyHandler = createProxyPOST(() => `/api/connections/${id}/keep-alive`);
     
     const modifiedRequest = new NextRequest(request.url, {
       method: 'POST',

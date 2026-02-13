@@ -9,7 +9,6 @@ declare global {
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useAuth } from '@/lib/supabase/auth-context';
 import {
   Box,
@@ -41,6 +40,7 @@ import {
   Tooltip,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
+import { SuparbaseLogo } from '@/components/Logo';
 
 const MotionBox = motion.create(Box);
 const MotionCard = motion.create(Card);
@@ -253,55 +253,8 @@ export default function DashboardPage() {
         <Container maxW="7xl" py={{ base: 3, md: 4 }} px={{ base: 4, md: 6 }}>
           <Flex justify="space-between" align="center">
             <HStack spacing={{ base: 2, md: 3 }}>
-              {/* suparbase Logo */}
               <Box display="flex" alignItems="center" gap={2}>
-                <Box width="64px" height="64px" position="relative" flexShrink={0}>
-                  <Image
-                    src="/logo.png"
-                    alt="suparbase logo"
-                    width={64}
-                    height={64}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                    }}
-                    priority
-                  />
-                </Box>
-                <VStack spacing={0.5} align="start">
-                  <HStack spacing={0}>
-                    <Text fontSize={{ base: 'xs', md: 'sm' }} fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
-                      SUPA
-                    </Text>
-                    <Box 
-                      mx={1.5} 
-                      px={2} 
-                      py={0.5} 
-                      bgGradient="linear(to-br, #3ECF8E, #14B8A6)" 
-                      borderRadius="full" 
-                      display="flex" 
-                      alignItems="center"
-                      boxShadow="0 0 15px rgba(62, 207, 142, 0.3)"
-                    >
-                      <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="900" color="white" lineHeight="1" fontFamily="JetBrains Mono, monospace">
-                        R
-                      </Text>
-                    </Box>
-                    <Text fontSize={{ base: 'xs', md: 'sm' }} fontWeight="300" color="white" letterSpacing="0.05em" opacity={0.9}>
-                      BASE
-                    </Text>
-                  </HStack>
-                  <Text 
-                    fontSize="2xs" 
-                    fontWeight="400" 
-                    color="surface.400"
-                    letterSpacing="0.1em"
-                    textTransform="uppercase"
-                  >
-                    reimagining
-                  </Text>
-                </VStack>
+                <SuparbaseLogo size="lg" variant="full" />
               </Box>
             </HStack>
             <HStack spacing={{ base: 1, md: 2 }}>
@@ -755,4 +708,3 @@ export default function DashboardPage() {
     </Box>
   );
 }
-

@@ -1,218 +1,138 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Box,
   Container,
-  VStack,
-  HStack,
-  Text,
-  Button,
-  Grid,
   Flex,
-  Link,
+  Grid,
+  HStack,
+  Link as ChakraLink,
+  Text,
+  VStack,
 } from '@chakra-ui/react';
 import { SuparbaseLogo } from './Logo';
-import ParticleTextAnimation from './ParticleTextAnimation';
+
+type FooterLink = {
+  label: string;
+  href: string;
+};
+
+type FooterColumn = {
+  title: string;
+  links: FooterLink[];
+};
+
+const footerColumns: FooterColumn[] = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Features', href: '/features' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'Benefits', href: '/benefits' },
+      { label: 'Integrations', href: '/integrations' },
+      { label: 'Status', href: '/status' },
+    ],
+  },
+  {
+    title: 'Learn',
+    links: [
+      { label: 'Getting Started', href: '/getting-started' },
+      { label: 'How It Works', href: '/how-it-works' },
+      { label: 'Guide', href: '/guide' },
+      { label: 'Best Practices', href: '/best-practices' },
+      { label: 'Troubleshooting', href: '/troubleshooting' },
+      { label: 'FAQ', href: '/faq' },
+      { label: 'Changelog', href: '/changelog' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About', href: '/about' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
+      { label: 'Legal', href: '/legal' },
+    ],
+  },
+];
 
 export default function PublicFooter() {
-  const router = useRouter();
-
   return (
     <Box
-      position="relative"
-      borderTop="1px solid"
-      borderColor="rgba(255,255,255,0.05)"
-      bg="rgba(0,0,0,0.3)"
-      backdropFilter="blur(20px)"
+      as="footer"
+      borderTopWidth="1px"
+      borderColor="border.default"
+      bg="rgba(8, 10, 15, 0.94)"
+      backdropFilter="blur(12px)"
       mt="auto"
     >
-      <Container maxW="7xl" py={{ base: 10, md: 12 }} position="relative" px={{ base: 4, md: 6 }}>
-        <VStack spacing={{ base: 8, md: 10 }} align="stretch">
-          {/* Main Footer Content */}
-          <Grid
-            templateColumns={{ base: '1fr', sm: '1fr', md: '2fr 1fr 1fr 1fr' }}
-            gap={{ base: 8, md: 12 }}
-          >
-            {/* Brand Column */}
-            <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
-              <Box onClick={() => router.push('/')} cursor="pointer">
+      <Container maxW="7xl" py={{ base: 10, md: 12 }} px={{ base: 4, md: 6 }}>
+        <VStack spacing={{ base: 10, md: 12 }} align="stretch">
+          <Grid templateColumns={{ base: '1fr', md: '1.35fr repeat(3, minmax(0, 1fr))' }} gap={{ base: 8, md: 10 }}>
+            <VStack align={{ base: 'center', md: 'start' }} spacing={4}>
+              <ChakraLink as={Link} href="/" _hover={{ textDecoration: 'none', opacity: 0.92 }}>
                 <Box display={{ base: 'block', md: 'none' }}>
-                  <SuparbaseLogo size="lg" showText={true} variant="full" />
+                  <SuparbaseLogo size="md" variant="full" />
                 </Box>
                 <Box display={{ base: 'none', md: 'block' }}>
-                  <SuparbaseLogo size="2xl" showText={true} variant="full" />
+                  <SuparbaseLogo size="lg" variant="full" />
                 </Box>
-              </Box>
-              <Text
-                color="surface.500"
-                fontSize={{ base: 'xs', md: 'sm' }}
-                maxW="xs"
-                textAlign={{ base: 'center', md: 'left' }}
-                lineHeight="1.6"
-              >
-                Sync your databases safely. Built for developers who move fast.
+              </ChakraLink>
+              <Text color="text.secondary" fontSize="sm" maxW="22rem" textAlign={{ base: 'center', md: 'left' }}>
+                Production-safe Supabase synchronization with schema validation, rollback protection, and keep-alive automation.
               </Text>
+              <HStack spacing={3} flexWrap="wrap" justify={{ base: 'center', md: 'flex-start' }}>
+                <Text fontSize="xs" color="text.tertiary">Security-first workflows</Text>
+                <Text color="text.tertiary" fontSize="xs">•</Text>
+                <Text fontSize="xs" color="text.tertiary">Built for teams</Text>
+              </HStack>
             </VStack>
 
-            {/* Product Column */}
-            <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
-              <Text
-                fontSize="xs"
-                fontWeight="600"
-                color="surface.300"
-                letterSpacing="0.05em"
-                textTransform="uppercase"
-              >
-                Product
-              </Text>
-              <VStack align={{ base: 'center', md: 'start' }} spacing={1.5}>
-                {[
-                  { label: 'Features', path: '/features' },
-                  { label: 'Pricing', path: '/pricing' },
-                  { label: 'Benefits', path: '/benefits' },
-                  { label: 'Integrations', path: '/integrations' },
-                  { label: 'Comparison', path: '/comparison' },
-                  { label: 'Status', path: '/status' }
-                ].map((link) => (
-                  <Link
-                    key={link.path}
-                    as="button"
-                    color="surface.500"
-                    fontSize="sm"
-                    fontWeight="400"
-                    _hover={{
-                      color: 'white',
-                    }}
-                    onClick={() => router.push(link.path)}
-                    transition="color 0.2s"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+            {footerColumns.map((column) => (
+              <VStack key={column.title} align={{ base: 'center', md: 'start' }} spacing={3}>
+                <Text textStyle="label" color="text.tertiary">
+                  {column.title}
+                </Text>
+                <VStack align={{ base: 'center', md: 'start' }} spacing={2}>
+                  {column.links.map((link) => (
+                    <ChakraLink
+                      key={link.href}
+                      as={Link}
+                      href={link.href}
+                      color="text.secondary"
+                      fontSize="sm"
+                      _hover={{ color: 'text.primary', textDecoration: 'underline' }}
+                    >
+                      {link.label}
+                    </ChakraLink>
+                  ))}
+                </VStack>
               </VStack>
-            </VStack>
-
-            {/* Learn Column */}
-            <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
-              <Text
-                fontSize="xs"
-                fontWeight="600"
-                color="surface.300"
-                letterSpacing="0.05em"
-                textTransform="uppercase"
-              >
-                Learn
-              </Text>
-              <VStack align={{ base: 'center', md: 'start' }} spacing={1.5}>
-                {[
-                  { label: 'Getting Started', path: '/getting-started' },
-                  { label: 'How It Works', path: '/how-it-works' },
-                  { label: 'Use Cases', path: '/use-cases' },
-                  { label: 'Guide', path: '/guide' },
-                  { label: 'Best Practices', path: '/best-practices' },
-                  { label: 'Troubleshooting', path: '/troubleshooting' },
-                  { label: 'FAQ', path: '/faq' },
-                  { label: 'Blog', path: '/blog' },
-                  { label: 'Resources', path: '/resources' },
-                  { label: 'Changelog', path: '/changelog' }
-                ].map((link) => (
-                  <Link
-                    key={link.path}
-                    as="button"
-                    color="surface.500"
-                    fontSize="sm"
-                    fontWeight="400"
-                    _hover={{
-                      color: 'white',
-                    }}
-                    onClick={() => router.push(link.path)}
-                    transition="color 0.2s"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </VStack>
-            </VStack>
-
-            {/* Company & Legal Column */}
-            <VStack align={{ base: 'center', md: 'start' }} spacing={3}>
-              <Text
-                fontSize="xs"
-                fontWeight="600"
-                color="surface.300"
-                letterSpacing="0.05em"
-                textTransform="uppercase"
-              >
-                Company
-              </Text>
-              <VStack align={{ base: 'center', md: 'start' }} spacing={1.5}>
-                {[
-                  { label: 'About', path: '/about' },
-                  { label: 'Contact', path: '/contact' },
-                  { label: 'Privacy', path: '/privacy' },
-                  { label: 'Terms', path: '/terms' },
-                  { label: 'Legal Notice', path: '/legal' }
-                ].map((link) => (
-                  <Link
-                    key={link.path}
-                    as="button"
-                    color="surface.500"
-                    fontSize="sm"
-                    fontWeight="400"
-                    _hover={{
-                      color: 'white',
-                    }}
-                    onClick={() => router.push(link.path)}
-                    transition="color 0.2s"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </VStack>
-            </VStack>
+            ))}
           </Grid>
 
-          {/* Divider */}
-          <Box h="1px" bg="rgba(255,255,255,0.05)" />
-
-          {/* Bottom Bar */}
           <Flex
+            borderTopWidth="1px"
+            borderColor="border.subtle"
+            pt={5}
             direction={{ base: 'column', md: 'row' }}
+            align={{ base: 'center', md: 'center' }}
             justify="space-between"
-            align="center"
-            gap={{ base: 3, md: 4 }}
-            pt={2}
+            gap={3}
           >
-            <Text
-              color="surface.600"
-              fontSize={{ base: '2xs', md: 'xs' }}
-              textAlign={{ base: 'center', md: 'left' }}
-            >
+            <Text color="text.tertiary" fontSize="xs" textAlign={{ base: 'center', md: 'left' }}>
               © {new Date().getFullYear()} Suparbase. All rights reserved.
             </Text>
-            <HStack spacing={4} flexWrap="wrap" justify="center">
-              <Text
-                color="surface.600"
-                fontSize={{ base: '2xs', md: 'xs' }}
-              >
-                v1.0.0
-              </Text>
-              <Box w="1px" h="10px" bg="surface.700" display={{ base: 'none', sm: 'block' }} />
-              <Text
-                color="surface.600"
-                fontSize={{ base: '2xs', md: 'xs' }}
-              >
-                Beta
-              </Text>
+            <HStack spacing={3} color="text.tertiary" fontSize="xs">
+              <Text>v1.0.0</Text>
+              <Text aria-hidden="true">•</Text>
+              <Text>Dark-first UI</Text>
             </HStack>
           </Flex>
         </VStack>
       </Container>
-
-      {/* Particle Text Animation */}
-      <ParticleTextAnimation />
     </Box>
   );
 }
-

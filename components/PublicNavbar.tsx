@@ -1,35 +1,35 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useDisclosure } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
 import {
   Box,
+  Button,
   Container,
+  Drawer,
+  DrawerBody,
+  DrawerCloseButton,
+  DrawerContent,
+  DrawerOverlay,
   Flex,
   HStack,
-  Button,
   IconButton,
-  useDisclosure,
-  Drawer,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerCloseButton,
-  DrawerBody,
+  Link as ChakraLink,
+  Text,
   VStack,
 } from '@chakra-ui/react';
 import { SuparbaseLogo } from '@/components/Logo';
 
-// Icons
-const MenuIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <line x1="3" y1="12" x2="21" y2="12" />
-    <line x1="3" y1="6" x2="21" y2="6" />
-    <line x1="3" y1="18" x2="21" y2="18" />
-  </svg>
-);
+type PublicNavItem = {
+  label: string;
+  href: string;
+  exact?: boolean;
+};
 
-const navLinks = [
-  { label: 'Home', href: '/' },
+const navLinks: PublicNavItem[] = [
+  { label: 'Home', href: '/', exact: true },
   { label: 'Features', href: '/features' },
   { label: 'Use Cases', href: '/use-cases' },
   { label: 'How It Works', href: '/how-it-works' },
@@ -39,19 +39,33 @@ const navLinks = [
   { label: 'Status', href: '/status' },
 ];
 
+function MenuIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
+function isActiveLink(pathname: string, link: PublicNavItem): boolean {
+  if (link.exact) return pathname === link.href;
+  return pathname.startsWith(link.href);
+}
+
 export default function PublicNavbar() {
-  const router = useRouter();
+  const pathname = usePathname();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Dynamic scroll detection for navbar transformation
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Check initial state
+    handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -61,86 +75,81 @@ export default function PublicNavbar() {
       as="nav"
       position="sticky"
       top={0}
-      bg="surface.900"
+      bg="rgba(8, 10, 15, 0.88)"
       borderBottomWidth="1px"
-      borderColor={isScrolled ? "rgba(62, 207, 142, 0.15)" : "surface.700"}
+      borderColor={isScrolled ? 'rgba(147, 222, 203, 0.24)' : 'border.default'}
       zIndex={100}
-      backdropFilter={isScrolled ? "blur(20px) saturate(180%)" : "blur(10px)"}
-      bgColor={isScrolled ? "rgba(9, 9, 11, 0.95)" : "rgba(9, 9, 11, 0.9)"}
-      boxShadow={isScrolled ? "0 4px 30px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.03) inset" : "none"}
-      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+      backdropFilter={isScrolled ? 'blur(14px) saturate(150%)' : 'blur(8px)'}
+      boxShadow={isScrolled ? 'var(--chakra-shadows-elevation-soft)' : 'none'}
+      transition="border-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard), backdrop-filter var(--motion-base) var(--ease-standard)"
     >
       <Container maxW="6xl" py={{ base: 2, md: 3 }} px={{ base: 4, md: 6 }}>
         <Flex justify="space-between" align="center">
-          {/* Logo - exactly matching AuthHeader structure */}
-          <Box
-            cursor="pointer"
-            onClick={() => router.push('/')}
-            _hover={{ opacity: 0.8 }}
-            transition="opacity 0.2s"
+          <ChakraLink
+            as={Link}
+            href="/"
+            aria-label="Suparbase home"
+            _hover={{ textDecoration: 'none', opacity: 0.92 }}
           >
             <Box display={{ base: 'block', md: 'none' }}>
-              <SuparbaseLogo size="lg" showText={true} variant="full" />
+              <SuparbaseLogo size="md" variant="full" />
             </Box>
             <Box display={{ base: 'none', md: 'block' }}>
-              <SuparbaseLogo size="2xl" showText={true} variant="full" />
+              <SuparbaseLogo size="lg" variant="full" />
             </Box>
-          </Box>
+          </ChakraLink>
 
-          {/* Desktop Navigation */}
-          <HStack spacing={1} display={{ base: 'none', md: 'flex' }}>
-            {navLinks.map((link) => (
-              <Button
-                key={link.href}
-                variant="ghost"
-                size="sm"
-                color="surface.300"
-                minH="44px"
-                fontWeight="500"
-                letterSpacing="0.01em"
-                _hover={{
-                  color: 'white',
-                  bg: 'surface.700',
-                  transform: 'translateY(-1px)'
-                }}
-                _active={{
-                  transform: 'translateY(0px)',
-                  bg: 'surface.600'
-                }}
-                transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-                onClick={() => router.push(link.href)}
-              >
-                {link.label}
-              </Button>
-            ))}
+          <HStack spacing={1} display={{ base: 'none', md: 'flex' }} as="ul" listStyleType="none">
+            {navLinks.map((link) => {
+              const active = isActiveLink(pathname, link);
+              return (
+                <Box as="li" key={link.href}>
+                  <ChakraLink
+                    as={Link}
+                    href={link.href}
+                    aria-current={active ? 'page' : undefined}
+                    px={3}
+                    py={2}
+                    minH="44px"
+                    borderRadius="lg"
+                    borderWidth="1px"
+                    borderColor={active ? 'rgba(147, 222, 203, 0.35)' : 'transparent'}
+                    bg={active ? 'rgba(25, 196, 167, 0.15)' : 'transparent'}
+                    color={active ? 'text.primary' : 'text.secondary'}
+                    fontSize="sm"
+                    fontWeight="600"
+                    transition="all var(--motion-fast) linear"
+                    _hover={{
+                      color: 'text.primary',
+                      bg: 'rgba(255, 255, 255, 0.07)',
+                      textDecoration: 'none',
+                      borderColor: 'rgba(147, 222, 203, 0.2)',
+                    }}
+                    _focusVisible={{
+                      boxShadow: '0 0 0 2px var(--chakra-colors-focus-ring)',
+                    }}
+                  >
+                    {link.label}
+                  </ChakraLink>
+                </Box>
+              );
+            })}
           </HStack>
 
-          {/* Right Side Actions */}
           <HStack spacing={2}>
             <Button
-              colorScheme="teal"
+              as={Link}
+              href="/login"
               size="sm"
+              variant="solid"
               minH="44px"
-              fontWeight="600"
-              letterSpacing="0.02em"
-              onClick={() => router.push('/login')}
-              display={{ base: 'none', sm: 'flex' }}
-              _hover={{
-                transform: 'translateY(-2px)',
-                boxShadow: '0 4px 20px rgba(62, 207, 142, 0.4)'
-              }}
-              _active={{
-                transform: 'translateY(0px)',
-                boxShadow: '0 2px 10px rgba(62, 207, 142, 0.3)'
-              }}
-              transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+              display={{ base: 'none', sm: 'inline-flex' }}
             >
               Login
             </Button>
 
-            {/* Mobile Menu Button */}
             <IconButton
-              aria-label="Menu"
+              aria-label="Open navigation menu"
               icon={<MenuIcon />}
               variant="ghost"
               display={{ base: 'flex', md: 'none' }}
@@ -148,43 +157,45 @@ export default function PublicNavbar() {
               size="md"
               minW="44px"
               minH="44px"
+              _focusVisible={{
+                boxShadow: '0 0 0 2px var(--chakra-colors-focus-ring)',
+              }}
             />
           </HStack>
         </Flex>
       </Container>
 
-      {/* Mobile Drawer */}
       <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
         <DrawerOverlay />
-        <DrawerContent bg="surface.800">
+        <DrawerContent bg="bg.surface" borderLeftWidth="1px" borderColor="border.default">
           <DrawerCloseButton color="white" />
           <DrawerBody pt={12} px={4}>
-            <VStack spacing={2} align="stretch">
-              {navLinks.map((link) => (
-                <Button
-                  key={link.href}
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  color="surface.300"
-                  minH="44px"
-                  _hover={{ color: 'white', bg: 'surface.700' }}
-                  onClick={() => {
-                    router.push(link.href);
-                    onClose();
-                  }}
-                >
-                  {link.label}
-                </Button>
-              ))}
-              <Button
-                colorScheme="teal"
-                mt={4}
-                minH="44px"
-                onClick={() => {
-                  router.push('/login');
-                  onClose();
-                }}
-              >
+            <VStack spacing={2} align="stretch" as="ul" listStyleType="none">
+              {navLinks.map((link) => {
+                const active = isActiveLink(pathname, link);
+                return (
+                  <Box as="li" key={link.href}>
+                    <ChakraLink
+                      as={Link}
+                      href={link.href}
+                      aria-current={active ? 'page' : undefined}
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      px={4}
+                      minH="46px"
+                      borderRadius="lg"
+                      color={active ? 'text.primary' : 'text.secondary'}
+                      bg={active ? 'rgba(25, 196, 167, 0.13)' : 'transparent'}
+                      onClick={onClose}
+                      _hover={{ bg: 'rgba(255, 255, 255, 0.08)', textDecoration: 'none' }}
+                    >
+                      <Text fontWeight="600">{link.label}</Text>
+                    </ChakraLink>
+                  </Box>
+                );
+              })}
+              <Button as={Link} href="/login" mt={3} minH="46px" onClick={onClose}>
                 Login
               </Button>
             </VStack>

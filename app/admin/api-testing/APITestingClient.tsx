@@ -123,6 +123,23 @@ interface APITestingClientProps {
   requestId: string;
 }
 
+function StatusBadge({ status }: { status: TestStatus }) {
+  const config = {
+    pending: { colorScheme: 'gray', icon: null },
+    running: { colorScheme: 'blue', icon: <Spinner size="xs" /> },
+    passed: { colorScheme: 'green', icon: <CheckIcon /> },
+    failed: { colorScheme: 'red', icon: <XIcon /> },
+    skipped: { colorScheme: 'yellow', icon: <SkipIcon /> },
+  };
+  const c = config[status];
+  return (
+    <Badge colorScheme={c.colorScheme} display="flex" alignItems="center" gap={1} px={2} py={0.5}>
+      {c.icon}
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </Badge>
+  );
+}
+
 const testCategories: TestCategory[] = [
   { id: 'health', name: 'Health & Status', description: 'Health endpoints and system status', icon: '💚' },
   { id: 'auth', name: 'Authentication', description: 'CSRF and session management', icon: '🔐' },
@@ -466,24 +483,6 @@ export default function APITestingClient({ adminUser, requestId }: APITestingCli
     a.download = `api-test-results-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  // Status badge component
-  const StatusBadge = ({ status }: { status: TestStatus }) => {
-    const config = {
-      pending: { colorScheme: 'gray', icon: null },
-      running: { colorScheme: 'blue', icon: <Spinner size="xs" /> },
-      passed: { colorScheme: 'green', icon: <CheckIcon /> },
-      failed: { colorScheme: 'red', icon: <XIcon /> },
-      skipped: { colorScheme: 'yellow', icon: <SkipIcon /> },
-    };
-    const c = config[status];
-    return (
-      <Badge colorScheme={c.colorScheme} display="flex" alignItems="center" gap={1} px={2} py={0.5}>
-        {c.icon}
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
   };
 
   return (

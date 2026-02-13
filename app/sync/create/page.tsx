@@ -49,6 +49,7 @@ import ConfirmationDialog from '@/components/ConfirmationDialog';
 import MigrationScriptViewer from '@/components/MigrationScriptViewer';
 import SchemaFixWizard from '@/components/SchemaFixWizard';
 import type { ValidationIssue, SchemaValidationResult } from '@/types';
+import { csrfFetch } from '@/lib/utils/csrf-client';
 
 const MotionBox = motion.create(Box);
 
@@ -177,7 +178,7 @@ export default function CreateSyncPage() {
     
     setLoadingTables(true);
     try {
-      const response = await fetch(`/api/connections/${sourceId}`, {
+      const response = await csrfFetch(`/api/connections/${sourceId}`, {
         method: 'POST',
       });
       const data = await response.json();
@@ -202,7 +203,7 @@ export default function CreateSyncPage() {
   const runValidation = async () => {
     setIsValidating(true);
     try {
-      const response = await fetch('/api/sync/validate', {
+      const response = await csrfFetch('/api/sync/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -258,7 +259,7 @@ export default function CreateSyncPage() {
     }
     
     try {
-      const response = await fetch('/api/sync', {
+      const response = await csrfFetch('/api/sync', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -311,7 +312,7 @@ export default function CreateSyncPage() {
 
     try {
       // Create the sync job
-      const createResponse = await fetch('/api/sync', {
+      const createResponse = await csrfFetch('/api/sync', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -335,7 +336,7 @@ export default function CreateSyncPage() {
       setCreatingStatus('Starting sync...');
 
       // Start the sync job (returns SSE stream, don't wait for it to complete)
-      const startResponse = await fetch(`/api/sync/${createData.data.id}/start`, {
+      const startResponse = await csrfFetch(`/api/sync/${createData.data.id}/start`, {
         method: 'POST',
       });
 

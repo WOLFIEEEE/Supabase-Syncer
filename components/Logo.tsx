@@ -1,28 +1,42 @@
 'use client';
 
-import { HStack, Text, Box, VStack } from '@chakra-ui/react';
+import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 import Image from 'next/image';
 
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   showText?: boolean;
-  variant?: 'full' | 'icon';
+  showTagline?: boolean;
+  variant?: 'full' | 'icon' | 'wordmark';
+  lockup?: 'stacked' | 'inline';
 }
 
 const sizes = {
-  sm: { icon: 24, text: 'md' as const },
-  md: { icon: 32, text: 'lg' as const },
-  lg: { icon: 40, text: 'xl' as const },
-  xl: { icon: 48, text: '2xl' as const },
-  '2xl': { icon: 64, text: 'lg' as const }, // Icon doubled, text stays same as 'md'
+  xs: { icon: 20, text: 'sm' as const, tag: '2xs' as const },
+  sm: { icon: 24, text: 'md' as const, tag: 'xs' as const },
+  md: { icon: 32, text: 'lg' as const, tag: 'xs' as const },
+  lg: { icon: 38, text: 'xl' as const, tag: 'xs' as const },
+  xl: { icon: 46, text: '2xl' as const, tag: 'sm' as const },
+  '2xl': { icon: 58, text: '2xl' as const, tag: 'sm' as const },
 };
 
-export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }: LogoProps) {
-  const { icon, text } = sizes[size];
-  
+export function SuparbaseLogo({
+  size = 'md',
+  showText = true,
+  showTagline = true,
+  variant = 'full',
+  lockup = 'stacked',
+}: LogoProps) {
+  const { icon, text, tag } = sizes[size];
+  const showWordmark = showText && variant !== 'icon';
+  const isStacked = lockup === 'stacked';
+
   return (
-    <HStack spacing={size === 'sm' ? 2 : 3} align="center">
-      <Box 
+    <HStack
+      spacing={size === 'xs' || size === 'sm' ? 2 : 3}
+      align={isStacked ? 'flex-start' : 'center'}
+    >
+      <Box
         width={`${icon}px`} 
         height={`${icon}px`}
         position="relative"
@@ -30,10 +44,12 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
         display="flex"
         alignItems="center"
         justifyContent="center"
+        borderRadius="lg"
+        overflow="hidden"
       >
         <Image
           src="/logo.png"
-          alt="suparbase logo"
+          alt="suparbase mark"
           width={icon}
           height={icon}
           style={{
@@ -44,94 +60,84 @@ export function SuparbaseLogo({ size = 'md', showText = true, variant = 'full' }
           priority
         />
       </Box>
-      
-      {showText && variant === 'full' && (
-        <VStack spacing={1} align="start">
-          <HStack spacing={0} align="center">
-            <Text 
-              fontSize={text} 
-              fontWeight="700" 
-              color="white"
-              letterSpacing="0.02em"
-              lineHeight="1.2"
+
+      {showWordmark && (
+        <VStack spacing={isStacked ? 0 : 0.5} align="start">
+          <HStack spacing={0} align="center" lineHeight="1">
+            <Text
+              fontSize={text}
+              fontWeight="700"
+              color="text.primary"
+              letterSpacing="-0.01em"
+              lineHeight="1"
               textTransform="lowercase"
-              fontFamily="sans-serif"
+              fontFamily="heading"
             >
               supa
             </Text>
             <Box
               mx={1}
-              px={2}
+              px={{ base: 1.5, md: 2 }}
               py={0.5}
-              bgGradient="linear(to-br, #3ECF8E, #14B8A6)"
               borderRadius="md"
-              display="inline-flex"
-              alignItems="center"
-              justifyContent="center"
-              boxShadow="0 0 10px rgba(62, 207, 142, 0.4)"
+              bgGradient="linear(125deg, #19c4a7, #1e84ff)"
+              color="white"
+              boxShadow="0 0 12px rgba(25, 196, 167, 0.45)"
+              lineHeight="1"
             >
-              <Text 
-                fontSize={text === 'md' ? 'lg' : text === 'lg' ? 'xl' : '2xl'} 
-                fontWeight="900" 
-                color="white"
+              <Text
+                fontSize={text === 'sm' ? 'sm' : text === 'md' ? 'md' : 'lg'}
+                fontWeight="900"
                 lineHeight="1"
-                fontFamily="'Playfair Display', 'Georgia', serif"
-                fontStyle="italic"
+                fontFamily="mono"
               >
                 R
               </Text>
             </Box>
-            <Text 
-              fontSize={text} 
-              fontWeight="700" 
-              color="white"
-              letterSpacing="0.02em"
-              lineHeight="1.2"
+            <Text
+              fontSize={text}
+              fontWeight="700"
+              color="text.primary"
+              letterSpacing="-0.01em"
+              lineHeight="1"
               textTransform="lowercase"
-              fontFamily="sans-serif"
+              fontFamily="heading"
             >
               base
             </Text>
           </HStack>
-          
-          <Text 
-            fontSize="xs" 
-            fontWeight="400" 
-            color="surface.400"
-            letterSpacing="0.1em"
-            textTransform="uppercase"
-          >
-            reimagining
-          </Text>
+
+          {showTagline && variant === 'full' && (
+            <Text
+              fontSize={tag}
+              color="text.tertiary"
+              letterSpacing="0.08em"
+              textTransform="uppercase"
+              fontWeight="600"
+            >
+              reimagining data sync
+            </Text>
+          )}
         </VStack>
       )}
     </HStack>
   );
 }
 
-// Animated version for loading states
-export function SuparbaseLogoAnimated({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function SuparbaseLogoAnimated({ size = 'md' }: { size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' }) {
   const { icon } = sizes[size];
-  
+
   return (
     <Box 
       width={`${icon}px`} 
       height={`${icon}px`}
       position="relative"
       className="pulse-logo-animated"
+      animation="pulse-logo 2s ease-in-out infinite"
     >
-      <style jsx global>{`
-        .pulse-logo-animated {
-          animation: supa-pulse 2s ease-in-out infinite;
-        }
-        @keyframes supa-pulse {
-          0%, 100% { opacity: 0.8; transform: scale(0.95); }
-          50% { opacity: 1; transform: scale(1.05); }
-        }
-      `}</style>
       <Image
         src="/logo.png"
-        alt="suparbase logo"
+        alt="suparbase mark"
         width={icon}
         height={icon}
         style={{
@@ -146,4 +152,3 @@ export function SuparbaseLogoAnimated({ size = 'md' }: { size?: 'sm' | 'md' | 'l
 }
 
 export default SuparbaseLogo;
-
